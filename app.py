@@ -17,11 +17,15 @@ CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 def extrair_dados_da_imagem(caminho_imagem):
     img = Image.open(caminho_imagem)
     texto = pytesseract.image_to_string(img)
+
     print("📜 Texto detectado:")
     print(texto)
-    peso = re.search(r"Tara.*?(\d+)", texto, re.IGNORECASE | re.DOTALL)
-    nf = re.search(r"Nota\s*Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
+
+    # Regex ajustadas para pegar os dados com mais flexibilidade
+    peso = re.search(r"^Tara\s+\d{2}/\d{2}\s+\d{2}:\d{2}\s+(\d+)", texto, re.MULTILINE)
+    nf = re.search(r"Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
     brm = re.search(r"BRM MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+
     return {
         "peso_tara": peso.group(1) if peso else "NÃO ENCONTRADO",
         "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
