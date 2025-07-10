@@ -14,6 +14,8 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
+clientes_validos = ["ArcelorMittal", "Gerdau", "ProActiva", "Raízen"]
+
 def extrair_dados_da_imagem(caminho_imagem):
     img = Image.open(caminho_imagem)
     texto = pytesseract.image_to_string(img)
@@ -69,10 +71,10 @@ def enviar_lista_clientes(numero, mensagem):
             "title": "Clientes DCAN",
             "buttonLabel": "Escolha o cliente",
             "options": [
-                {"id": "arcelormittal", "title": "ArcelorMittal", "description": ""},
-                {"id": "gerdau", "title": "Gerdau", "description": ""},
-                {"id": "proactiva", "title": "ProActiva", "description": ""},
-                {"id": "raizen", "title": "Raízen", "description": ""},
+                {"id": "ArcelorMittal", "title": "ArcelorMittal", "description": ""},
+                {"id": "Gerdau", "title": "Gerdau", "description": ""},
+                {"id": "ProActiva", "title": "ProActiva", "description": ""},
+                {"id": "Raízen", "title": "Raízen", "description": ""},
             ]
         }
     }
@@ -92,12 +94,11 @@ def webhook():
     tipo = data.get("type")
     numero = data.get("phone") or data.get("from")
 
-    # Aqui a mágica acontece
     texto_recebido = (
         data.get("buttonsResponseMessage", {}).get("buttonId") or
-        data.get("listResponse", {}).get("selectedRowId") or
-        ""
-    ).strip().lower()
+        data.get("listResponse", {}).get("rowId") or
+        data.get("text", {}).get("message", "")
+    ).strip()
 
     estado = conversas.get(numero, {}).get("estado")
 
@@ -110,37 +111,25 @@ def webhook():
         return jsonify(status="aguardando confirmação de motorista")
 
     if estado == "aguardando_confirmacao_motorista":
-        if texto_recebido in ['sim', 's']:
+        if texto_recebido.lower() in ['sim', 's']:
             enviar_lista_clientes(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada?")
             conversas[numero]["estado"] = "aguardando_cliente"
-        elif texto_recebido in ['não', 'nao', 'n']:
+        elif texto_recebido.lower() in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
             conversas.pop(numero)
         else:
-            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")  
+            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return jsonify(status="resposta motorista")
 
     if estado == "aguardando_cliente":
-        list_response = data.get("listResponse")
-        if not list_response or not list_response.get("id"):
-        enviar_lista_clientes(numero, "❗ Por favor, selecione um cliente da lista.")
-        return jsonify(status="aguardando seleção de cliente")
+        if texto_recebido in clientes_validos:
+            conversas[numero]["dados"] = {"cliente": texto_recebido}
+            enviar_mensagem(numero, f"🚚 Obrigado! Cliente informado: {texto_recebido}.\nPor gentileza, envie a foto do ticket.")
+            conversas[numero]["estado"] = "aguardando_imagem"
+        else:
+            enviar_lista_clientes(numero, "❓ Por favor, selecione um cliente da lista abaixo.")
+        return jsonify(status="verificação cliente")
 
-cliente_id = list_response["id"]
-
-        clientes_map = {
-            "arcelormittal": "ArcelorMittal",
-            "gerdau": "Gerdau",
-            "proactiva": "ProActiva",
-            "raizen": "Raízen"
-        }
-        cliente_id = list_response["selectedRowId"]
-        cliente = clientes_map.get(cliente_id, cliente_id.capitalize())
-        conversas[numero]["dados"] = {"cliente": cliente}
-        enviar_mensagem(numero, f"🚚 Obrigado! Cliente informado: {cliente}.\nPor gentileza, envie a foto do ticket.")
-        conversas[numero]["estado"] = "aguardando_imagem"
-        return jsonify(status="cliente recebido")
-        
     if estado == "aguardando_imagem":
         if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
             url_img = data["image"]["imageUrl"]
@@ -152,7 +141,7 @@ cliente_id = list_response["id"]
                 else:
                     enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
                     return jsonify(status="erro ao baixar")
-            except Exception as e:
+            except Exception:
                 enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
                 return jsonify(status="erro ao baixar")
 
@@ -175,11 +164,10 @@ cliente_id = list_response["id"]
             return jsonify(status="aguardando imagem")
 
     if estado == "aguardando_confirmacao":
-        if texto_recebido in ['sim', 's']:
+        if texto_recebido.lower() in ['sim', 's']:
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
-            # Aqui dá pra salvar numa planilha depois, Zé
             conversas.pop(numero)
-        elif texto_recebido in ['não', 'nao', 'n']:
+        elif texto_recebido.lower() in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
             conversas[numero]["estado"] = "aguardando_imagem"
         else:
