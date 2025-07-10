@@ -14,7 +14,7 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
-clientes_validos = ["ArcelorMittal", "Gerdau", "ProActiva", "Raízen"]
+clientes_validos = ["arcelormittal", "gerdau", "proactiva", "raízen"]
 
 def extrair_dados_da_imagem(caminho_imagem):
     img = Image.open(caminho_imagem)
@@ -71,10 +71,10 @@ def enviar_lista_clientes(numero, mensagem):
             "title": "Clientes DCAN",
             "buttonLabel": "Escolha o cliente",
             "options": [
-                {"id": "ArcelorMittal", "title": "ArcelorMittal", "description": ""},
-                {"id": "Gerdau", "title": "Gerdau", "description": ""},
-                {"id": "ProActiva", "title": "ProActiva", "description": ""},
-                {"id": "Raízen", "title": "Raízen", "description": ""},
+                {"id": "arcelormittal", "title": "ArcelorMittal", "description": ""},
+                {"id": "gerdau", "title": "Gerdau", "description": ""},
+                {"id": "proactiva", "title": "ProActiva", "description": ""},
+                {"id": "raízen", "title": "Raízen", "description": ""},
             ]
         }
     }
@@ -96,9 +96,9 @@ def webhook():
 
     texto_recebido = (
         data.get("buttonsResponseMessage", {}).get("buttonId") or
-        data.get("listResponse", {}).get("selectedRowId") or
+        data.get("listResponseMessage", {}).get("selectedRowId") or
         data.get("text", {}).get("message", "")
-    ).strip()
+    ).strip().lower()
 
     estado = conversas.get(numero, {}).get("estado")
 
@@ -111,10 +111,10 @@ def webhook():
         return jsonify(status="aguardando confirmação de motorista")
 
     if estado == "aguardando_confirmacao_motorista":
-        if texto_recebido.lower() in ['sim', 's']:
+        if texto_recebido in ['sim', 's']:
             enviar_lista_clientes(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada?")
             conversas[numero]["estado"] = "aguardando_cliente"
-        elif texto_recebido.lower() in ['não', 'nao', 'n']:
+        elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
             conversas.pop(numero)
         else:
@@ -123,8 +123,8 @@ def webhook():
 
     if estado == "aguardando_cliente":
         if texto_recebido in clientes_validos:
-            conversas[numero]["dados"] = {"cliente": texto_recebido}
-            enviar_mensagem(numero, f"🚚 Obrigado! Cliente informado: {texto_recebido}.\nPor gentileza, envie a foto do ticket.")
+            conversas[numero]["dados"] = {"cliente": texto_recebido.title()}
+            enviar_mensagem(numero, f"🚚 Obrigado! Cliente informado: {texto_recebido.title()}.\nPor gentileza, envie a foto do ticket.")
             conversas[numero]["estado"] = "aguardando_imagem"
         else:
             enviar_lista_clientes(numero, "❓ Por favor, selecione um cliente da lista abaixo.")
@@ -164,10 +164,10 @@ def webhook():
             return jsonify(status="aguardando imagem")
 
     if estado == "aguardando_confirmacao":
-        if texto_recebido.lower() in ['sim', 's']:
+        if texto_recebido in ['sim', 's']:
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
             conversas.pop(numero)
-        elif texto_recebido.lower() in ['não', 'nao', 'n']:
+        elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
             conversas[numero]["estado"] = "aguardando_imagem"
         else:
