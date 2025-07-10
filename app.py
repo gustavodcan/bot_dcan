@@ -122,9 +122,11 @@ def webhook():
 
     if estado == "aguardando_cliente":
         list_response = data.get("listResponse")
-        if not list_response or not list_response.get("selectedRowId"):
-            enviar_lista_clientes(numero, "❗ Por favor, selecione um cliente da lista.")
-            return jsonify(status="aguardando seleção de cliente")
+        if not list_response or not list_response.get("id"):
+        enviar_lista_clientes(numero, "❗ Por favor, selecione um cliente da lista.")
+        return jsonify(status="aguardando seleção de cliente")
+
+cliente_id = list_response["id"]
 
         clientes_map = {
             "arcelormittal": "ArcelorMittal",
