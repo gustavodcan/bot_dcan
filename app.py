@@ -46,12 +46,10 @@ def enviar_botoes_sim_nao(numero, mensagem):
     payload = {
         "phone": numero,
         "message": mensagem,
-        "buttonList": {
-            "buttons": [
-                {"id": "sim", "label": "Sim"},
-                {"id": "nao", "label": "Não"}
-            ]
-        }
+        "buttons": [
+            {"id": "sim", "text": "Sim"},
+            {"id": "nao", "text": "Não"}
+        ]
     }
     headers = {
         "Content-Type": "application/json",
@@ -68,14 +66,15 @@ def webhook():
 
     tipo = data.get("type")
     numero = data.get("phone") or data.get("from")
+    
     texto_recebido = (
-        data.get("buttonResponse", {}).get("selectedButtonId") or
+        data.get("buttonsResponseMessage", {}).get("buttonId") or
         data.get("listResponse", {}).get("rowId") or
         data.get("text", {}).get("message", "")
     ).strip().lower()
-
+    
     print(f"[DEBUG] Resposta recebida: '{texto_recebido}'")
-
+    
     estado = conversas.get(numero, {}).get("estado")
 
     if tipo != "ReceivedCallback":
@@ -140,7 +139,6 @@ def webhook():
     if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
-            # Aqui você pode salvar os dados em uma planilha no futuro
             conversas.pop(numero)
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
