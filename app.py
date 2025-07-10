@@ -69,10 +69,10 @@ def enviar_lista_clientes(numero, mensagem):
             "title": "Clientes DCAN",
             "buttonLabel": "Escolha o cliente",
             "options": [
-                {"id": "arcelormittal", "title": "ArcelorMittal", "description": "Cliente ArcelorMittal"},
-                {"id": "gerdau", "title": "Gerdau", "description": "Cliente Gerdau"},
-                {"id": "proactiva", "title": "ProActiva", "description": "Cliente ProActiva"},
-                {"id": "raizen", "title": "Raízen", "description": "Cliente Raízen"},
+                {"id": "arcelormittal", "title": "ArcelorMittal", "description": ""},
+                {"id": "gerdau", "title": "Gerdau", "description": ""},
+                {"id": "proactiva", "title": "ProActiva", "description": ""},
+                {"id": "raizen", "title": "Raízen", "description": ""},
             ]
         }
     }
@@ -94,7 +94,7 @@ def webhook():
 
     texto_recebido = (
         data.get("buttonsResponseMessage", {}).get("buttonId") or
-        data.get("listResponse", {}).get("rowId") or
+        data.get("listResponse", {}).get("selectedRowId") or
         data.get("text", {}).get("message", "")
     ).strip().lower()
 
