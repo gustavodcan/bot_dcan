@@ -92,10 +92,11 @@ def webhook():
     tipo = data.get("type")
     numero = data.get("phone") or data.get("from")
 
+    # Aqui a mágica acontece
     texto_recebido = (
         data.get("buttonsResponseMessage", {}).get("buttonId") or
         data.get("listResponse", {}).get("selectedRowId") or
-        data.get("text", {}).get("message", "")
+        ""
     ).strip().lower()
 
     estado = conversas.get(numero, {}).get("estado")
@@ -116,22 +117,28 @@ def webhook():
             enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
             conversas.pop(numero)
         else:
-            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
+            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")  
         return jsonify(status="resposta motorista")
 
     if estado == "aguardando_cliente":
+        list_response = data.get("listResponse")
+        if not list_response or not list_response.get("selectedRowId"):
+            enviar_lista_clientes(numero, "❗ Por favor, selecione um cliente da lista.")
+            return jsonify(status="aguardando seleção de cliente")
+
         clientes_map = {
             "arcelormittal": "ArcelorMittal",
             "gerdau": "Gerdau",
             "proactiva": "ProActiva",
             "raizen": "Raízen"
         }
-        cliente = clientes_map.get(texto_recebido, texto_recebido.capitalize())
+        cliente_id = list_response["selectedRowId"]
+        cliente = clientes_map.get(cliente_id, cliente_id.capitalize())
         conversas[numero]["dados"] = {"cliente": cliente}
         enviar_mensagem(numero, f"🚚 Obrigado! Cliente informado: {cliente}.\nPor gentileza, envie a foto do ticket.")
         conversas[numero]["estado"] = "aguardando_imagem"
         return jsonify(status="cliente recebido")
-
+        
     if estado == "aguardando_imagem":
         if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
             url_img = data["image"]["imageUrl"]
