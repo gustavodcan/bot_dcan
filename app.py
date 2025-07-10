@@ -32,9 +32,15 @@ def extrair_dados_da_imagem(caminho_imagem):
         "brm_mes": brm.group(1) if brm else "NÃO ENCONTRADO"
     }
 
-def enviar_mensagem(numero, texto):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
-    payload = {"phone": numero, "message": texto}
+def enviar_mensagem(numero, texto, buttons=None):
+    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-buttons"
+    payload = {
+        "phone": numero,
+        "message": texto,
+    }
+    if buttons:
+        payload["buttons"] = buttons
+
     headers = {
         "Content-Type": "application/json",
         "Client-Token": CLIENT_TOKEN
@@ -61,19 +67,43 @@ def webhook():
         return jsonify(status="ignorado")
 
     if not estado:
-        enviar_mensagem(numero, "👋 Olá! Tudo bem? Sou o bot de tickets da DCAN Transportes.\nPor acaso você seria motorista em viagem pela DCAN?")
+        # Pergunta inicial com botões SIM e NÃO
+        enviar_mensagem(
+            numero,
+            "👋 Olá! Tudo bem? Sou o bot de tickets da DCAN Transportes.\nPor acaso você seria motorista em viagem pela DCAN?",
+            buttons=[
+                {"id": "sim", "text": "Sim"},
+                {"id": "nao", "text": "Não"}
+            ]
+        )
         conversas[numero] = {"estado": "aguardando_confirmacao_motorista"}
         return jsonify(status="aguardando confirmação de motorista")
 
     if estado == "aguardando_confirmacao_motorista":
         if texto_recebido in ['sim', 's']:
-            enviar_mensagem(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada? ArcelorMittal, Gerdau, Raízen ou ProActiva?")
+            enviar_mensagem(
+                numero,
+                "✅ Perfeito! Para qual cliente a descarga foi realizada?",
+                buttons=[
+                    {"id": "arcelormittal", "text": "ArcelorMittal"},
+                    {"id": "gerdau", "text": "Gerdau"},
+                    {"id": "raizen", "text": "Raízen"},
+                    {"id": "proactiva", "text": "ProActiva"}
+                ]
+            )
             conversas[numero]["estado"] = "aguardando_cliente"
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
             conversas.pop(numero)
         else:
-            enviar_mensagem(numero, "❓ Por favor, responda apenas SIM ou NÃO.")
+            enviar_mensagem(
+                numero,
+                "❓ Por favor, responda apenas SIM ou NÃO.",
+                buttons=[
+                    {"id": "sim", "text": "Sim"},
+                    {"id": "nao", "text": "Não"}
+                ]
+            )
         return jsonify(status="resposta motorista")
 
     if estado == "aguardando_cliente":
@@ -102,13 +132,20 @@ def webhook():
             msg = (
                 f"📋 Recebi os dados:\n"
                 f"Cliente: {conversas[numero]['dados'].get('cliente', 'Desconhecido')}\n"
-                f"Peso Tara: {dados['peso_tara']}\n"
+                f"Peso: {dados['peso_tara']}\n"
                 f"Nota Fiscal: {dados['nota_fiscal']}\n"
-                f"BRM MES: {dados['brm_mes']}\n\n"
+                f"BRM: {dados['brm_mes']}\n\n"
                 f"Está correto? Responda SIM ou NÃO."
             )
             conversas[numero]["estado"] = "aguardando_confirmacao"
-            enviar_mensagem(numero, msg)
+            enviar_mensagem(
+                numero,
+                msg,
+                buttons=[
+                    {"id": "sim", "text": "Sim"},
+                    {"id": "nao", "text": "Não"}
+                ]
+            )
             os.remove("ticket.jpg")
             return jsonify(status="imagem processada")
         else:
@@ -123,16 +160,37 @@ def webhook():
             enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
             conversas[numero]["estado"] = "aguardando_imagem"
         else:
-            enviar_mensagem(numero, "❓ Por favor, responda apenas SIM ou NÃO.")
+            enviar_mensagem(
+                numero,
+                "❓ Por favor, responda apenas SIM ou NÃO.",
+                buttons=[
+                    {"id": "sim", "text": "Sim"},
+                    {"id": "nao", "text": "Não"}
+                ]
+            )
         return jsonify(status="confirmação final")
 
     if "text" in data and "message" in data["text"]:
         if estado == "aguardando_imagem":
             enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
         elif estado in ["aguardando_confirmacao_motorista", "aguardando_cliente", "aguardando_confirmacao"]:
-            enviar_mensagem(numero, "❓ Por favor, siga as instruções anteriores ou responda com SIM/NÃO.")
+            enviar_mensagem(
+                numero,
+                "❓ Por favor, siga as instruções anteriores ou responda com SIM/NÃO.",
+                buttons=[
+                    {"id": "sim", "text": "Sim"},
+                    {"id": "nao", "text": "Não"}
+                ]
+            )
         else:
-            enviar_mensagem(numero, "👋 Olá! Tudo bem? Sou o bot de tickets da DCAN Transportes.\nPor acaso você seria motorista em viagem pela DCAN?")
+            enviar_mensagem(
+                numero,
+                "👋 Olá! Tudo bem? Sou o bot de tickets da DCAN Transportes.\nPor acaso você seria motorista em viagem pela DCAN?",
+                buttons=[
+                    {"id": "sim", "text": "Sim"},
+                    {"id": "nao", "text": "Não"}
+                ]
+            )
             conversas[numero] = {"estado": "aguardando_confirmacao_motorista"}
         return jsonify(status="mensagem fora de contexto redirecionada")
 
