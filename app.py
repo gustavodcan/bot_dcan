@@ -96,7 +96,7 @@ def webhook():
 
     texto_recebido = (
         data.get("buttonsResponseMessage", {}).get("buttonId") or
-        data.get("listResponse", {}).get("rowId") or
+        data.get("listResponse", {}).get("selectedRowId") or
         data.get("text", {}).get("message", "")
     ).strip()
 
