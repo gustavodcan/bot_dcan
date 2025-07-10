@@ -46,10 +46,31 @@ def enviar_botoes_sim_nao(numero, mensagem):
     payload = {
         "phone": numero,
         "message": mensagem,
-        "buttonList": {
-            "buttons": [
-                {"id": "sim", "label": "Sim"},
-                {"id": "nao", "label": "Não"}
+        "buttons": [
+            {"id": "sim", "label": "Sim"},
+            {"id": "nao", "label": "Não"}
+        ]
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Client-Token": CLIENT_TOKEN
+    }
+    res = requests.post(url, json=payload, headers=headers)
+    print(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
+
+def enviar_lista_clientes(numero, mensagem):
+    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
+    payload = {
+        "phone": numero,
+        "message": mensagem,
+        "optionList": {
+            "title": "Clientes DCAN",
+            "buttonLabel": "Escolha o cliente",
+            "options": [
+                {"id": "arcelormittal", "title": "ArcelorMittal", "description": "Cliente ArcelorMittal"},
+                {"id": "gerdau", "title": "Gerdau", "description": "Cliente Gerdau"},
+                {"id": "proactiva", "title": "ProActiva", "description": "Cliente ProActiva"},
+                {"id": "raizen", "title": "Raízen", "description": "Cliente Raízen"},
             ]
         }
     }
@@ -58,7 +79,7 @@ def enviar_botoes_sim_nao(numero, mensagem):
         "Client-Token": CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
+    print(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -68,15 +89,13 @@ def webhook():
 
     tipo = data.get("type")
     numero = data.get("phone") or data.get("from")
-    
+
     texto_recebido = (
         data.get("buttonsResponseMessage", {}).get("buttonId") or
         data.get("listResponse", {}).get("rowId") or
         data.get("text", {}).get("message", "")
     ).strip().lower()
-    
-    print(f"[DEBUG] Resposta recebida: '{texto_recebido}'")
-    
+
     estado = conversas.get(numero, {}).get("estado")
 
     if tipo != "ReceivedCallback":
@@ -89,7 +108,7 @@ def webhook():
 
     if estado == "aguardando_confirmacao_motorista":
         if texto_recebido in ['sim', 's']:
-            enviar_mensagem(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada? ArcelorMittal, Gerdau, Raízen ou ProActiva?")
+            enviar_lista_clientes(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada?")
             conversas[numero]["estado"] = "aguardando_cliente"
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
@@ -99,7 +118,13 @@ def webhook():
         return jsonify(status="resposta motorista")
 
     if estado == "aguardando_cliente":
-        cliente = texto_recebido.capitalize()
+        clientes_map = {
+            "arcelormittal": "ArcelorMittal",
+            "gerdau": "Gerdau",
+            "proactiva": "ProActiva",
+            "raizen": "Raízen"
+        }
+        cliente = clientes_map.get(texto_recebido, texto_recebido.capitalize())
         conversas[numero]["dados"] = {"cliente": cliente}
         enviar_mensagem(numero, f"🚚 Obrigado! Cliente informado: {cliente}.\nPor gentileza, envie a foto do ticket.")
         conversas[numero]["estado"] = "aguardando_imagem"
@@ -141,6 +166,7 @@ def webhook():
     if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
+            # Aqui dá pra salvar numa planilha depois, Zé
             conversas.pop(numero)
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
