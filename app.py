@@ -46,10 +46,12 @@ def enviar_botoes_sim_nao(numero, mensagem):
     payload = {
         "phone": numero,
         "message": mensagem,
-        "buttons": [
-            {"id": "sim", "text": "Sim"},
-            {"id": "nao", "text": "Não"}
-        ]
+        "buttonList": {
+            "buttons": [
+                {"id": "sim", "label": "Sim"},
+                {"id": "nao", "label": "Não"}
+            ]
+        }
     }
     headers = {
         "Content-Type": "application/json",
