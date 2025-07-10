@@ -58,36 +58,7 @@ def enviar_botoes_sim_nao(numero, mensagem):
         "Client-Token": CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟦 Botões SIM/NÃO enviados] Status {res.status_code}: {res.text}")
-
-def enviar_lista_clientes(numero):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-list"
-    payload = {
-        "phone": numero,
-        "message": "✅ Perfeito! Para qual cliente a descarga foi realizada?",
-        "list": {
-            "buttonText": "Escolher Cliente",
-            "title": "Clientes DCAN",
-            "footer": "Por favor, selecione um cliente",
-            "sections": [
-                {
-                    "title": "Clientes disponíveis",
-                    "rows": [
-                        {"id": "arcelor", "title": "ArcelorMittal"},
-                        {"id": "gerdau", "title": "Gerdau"},
-                        {"id": "raizen", "title": "Raízen"},
-                        {"id": "proactiva", "title": "ProActiva"}
-                    ]
-                }
-            ]
-        }
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
-    }
-    res = requests.post(url, json=payload, headers=headers)
-    print(f"[📋 Lista de clientes enviada] Status {res.status_code}: {res.text}")
+    print(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -102,6 +73,9 @@ def webhook():
         data.get("listResponse", {}).get("rowId") or
         data.get("text", {}).get("message", "")
     ).strip().lower()
+
+    print(f"[DEBUG] Resposta recebida: '{texto_recebido}'")
+
     estado = conversas.get(numero, {}).get("estado")
 
     if tipo != "ReceivedCallback":
@@ -113,10 +87,10 @@ def webhook():
         return jsonify(status="aguardando confirmação de motorista")
 
     if estado == "aguardando_confirmacao_motorista":
-        if texto_recebido == 'sim':
-            enviar_lista_clientes(numero)
+        if texto_recebido in ['sim', 's']:
+            enviar_mensagem(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada? ArcelorMittal, Gerdau, Raízen ou ProActiva?")
             conversas[numero]["estado"] = "aguardando_cliente"
-        elif texto_recebido == 'nao':
+        elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
             conversas.pop(numero)
         else:
@@ -164,10 +138,11 @@ def webhook():
             return jsonify(status="aguardando imagem")
 
     if estado == "aguardando_confirmacao":
-        if texto_recebido == 'sim':
+        if texto_recebido in ['sim', 's']:
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
+            # Aqui você pode salvar os dados em uma planilha no futuro
             conversas.pop(numero)
-        elif texto_recebido == 'nao':
+        elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
             conversas[numero]["estado"] = "aguardando_imagem"
         else:
