@@ -122,12 +122,7 @@ def extrair_dados_cliente_cdr(img, texto):
     }
 
 def extrair_dados_da_imagem(caminho_imagem, cliente):
-'    img = Image.open(caminho_imagem)
-'    img = ImageOps.grayscale(img)
-'    img = img.point(lambda x: 0 if x < 150 else 255, '1')
-'    config = r'--psm 6'
     texto = pytesseract.image_to_string(img)
-'    texto = pytesseract.image_to_string(img, config=config)
 
     print("📜 Texto detectado:")
     print(texto)
