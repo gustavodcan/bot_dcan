@@ -16,6 +16,44 @@ CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
 clientes_validos = ["arcelormittal", "gerdau", "raízen", "mahle", "orizon", "cdr", "saae"]
 
+def enviar_mensagem(numero, mensagem):
+    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
+    payload = {
+        "phone": numero,
+        "message": mensagem
+    }
+    requests.post(url, json=payload)
+
+def enviar_botoes_sim_nao(numero, mensagem):
+    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-buttons"
+    payload = {
+        "phone": numero,
+        "message": mensagem,
+        "buttons": [
+            {"buttonId": "sim", "buttonText": {"displayText": "Sim"}, "type": 1},
+            {"buttonId": "nao", "buttonText": {"displayText": "Não"}, "type": 1}
+        ]
+    }
+    requests.post(url, json=payload)
+
+def enviar_lista_clientes(numero, mensagem):
+    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-list"
+    payload = {
+        "phone": numero,
+        "message": mensagem,
+        "sections": [
+            {
+                "title": "Clientes",
+                "rows": [
+                    {"rowId": cliente, "title": cliente.title()}
+                    for cliente in clientes_validos
+                ]
+            }
+        ],
+        "buttonText": "Selecionar Cliente"
+    }
+    requests.post(url, json=payload)
+
 def extrair_dados_cliente_cdr(img, texto):
     print("📜 [CDR] Texto detectado:")
     print(texto)
@@ -30,8 +68,6 @@ def extrair_dados_cliente_cdr(img, texto):
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
     }
 
-# (demais funções extrair_dados_cliente_* permanecem iguais)
-
 def extrair_dados_da_imagem(caminho_imagem, cliente):
     img = Image.open(caminho_imagem)
     texto = pytesseract.image_to_string(img)
@@ -43,26 +79,12 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
     match cliente:
         case "cdr":
             return extrair_dados_cliente_cdr(img, texto)
-        case "arcelormittal":
-            return extrair_dados_cliente_arcelormittal(img, texto)
-        case "gerdau":
-            return extrair_dados_cliente_gerdau(img, texto)
-        case "raízen":
-            return extrair_dados_cliente_raízen(img, texto)
-        case "mahle":
-            return extrair_dados_cliente_mahle(img, texto)
-        case "orizon":
-            return extrair_dados_cliente_orizon(img, texto)
-        case "saae":
-            return extrair_dados_cliente_saae(img, texto)
         case _:
             return {
                 "ticket": "CLIENTE NÃO SUPORTADO",
                 "outros_docs": "CLIENTE NÃO SUPORTADO",
                 "peso_liquido": "CLIENTE NÃO SUPORTADO"
             }
-
-# funções enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_clientes seguem iguais...
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -127,71 +149,14 @@ def webhook():
             cliente = conversas[numero]["dados"].get("cliente", "").lower()
             dados = extrair_dados_da_imagem("ticket.jpg", cliente)
 
-            # Monta a mensagem com base no cliente
-            match cliente:
-                case "cdr":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: {cliente.title()}\n"
-                        f"Ticket: {dados.get('ticket')}\n"
-                        f"Outros Docs: {dados.get('outros_docs')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
-                        f"Está correto?"
-                    )
-                case "gerdau":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: Gerdau\n"
-                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                        f"Peso Tara: {dados.get('peso_tara')}\n"
-                        f"Nº Viagem: {dados.get('numero_viagem')}\n\n"
-                        f"Está correto?"
-                    )
-                case "raízen":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: Raízen\n"
-                        f"Protocolo: {dados.get('protocolo')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                        f"Doc Referência: {dados.get('doc_referencia')}\n\n"
-                        f"Está correto?"
-                    )
-                case "mahle":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: Mahle\n"
-                        f"Lote: {dados.get('lote')}\n"
-                        f"Peso: {dados.get('peso')}\n"
-                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n\n"
-                        f"Está correto?"
-                    )
-                case "orizon":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: Orizon\n"
-                        f"Código: {dados.get('codigo')}\n"
-                        f"Peso: {dados.get('peso')}\n"
-                        f"Documento: {dados.get('documento')}\n\n"
-                        f"Está correto?"
-                    )
-                case "saae":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: SAAE\n"
-                        f"Protocolo: {dados.get('protocolo')}\n"
-                        f"Volume: {dados.get('volume')}\n"
-                        f"Data: {dados.get('data')}\n\n"
-                        f"Está correto?"
-                    )
-                case _:
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: {cliente.title()}\n"
-                        f"Peso Tara: {dados.get('peso_tara')}\n"
-                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                        f"BRM: {dados.get('brm_mes')}\n\n"
-                        f"Está correto?"
-                    )
+            msg = (
+                f"📋 Recebi os dados:\n"
+                f"Cliente: {cliente.title()}\n"
+                f"Ticket: {dados.get('ticket')}\n"
+                f"Outros Docs: {dados.get('outros_docs')}\n"
+                f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
+                f"Está correto?"
+            )
 
             conversas[numero]["dados"].update(dados)
             conversas[numero]["estado"] = "aguardando_confirmacao"
