@@ -23,22 +23,71 @@ import re
 # Caminho da imagem reimportada
 caminho_imagem = "/mnt/data/b5b01b75-d672-4df2-8a55-550d7bc05c18.jpg"
 
-def extrair_dados_da_imagem(caminho_imagem):
-    img = Image.open(caminho_imagem)
-    texto = pytesseract.image_to_string(img)
-
-    print("📜 Texto detectado:")
-    print(texto)
-
+def extrair_dados_cliente_arcelormittal(img, texto):
     peso = re.search(r"^Tara\s+\d{2}/\d{2}\s+\d{2}:\d{2}\s+(\d+)", texto, re.MULTILINE)
     nf = re.search(r"Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
     brm = re.search(r"BRM MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
-
     return {
         "peso_tara": peso.group(1) if peso else "NÃO ENCONTRADO",
         "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
         "brm_mes": brm.group(1) if brm else "NÃO ENCONTRADO"
     }
+
+def extrair_dados_cliente_gerdau(img, texto):
+    return extrair_dados_cliente_arcelormittal(img, texto)
+
+def extrair_dados_cliente_proactiva(img, texto):
+    return extrair_dados_cliente_arcelormittal(img, texto)
+
+def extrair_dados_cliente_raízen(img, texto):
+    return extrair_dados_cliente_arcelormittal(img, texto)
+
+def extrair_dados_cliente_mahle(img, texto):
+    return extrair_dados_cliente_arcelormittal(img, texto)
+
+def extrair_dados_cliente_orizon(img, texto):
+    return extrair_dados_cliente_arcelormittal(img, texto)
+
+def extrair_dados_cliente_cdr(img, texto):
+    return extrair_dados_cliente_arcelormittal(img, texto)
+
+def extrair_dados_cliente_saae(img, texto):
+    return extrair_dados_cliente_arcelormittal(img, texto)
+
+def extrair_dados_da_imagem(caminho_imagem, cliente):
+    img = Image.open(caminho_imagem)
+    img = ImageOps.grayscale(img)
+    img = img.point(lambda x: 0 if x < 150 else 255, '1')
+    config = r'--psm 6'
+    texto = pytesseract.image_to_string(img, config=config)
+
+    print("📜 Texto detectado:")
+    print(texto)
+
+    cliente = cliente.lower()
+    match cliente:
+        case "arcelormittal":
+            return extrair_dados_cliente_arcelormittal(img, texto)
+        case "gerdau":
+            return extrair_dados_cliente_gerdau(img, texto)
+        case "proactiva":
+            return extrair_dados_cliente_proactiva(img, texto)
+        case "raízen":
+            return extrair_dados_cliente_raízen(img, texto)
+        case "mahle":
+            return extrair_dados_cliente_mahle(img, texto)
+        case "orizon":
+            return extrair_dados_cliente_orizon(img, texto)
+        case "cdr":
+            return extrair_dados_cliente_cdr(img, texto)
+        case "saae":
+            return extrair_dados_cliente_saae(img, texto)
+        case _:
+            return {
+                "peso_tara": "CLIENTE NÃO SUPORTADO",
+                "nota_fiscal": "CLIENTE NÃO SUPORTADO",
+                "brm_mes": "CLIENTE NÃO SUPORTADO"
+            }
 
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
@@ -155,7 +204,8 @@ def webhook():
                 enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
                 return jsonify(status="erro ao baixar")
 
-            dados = extrair_dados_da_imagem("ticket.jpg")
+            cliente = conversas[numero]["dados"].get("cliente", "")
+            dados = extrair_dados_da_imagem("ticket.jpg", cliente)
             msg = (
                 f"📋 Recebi os dados:\n"
                 f"Cliente: {conversas[numero]['dados'].get('cliente', 'Desconhecido')}\n"
