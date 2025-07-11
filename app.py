@@ -25,29 +25,16 @@ caminho_imagem = "/mnt/data/b5b01b75-d672-4df2-8a55-550d7bc05c18.jpg"
 
 def extrair_dados_da_imagem(caminho_imagem):
     img = Image.open(caminho_imagem)
+    texto = pytesseract.image_to_string(img)
 
-    # Pré-processamento da imagem
-    img = img.convert('L')  # Converte para escala de cinza
-    img = img.filter(ImageFilter.MedianFilter())  # Filtro para reduzir ruído
-'    enhancer = ImageEnhance.Contrast(img)
-'    img = enhancer.enhance(2.0)  # Aumenta o contraste
-'    img = img.point(lambda x: 0 if x < 140 else 255)  # Binarização
-
-    # OCR com Tesseract usando PSM 6
-    config = "--psm 6"
-    texto = pytesseract.image_to_string(img, config=config)
-
-    # Impressão do texto extraído
-    print("Texto extraído:")
+    print("📜 Texto detectado:")
     print(texto)
 
-    # Expressões regulares para os dados
-    peso = re.search(r"PESO\s*\n?\s*\d{2}/\d{2}\s*\d{2}:\d{2}\s*(\d+)", texto, re.IGNORECASE)
-    nf = re.search(r"N[.\s]*Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
-    brm = re.search(r"BRM\s+MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    peso = re.search(r"^Tara\s+\d{2}/\d{2}\s+\d{2}:\d{2}\s+(\d+)", texto, re.MULTILINE)
+    nf = re.search(r"Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
+    brm = re.search(r"BRM MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
 
     return {
-        "texto": texto,
         "peso_tara": peso.group(1) if peso else "NÃO ENCONTRADO",
         "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
         "brm_mes": brm.group(1) if brm else "NÃO ENCONTRADO"
