@@ -88,7 +88,34 @@ def extrair_dados_cliente_cdr(img, texto):
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
     }
 
-# (demais funções extrair_dados_cliente_* permanecem iguais)
+def extrair_dados_cliente_arcelormittal(img, texto):
+    print("📜 Texto detectado:")
+    print(texto)
+    
+    peso = re.search(r"Tara.*?(\d+)", texto, re.IGNORECASE | re.DOTALL)
+    nf = re.search(r"Nota\s*Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
+    brm = re.search(r"BRM MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    
+    return {
+        "peso_tara": peso.group(1) if peso else "NÃO ENCONTRADO",
+        "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
+        "brm_mes": brm.group(1) if brm else "NÃO ENCONTRADO"
+    }
+
+def extrair_dados_cliente_gerdau(img, texto):
+    return {"nota_fiscal": "placeholder", "peso_tara": "placeholder", "numero_viagem": "placeholder"}
+
+def extrair_dados_cliente_raízen(img, texto):
+    return {"protocolo": "placeholder", "peso_liquido": "placeholder", "doc_referencia": "placeholder"}
+
+def extrair_dados_cliente_mahle(img, texto):
+    return {"lote": "placeholder", "peso": "placeholder", "nota_fiscal": "placeholder"}
+
+def extrair_dados_cliente_orizon(img, texto):
+    return {"codigo": "placeholder", "peso": "placeholder", "documento": "placeholder"}
+
+def extrair_dados_cliente_saae(img, texto):
+    return {"protocolo": "placeholder", "volume": "placeholder", "data": "placeholder"}
 
 def extrair_dados_da_imagem(caminho_imagem, cliente):
     img = Image.open(caminho_imagem)
