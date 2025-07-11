@@ -30,6 +30,8 @@ def extrair_dados_cliente_cdr(img, texto):
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
     }
 
+# (demais funções extrair_dados_cliente_* permanecem iguais)
+
 def extrair_dados_da_imagem(caminho_imagem, cliente):
     img = Image.open(caminho_imagem)
     texto = pytesseract.image_to_string(img)
@@ -41,6 +43,18 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
     match cliente:
         case "cdr":
             return extrair_dados_cliente_cdr(img, texto)
+        case "arcelormittal":
+            return extrair_dados_cliente_arcelormittal(img, texto)
+        case "gerdau":
+            return extrair_dados_cliente_gerdau(img, texto)
+        case "raízen":
+            return extrair_dados_cliente_raízen(img, texto)
+        case "mahle":
+            return extrair_dados_cliente_mahle(img, texto)
+        case "orizon":
+            return extrair_dados_cliente_orizon(img, texto)
+        case "saae":
+            return extrair_dados_cliente_saae(img, texto)
         case _:
             return {
                 "ticket": "CLIENTE NÃO SUPORTADO",
@@ -48,14 +62,7 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
                 "peso_liquido": "CLIENTE NÃO SUPORTADO"
             }
 
-def enviar_mensagem(numero, texto):
-    print(f"[ENVIO DE MENSAGEM] {numero}: {texto}")
-
-def enviar_botoes_sim_nao(numero, mensagem):
-    print(f"[ENVIO DE BOTÕES] {numero}: {mensagem}")
-
-def enviar_lista_clientes(numero, mensagem):
-    print(f"[ENVIO DE LISTA] {numero}: {mensagem}")
+# funções enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_clientes seguem iguais...
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -82,15 +89,131 @@ def webhook():
         conversas[numero] = {"estado": "aguardando_confirmacao_motorista"}
         return jsonify(status="aguardando confirmação de motorista")
 
+    if estado == "aguardando_confirmacao_motorista":
+        if texto_recebido in ['sim', 's']:
+            enviar_lista_clientes(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada?")
+            conversas[numero]["estado"] = "aguardando_cliente"
+        elif texto_recebido in ['não', 'nao', 'n']:
+            enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
+            conversas.pop(numero)
+        else:
+            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
+        return jsonify(status="resposta motorista")
+
+    if estado == "aguardando_cliente":
+        if texto_recebido in clientes_validos:
+            conversas[numero]["dados"] = {"cliente": texto_recebido.title()}
+            enviar_mensagem(numero, f"🚚 Obrigado! Cliente informado: {texto_recebido.title()}.\nPor gentileza, envie a foto do ticket.")
+            conversas[numero]["estado"] = "aguardando_imagem"
+        else:
+            enviar_lista_clientes(numero, "❓ Por favor, selecione um cliente da lista abaixo.")
+        return jsonify(status="verificação cliente")
+
+    if estado == "aguardando_imagem":
+        if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
+            url_img = data["image"]["imageUrl"]
+            try:
+                img_res = requests.get(url_img)
+                if img_res.status_code == 200:
+                    with open("ticket.jpg", "wb") as f:
+                        f.write(img_res.content)
+                else:
+                    enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
+                    return jsonify(status="erro ao baixar")
+            except Exception:
+                enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
+                return jsonify(status="erro ao baixar")
+
+            cliente = conversas[numero]["dados"].get("cliente", "").lower()
+            dados = extrair_dados_da_imagem("ticket.jpg", cliente)
+
+            # Monta a mensagem com base no cliente
+            match cliente:
+                case "cdr":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: {cliente.title()}\n"
+                        f"Ticket: {dados.get('ticket')}\n"
+                        f"Outros Docs: {dados.get('outros_docs')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
+                        f"Está correto?"
+                    )
+                case "gerdau":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: Gerdau\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                        f"Peso Tara: {dados.get('peso_tara')}\n"
+                        f"Nº Viagem: {dados.get('numero_viagem')}\n\n"
+                        f"Está correto?"
+                    )
+                case "raízen":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: Raízen\n"
+                        f"Protocolo: {dados.get('protocolo')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                        f"Doc Referência: {dados.get('doc_referencia')}\n\n"
+                        f"Está correto?"
+                    )
+                case "mahle":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: Mahle\n"
+                        f"Lote: {dados.get('lote')}\n"
+                        f"Peso: {dados.get('peso')}\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n\n"
+                        f"Está correto?"
+                    )
+                case "orizon":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: Orizon\n"
+                        f"Código: {dados.get('codigo')}\n"
+                        f"Peso: {dados.get('peso')}\n"
+                        f"Documento: {dados.get('documento')}\n\n"
+                        f"Está correto?"
+                    )
+                case "saae":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: SAAE\n"
+                        f"Protocolo: {dados.get('protocolo')}\n"
+                        f"Volume: {dados.get('volume')}\n"
+                        f"Data: {dados.get('data')}\n\n"
+                        f"Está correto?"
+                    )
+                case _:
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: {cliente.title()}\n"
+                        f"Peso Tara: {dados.get('peso_tara')}\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                        f"BRM: {dados.get('brm_mes')}\n\n"
+                        f"Está correto?"
+                    )
+
+            conversas[numero]["dados"].update(dados)
+            conversas[numero]["estado"] = "aguardando_confirmacao"
+            enviar_botoes_sim_nao(numero, msg)
+            os.remove("ticket.jpg")
+            return jsonify(status="imagem processada")
+        else:
+            enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
+            return jsonify(status="aguardando imagem")
+
+    if estado == "aguardando_confirmacao":
+        if texto_recebido in ['sim', 's']:
+            enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
+            conversas.pop(numero)
+        elif texto_recebido in ['não', 'nao', 'n']:
+            enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
+            conversas[numero]["estado"] = "aguardando_imagem"
+        else:
+            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
+        return jsonify(status="confirmação final")
+
     return jsonify(status="sem ação definida")
-@app.route('/debug', methods=['GET'])
-def debug():
-    return jsonify({
-        "status": "ok",
-        "instance_id": INSTANCE_ID if INSTANCE_ID else "❌ NÃO DEFINIDO",
-        "api_token": API_TOKEN[:6] + "..." if API_TOKEN else "❌ NÃO DEFINIDO",
-        "client_token": CLIENT_TOKEN[:6] + "..." if CLIENT_TOKEN else "❌ NÃO DEFINIDO"
-    })
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
