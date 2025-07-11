@@ -14,9 +14,9 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
-clientes_validos = ["arcelormittal", "gerdau", "proactiva", "raízen"]
+clientes_validos = ["arcelormittal", "gerdau", "proactiva", "raízen", "mahle", "orizon", "cdr", "saae"]
 
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 import pytesseract
 import re
 
