@@ -1,28 +1,20 @@
+# Imagem base com Python e Debian
 FROM python:3.11-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Instala dependências do sistema
+RUN apt-get update && apt-get install -y     tesseract-ocr     libglib2.0-0     libsm6     libxext6     libxrender-dev     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y \
-    tesseract-ocr \
-    tesseract-ocr-por \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libjpeg-dev \
-    zlib1g-dev \
-    libpng-dev \
-    libtiff5 \
-    libopenjp2-7 \
-    curl && \
-    rm -rf /var/lib/apt/lists/*
-
+# Cria diretório da aplicação
 WORKDIR /app
 
+# Copia os arquivos
 COPY . .
 
+# Instala dependências Python
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Expõe a porta
 EXPOSE 10000
 
+# Comando de start
 CMD ["python", "app.py"]
