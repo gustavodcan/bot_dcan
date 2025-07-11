@@ -29,9 +29,9 @@ def extrair_dados_da_imagem(caminho_imagem):
     # Pré-processamento da imagem
     img = img.convert('L')  # Converte para escala de cinza
     img = img.filter(ImageFilter.MedianFilter())  # Filtro para reduzir ruído
-    enhancer = ImageEnhance.Contrast(img)
-    img = enhancer.enhance(2.0)  # Aumenta o contraste
-    img = img.point(lambda x: 0 if x < 140 else 255)  # Binarização
+'    enhancer = ImageEnhance.Contrast(img)
+'    img = enhancer.enhance(2.0)  # Aumenta o contraste
+'    img = img.point(lambda x: 0 if x < 140 else 255)  # Binarização
 
     # OCR com Tesseract usando PSM 6
     config = "--psm 6"
