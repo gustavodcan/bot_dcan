@@ -17,18 +17,41 @@ CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 clientes_validos = ["arcelormittal", "gerdau", "proactiva", "raízen"]
 
 def extrair_dados_da_imagem(caminho_imagem):
+    from PIL import ImageOps
+
+    # Pré-processamento da imagem
     img = Image.open(caminho_imagem)
-    texto = pytesseract.image_to_string(img)
+    img = ImageOps.grayscale(img)
+    img = img.point(lambda x: 0 if x < 150 else 255, '1')  # binarização simples
+
+    # OCR com modo de segmentação de página 6
+    custom_config = r'--psm 6'
+    texto = pytesseract.image_to_string(img, config=custom_config)
 
     print("📜 Texto detectado:")
     print(texto)
 
-    peso = re.search(r"^Tara\s+\d{2}/\d{2}\s+\d{2}:\d{2}\s+(\d+)", texto, re.MULTILINE)
-    nf = re.search(r"Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
-    brm = re.search(r"BRM MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    # Buscar todos os pesos com regex baseada na estrutura do ticket
+    pesos_encontrados = re.findall(r'PESO\s*\n?.*?(\d{4,6})', texto, re.IGNORECASE)
+    pesos_convertidos = [int(p) for p in pesos_encontrados if p.isdigit()]
+
+    if len(pesos_convertidos) >= 3:
+        peso_final = sum(pesos_convertidos[:2])  # ignora o terceiro
+    elif len(pesos_convertidos) == 2:
+        peso_final = pesos_convertidos[0]  # usa só o primeiro
+    elif len(pesos_convertidos) == 1:
+        peso_final = pesos_convertidos[0]
+    else:
+        peso_final = "NÃO ENCONTRADO"
+
+    # Nota Fiscal
+    nf = re.search(r"N[ºo\. ]?\s*Fiscal[:\-]?\s*(\d+\/?\d*)", texto, re.IGNORECASE)
+
+    # BRM MES
+    brm = re.search(r"BRM\s+MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
 
     return {
-        "peso_tara": peso.group(1) if peso else "NÃO ENCONTRADO",
+        "peso_tara": peso_final,
         "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
         "brm_mes": brm.group(1) if brm else "NÃO ENCONTRADO"
     }
