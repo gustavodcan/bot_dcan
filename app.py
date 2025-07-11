@@ -80,8 +80,11 @@ def enviar_lista_clientes(numero, mensagem):
             "options": [
                 {"id": "arcelormittal", "title": "ArcelorMittal", "description": ""},
                 {"id": "gerdau", "title": "Gerdau", "description": ""},
-                {"id": "proactiva", "title": "ProActiva", "description": ""},
+                {"id": "mahle", "title": "Mahle", "description": ""},
                 {"id": "raízen", "title": "Raízen", "description": ""},
+                {"id": "orizon", "title": "Orizon", "description": ""},
+                {"id": "cdr", "title": "CDR", "description": ""},
+                {"id": "saae", "title": "SAAE", "description": ""},
             ]
         }
     }
