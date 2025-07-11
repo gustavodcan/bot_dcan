@@ -83,6 +83,14 @@ def webhook():
         return jsonify(status="aguardando confirmação de motorista")
 
     return jsonify(status="sem ação definida")
+@app.route('/debug', methods=['GET'])
+def debug():
+    return jsonify({
+        "status": "ok",
+        "instance_id": INSTANCE_ID if INSTANCE_ID else "❌ NÃO DEFINIDO",
+        "api_token": API_TOKEN[:6] + "..." if API_TOKEN else "❌ NÃO DEFINIDO",
+        "client_token": CLIENT_TOKEN[:6] + "..." if CLIENT_TOKEN else "❌ NÃO DEFINIDO"
+    })
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
