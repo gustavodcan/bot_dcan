@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: bot-dcan
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    plan: free
+    envVars:
+      - key: INSTANCE_ID
+        value: your_instance_id_here
+      - key: API_TOKEN
+        value: your_api_token_here
+      - key: CLIENT_TOKEN
+        value: your_client_token_here
