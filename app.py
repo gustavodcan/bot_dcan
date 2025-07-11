@@ -16,42 +16,39 @@ CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
 clientes_validos = ["arcelormittal", "gerdau", "proactiva", "raízen"]
 
+from PIL import Image, ImageEnhance, ImageFilter
+import pytesseract
+import re
+
+# Caminho da imagem reimportada
+caminho_imagem = "/mnt/data/b5b01b75-d672-4df2-8a55-550d7bc05c18.jpg"
+
 def extrair_dados_da_imagem(caminho_imagem):
-    from PIL import ImageOps
+    img = Image.open(caminho_imagem)
 
     # Pré-processamento da imagem
-    img = Image.open(caminho_imagem)
-    img = ImageOps.grayscale(img)
-    img = img.point(lambda x: 0 if x < 150 else 255, '1')  # binarização simples
+    img = img.convert('L')  # Converte para escala de cinza
+    img = img.filter(ImageFilter.MedianFilter())  # Filtro para reduzir ruído
+    enhancer = ImageEnhance.Contrast(img)
+    img = enhancer.enhance(2.0)  # Aumenta o contraste
+    img = img.point(lambda x: 0 if x < 140 else 255)  # Binarização
 
-    # OCR com modo de segmentação de página 6
-    custom_config = r'--psm 6'
-    texto = pytesseract.image_to_string(img, config=custom_config)
+    # OCR com Tesseract usando PSM 6
+    config = "--psm 6"
+    texto = pytesseract.image_to_string(img, config=config)
 
-    print("📜 Texto detectado:")
+    # Impressão do texto extraído
+    print("Texto extraído:")
     print(texto)
 
-    # Buscar todos os pesos com regex baseada na estrutura do ticket
-    pesos_encontrados = re.findall(r'PESO\s*\n?.*?(\d{4,6})', texto, re.IGNORECASE)
-    pesos_convertidos = [int(p) for p in pesos_encontrados if p.isdigit()]
-
-    if len(pesos_convertidos) >= 3:
-        peso_final = sum(pesos_convertidos[:2])  # ignora o terceiro
-    elif len(pesos_convertidos) == 2:
-        peso_final = pesos_convertidos[0]  # usa só o primeiro
-    elif len(pesos_convertidos) == 1:
-        peso_final = pesos_convertidos[0]
-    else:
-        peso_final = "NÃO ENCONTRADO"
-
-    # Nota Fiscal
-    nf = re.search(r"N[ºo\. ]?\s*Fiscal[:\-]?\s*(\d+\/?\d*)", texto, re.IGNORECASE)
-
-    # BRM MES
+    # Expressões regulares para os dados
+    peso = re.search(r"PESO\s*\n?\s*\d{2}/\d{2}\s*\d{2}:\d{2}\s*(\d+)", texto, re.IGNORECASE)
+    nf = re.search(r"N[.\s]*Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
     brm = re.search(r"BRM\s+MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
 
     return {
-        "peso_tara": peso_final,
+        "texto": texto,
+        "peso_tara": peso.group(1) if peso else "NÃO ENCONTRADO",
         "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
         "brm_mes": brm.group(1) if brm else "NÃO ENCONTRADO"
     }
