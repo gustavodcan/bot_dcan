@@ -1,4 +1,6 @@
-flask
-requests
+Flask
+pillow
 pytesseract
-Pillow
+requests
+google-cloud-vision
+google-auth
