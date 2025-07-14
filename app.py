@@ -196,8 +196,10 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
 
     texto = limpar_texto_ocr(texto)
 
+    import sys
     print(f"📜 Texto detectado (cliente={cliente}):")
     print(texto)
+    sys.stdout.flush()
 
     cliente = cliente.lower()
     match cliente:
@@ -221,9 +223,6 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
                 "outros_docs": "CLIENTE NÃO SUPORTADO",
                 "peso_liquido": "CLIENTE NÃO SUPORTADO"
             }
-
-
-# funções enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_clientes seguem iguais...
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
