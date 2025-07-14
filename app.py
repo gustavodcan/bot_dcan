@@ -159,7 +159,7 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
     AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT", "https://ocr-bot-dcan.cognitiveservices.azure.com")
     AZURE_KEY = os.getenv("AZURE_KEY", "EO6zkOWHACWpvBqvCSChh9kVh30qboMx9Q6dI52UFnnt7unNo4HLJQQJ99BGACZoyfiXJ3w3AAAFACOGspAv")
 
-        try:
+    try:
         ocr_json = ocr_azure(imagem_bytes, AZURE_ENDPOINT, AZURE_KEY)
     except Exception as e:
         print(f"❌ Erro ao chamar Azure OCR: {e}")
