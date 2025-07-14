@@ -151,7 +151,6 @@ def extrair_dados_cliente_cdr(img, texto):
     }
 
 def extrair_dados_cliente_arcelormittal(img, texto):
-    print(f"[{cliente.upper()}] Começando extração de dados...")
     print("📜 Texto recebido para extração:")
     print(texto)
     
