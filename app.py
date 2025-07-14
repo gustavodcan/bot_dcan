@@ -75,7 +75,8 @@ def enviar_lista_clientes(numero, mensagem):
 
 
 def extrair_dados_cliente_cdr(img, texto):
-    print("📜 [CDR] Texto detectado:")
+    print(f"[{cliente.upper()}] Começando extração de dados...")
+    print("📜 Texto recebido para extração:")
     print(texto)
 
     ticket = re.search(r"ticket[:\-]?\s*(\d{5,}/\d{4})", texto, re.IGNORECASE)
@@ -89,7 +90,8 @@ def extrair_dados_cliente_cdr(img, texto):
     }
 
 def extrair_dados_cliente_arcelormittal(img, texto):
-    print("📜 Texto detectado:")
+    print(f"[{cliente.upper()}] Começando extração de dados...")
+    print("📜 Texto recebido para extração:")
     print(texto)
     
     peso = re.search(r"^Tara\s+\d{2}/\d{2}\s+\d{2}:\d{2}\s+(\d+)", texto, re.MULTILINE)
@@ -126,6 +128,7 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
 
     cliente = cliente.lower()
     match cliente:
+    print(f"🔍 Cliente identificado: {cliente}")
         case "cdr":
             return extrair_dados_cliente_cdr(img, texto)
         case "arcelormittal":
@@ -145,6 +148,10 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
                 "ticket": "CLIENTE NÃO SUPORTADO",
                 "outros_docs": "CLIENTE NÃO SUPORTADO",
                 "peso_liquido": "CLIENTE NÃO SUPORTADO"
+
+        if not texto.strip():
+        print("⚠️ OCR não retornou nenhum texto!")
+                
             }
 
 # funções enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_clientes seguem iguais...
