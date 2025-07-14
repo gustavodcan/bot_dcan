@@ -206,7 +206,7 @@ def webhook():
     if estado == "aguardando_confirmacao_motorista":
         if texto_recebido in ['sim', 's']:
             enviar_lista_clientes(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada?")
-            conversas[numero]["estado"] = "aguardando_cliente")
+            conversas[numero]["estado"] = "aguardando_cliente"
     
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
