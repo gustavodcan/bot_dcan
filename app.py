@@ -16,6 +16,17 @@ CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
 clientes_validos = ["arcelormittal", "gerdau", "raízen", "mahle", "orizon", "cdr", "saae"]
 
+def ocr_azure(imagem_bytes, endpoint, key):
+    ocr_url = f"{endpoint}/vision/v3.2/ocr"
+    headers = {
+        "Ocp-Apim-Subscription-Key": key,
+        "Content-Type": "application/octet-stream"
+    }
+
+    response = requests.post(ocr_url, headers=headers, data=imagem_bytes)
+    response.raise_for_status()
+    return response.json()
+
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
     payload = {"phone": numero, "message": texto}
@@ -75,16 +86,15 @@ def enviar_lista_clientes(numero, mensagem):
 
 
 def extrair_dados_cliente_cdr(img, texto):
-    print(f"[{cliente.upper()}] Começando extração de dados...")
-    print("📜 Texto recebido para extração:")
+    print("📜 [CDR] Texto detectado:")
     print(texto)
 
     ticket = re.search(r"(ticket|cket)[:\-]?\s*(\d{5,}/\d{4})", texto, re.IGNORECASE)
     outros_docs = re.search(r"outros\s+docs[\.:;\-]?\s*(\d+)", texto, re.IGNORECASE)
-    peso_liquido = re.search(r"quido.*?[:\-]?\s*(\d[\d\.,]*)", texto, re.IGNORECASE)
+    peso_liquido = re.search(r"liquido.*?[\.:;\-]?\s*(\d[\d\.,]*)", texto, re.IGNORECASE)
 
     return {
-        "ticket": ticket.group(1) if ticket else "NÃO ENCONTRADO",
+        "ticket": ticket.group(2) if ticket else "NÃO ENCONTRADO",
         "outros_docs": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO",
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
     }
@@ -120,44 +130,51 @@ def extrair_dados_cliente_saae(img, texto):
     return {"protocolo": "placeholder", "volume": "placeholder", "data": "placeholder"}
 
 def extrair_dados_da_imagem(caminho_imagem, cliente):
-    img = Image.open("ticket.jpg").convert("L")  # escala de cinza
-    img = img.filter(ImageFilter.MedianFilter())
-    enhancer = ImageEnhance.Contrast(img)
-    img = enhancer.enhance(2)  # aumentar contraste
-    img = img.point(lambda x: 0 if x < 128 else 255)  # binarização
+    with open(caminho_imagem, "rb") as f:
+        imagem_bytes = f.read()
 
-    texto = pytesseract.image_to_string(img)
+    # Chaves falsas - substitui pelas reais no ambiente
+    AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT", "https://ocr-bot-dcan.cognitiveservices.azure.com")
+    AZURE_KEY = os.getenv("AZURE_KEY", "EO6zkOWHACWpvBqvCSChh9kVh30qboMx9Q6dI52UFnnt7unNo4HLJQQJ99BGACZoyfiXJ3w3AAAFACOGspAv")
 
-    print("📜 Texto detectado:")
+    try:
+        ocr_json = ocr_azure(imagem_bytes, AZURE_ENDPOINT, AZURE_KEY)
+    except Exception as e:
+        print(f"❌ Erro ao chamar Azure OCR: {e}")
+        return {"erro": "Falha no OCR"}
+
+    # Junta todo o texto OCR em uma string só
+    texto = ""
+    for region in ocr_json.get("regions", []):
+        for line in region.get("lines", []):
+            texto += " ".join([word["text"] for word in line["words"]]) + "\n"
+
+    print(f"📜 Texto detectado ({cliente}):")
     print(texto)
 
     cliente = cliente.lower()
     match cliente:
-    print(f"🔍 Cliente identificado: {cliente}")
         case "cdr":
-            return extrair_dados_cliente_cdr(img, texto)
+            return extrair_dados_cliente_cdr(None, texto)
         case "arcelormittal":
-            return extrair_dados_cliente_arcelormittal(img, texto)
+            return extrair_dados_cliente_arcelormittal(None, texto)
         case "gerdau":
-            return extrair_dados_cliente_gerdau(img, texto)
+            return extrair_dados_cliente_gerdau(None, texto)
         case "raízen":
-            return extrair_dados_cliente_raízen(img, texto)
+            return extrair_dados_cliente_raízen(None, texto)
         case "mahle":
-            return extrair_dados_cliente_mahle(img, texto)
+            return extrair_dados_cliente_mahle(None, texto)
         case "orizon":
-            return extrair_dados_cliente_orizon(img, texto)
+            return extrair_dados_cliente_orizon(None, texto)
         case "saae":
-            return extrair_dados_cliente_saae(img, texto)
+            return extrair_dados_cliente_saae(None, texto)
         case _:
             return {
                 "ticket": "CLIENTE NÃO SUPORTADO",
                 "outros_docs": "CLIENTE NÃO SUPORTADO",
                 "peso_liquido": "CLIENTE NÃO SUPORTADO"
-
-        if not texto.strip():
-        print("⚠️ OCR não retornou nenhum texto!")
-                
             }
+
 
 # funções enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_clientes seguem iguais...
 
