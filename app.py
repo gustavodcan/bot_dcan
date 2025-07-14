@@ -16,13 +16,27 @@ CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
 clientes_validos = ["arcelormittal", "gerdau", "raízen", "mahle", "orizon", "cdr", "saae"]
 
-def preprocessar_imagem(img_path):
-    img = Image.open(img_path).convert("L")  # escala de cinza
-    img = img.filter(ImageFilter.MedianFilter())  # remove ruído
-    enhancer = ImageEnhance.Contrast(img)
-    img = enhancer.enhance(2.5)  # aumenta contraste
-    img = img.point(lambda x: 0 if x < 160 else 255)  # binariza (preto e branco)
-    return img
+def preprocessar_imagem(caminho):
+    imagem = Image.open(caminho)
+
+    # 1. Converte pra escala de cinza
+    imagem = imagem.convert("L")
+
+    # 2. Aumenta a imagem
+    largura, altura = imagem.size
+    imagem = imagem.resize((largura * 2, altura * 2), Image.LANCZOS)
+
+    # 3. Aumenta contraste
+    enhancer = ImageEnhance.Contrast(imagem)
+    imagem = enhancer.enhance(2.0)  # pode ajustar pra 1.5 ou 3.0 conforme imagem
+
+    # 4. Binariza (threshold)
+    imagem = imagem.point(lambda x: 0 if x < 140 else 255, '1')
+
+    # 5. Aplica sharpen
+    imagem = imagem.filter(ImageFilter.SHARPEN)
+
+    return imagem
 
 def limpar_texto_ocr(texto):
     texto = texto.lower()
