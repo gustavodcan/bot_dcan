@@ -58,17 +58,6 @@ def limpar_texto_ocr(texto):
     texto = re.sub(r"\s{2,}", " ", texto)
     return texto
 
-def ocr_azure(imagem_bytes, endpoint, key):
-    ocr_url = f"{endpoint}/vision/v3.2/ocr"
-    headers = {
-        "Ocp-Apim-Subscription-Key": key,
-        "Content-Type": "application/octet-stream"
-    }
-
-    response = requests.post(ocr_url, headers=headers, data=imagem_bytes)
-    response.raise_for_status()
-    return response.json()
-
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
     payload = {"phone": numero, "message": texto}
@@ -177,21 +166,15 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
     with open("preprocessado.jpg", "rb") as f:
         imagem_bytes = f.read()
 
-    AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT", "https://ocr-bot-dcan.cognitiveservices.azure.com")
-    AZURE_KEY = os.getenv("AZURE_KEY", "EO6zkOWHACWpvBqvCSChh9kVh30qboMx9Q6dI52UFnnt7unNo4HLJQQJ99BGACZoyfiXJ3w3AAAFACOGspAv")
-
     try:
-        ocr_json = ocr_azure(imagem_bytes, AZURE_ENDPOINT, AZURE_KEY)
+        img.save("ticket_pre_google.jpg")  # salvar temporário pra OCR
+        texto = ler_texto_google_ocr("ticket_pre_google.jpg")
+        os.remove("ticket_pre_google.jpg")
     except Exception as e:
-        print(f"❌ Erro ao chamar Azure OCR: {e}")
+        print(f"❌ Erro no OCR Google: {e}")
         return {"erro": "Falha no OCR"}
 
-    # Junta todo o texto OCR em uma string só
-    texto = ""
-    for region in ocr_json.get("regions", []):
-        for line in region.get("lines", []):
-            for word in line["words"]:
-                texto += word["text"] + "\n"
+    texto = limpar_texto_ocr(texto)
 
     print(f"📜 Texto detectado ({cliente}):")
     print(texto)
