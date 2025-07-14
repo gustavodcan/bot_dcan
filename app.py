@@ -4,6 +4,9 @@ from PIL import Image, ImageEnhance, ImageFilter
 import pytesseract
 import re
 import os
+import json
+from google.oauth2 import service_account
+from google.cloud import vision
 
 app = Flask(__name__)
 conversas = {}
@@ -15,6 +18,25 @@ API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
 clientes_validos = ["arcelormittal", "gerdau", "raízen", "mahle", "orizon", "cdr", "saae"]
+
+def get_google_client():
+    creds_json = os.getenv("GOOGLE_CREDS")
+    creds_dict = json.loads(creds_json)
+    credentials = service_account.Credentials.from_service_account_info(creds_dict)
+    return vision.ImageAnnotatorClient(credentials=credentials)
+
+def ler_texto_google_ocr(path_imagem):
+    client = get_google_client()
+
+    with open(path_imagem, "rb") as image_file:
+        content = image_file.read()
+
+    image = vision.Image(content=content)
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+
+    return texts[0].description if texts else ""
+
 
 def preprocessar_imagem(caminho):
     imagem = Image.open(caminho)
