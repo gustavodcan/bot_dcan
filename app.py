@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import requests
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageFilter
 import pytesseract
 import re
 import os
@@ -79,8 +79,8 @@ def extrair_dados_cliente_cdr(img, texto):
     print("📜 Texto recebido para extração:")
     print(texto)
 
-    ticket = re.search(r"ticket[:\-]?\s*(\d{5,}/\d{4})", texto, re.IGNORECASE)
-    outros_docs = re.search(r"outros\s+docs\.?\s*[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    ticket = re.search(r"(ticket|cket)[:\-]?\s*(\d{5,}/\d{4})", texto, re.IGNORECASE)
+    outros_docs = re.search(r"outros\s+docs[\.:;\-]?\s*(\d+)", texto, re.IGNORECASE)
     peso_liquido = re.search(r"quido.*?[:\-]?\s*(\d[\d\.,]*)", texto, re.IGNORECASE)
 
     return {
@@ -120,7 +120,12 @@ def extrair_dados_cliente_saae(img, texto):
     return {"protocolo": "placeholder", "volume": "placeholder", "data": "placeholder"}
 
 def extrair_dados_da_imagem(caminho_imagem, cliente):
-    img = Image.open(caminho_imagem)
+    img = Image.open("ticket.jpg").convert("L")  # escala de cinza
+    img = img.filter(ImageFilter.MedianFilter())
+    enhancer = ImageEnhance.Contrast(img)
+    img = enhancer.enhance(2)  # aumentar contraste
+    img = img.point(lambda x: 0 if x < 128 else 255)  # binarização
+
     texto = pytesseract.image_to_string(img)
 
     print("📜 Texto detectado:")
@@ -184,7 +189,8 @@ def webhook():
     if estado == "aguardando_confirmacao_motorista":
         if texto_recebido in ['sim', 's']:
             enviar_lista_clientes(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada?")
-            conversas[numero]["estado"] = "aguardando_cliente"
+            conversas[numero]["estado"] = "aguardando_cliente")
+    
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
             conversas.pop(numero)
