@@ -147,7 +147,8 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
     texto = ""
     for region in ocr_json.get("regions", []):
         for line in region.get("lines", []):
-            texto += " ".join([word["text"] for word in line["words"]]) + "\n"
+            for word in line["words"]:
+                texto += word["text"] + " "
 
     print(f"📜 Texto detectado ({cliente}):")
     print(texto)
