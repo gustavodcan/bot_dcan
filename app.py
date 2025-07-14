@@ -16,17 +16,24 @@ CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
 clientes_validos = ["arcelormittal", "gerdau", "raízen", "mahle", "orizon", "cdr", "saae"]
 
+def preprocessar_imagem(img_path):
+    img = Image.open(img_path).convert("L")  # escala de cinza
+    img = img.filter(ImageFilter.MedianFilter())  # remove ruído
+    enhancer = ImageEnhance.Contrast(img)
+    img = enhancer.enhance(2.5)  # aumenta contraste
+    img = img.point(lambda x: 0 if x < 160 else 255)  # binariza (preto e branco)
+    return img
+
 def limpar_texto_ocr(texto):
     texto = texto.lower()
     texto = texto.replace("kg;", "kg:")
     texto = texto.replace("kg)", "kg:")
     texto = texto.replace("ko:", "kg:")
-    texto = texto.replace("liquido", "líquido")
-    texto = texto.replace("outros docs.", "outros_docs")
-    texto = texto.replace(":", ": ")
-    texto = re.sub(r"[^a-z0-9\s:/\.,-]", "", texto)  # remove símbolos zoados
-    texto = re.sub(r"\s{2,}", " ", texto)  # normaliza espaços
-    return texto.strip()
+    texto = texto.replace("liq", "líquido")
+    texto = texto.replace("outros docs", "outros_docs")
+    texto = re.sub(r"[^\w\s:/\.,-]", "", texto)  # remove símbolos bizarros
+    texto = re.sub(r"\s{2,}", " ", texto)
+    return texto
 
 def ocr_azure(imagem_bytes, endpoint, key):
     ocr_url = f"{endpoint}/vision/v3.2/ocr"
@@ -142,8 +149,11 @@ def extrair_dados_cliente_saae(img, texto):
     return {"protocolo": "placeholder", "volume": "placeholder", "data": "placeholder"}
 
 def extrair_dados_da_imagem(caminho_imagem, cliente):
-    with open(caminho_imagem, "rb") as f:
-        imagem_bytes = f.read()
+    img = preprocessar_imagem(caminho_imagem)
+    img.save("preprocessado.jpg")
+    with open("preprocessado.jpg", "rb") as f:
+    imagem_bytes = f.read()
+
 
     # Chaves falsas - substitui pelas reais no ambiente
     AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT", "https://ocr-bot-dcan.cognitiveservices.azure.com")
