@@ -79,8 +79,8 @@ def extrair_dados_cliente_cdr(img, texto):
     print(texto)
 
     ticket = re.search(r"ticket[:\-]?\s*(\d{5,}/\d{4})", texto, re.IGNORECASE)
-    nf = re.search(r"outros\s+docs\.?\s*[:\-]?\s*(\d+)", texto, re.IGNORECASE)
-    peso= re.search(r"quido.*?[:\-]?\s*(\d[\d\.,]*)", texto, re.IGNORECASE)
+    outros_docs = re.search(r"outros\s+docs\.?\s*[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    peso_liquido = re.search(r"quido.*?[:\-]?\s*(\d[\d\.,]*)", texto, re.IGNORECASE)
 
     return {
         "ticket": ticket.group(1) if ticket else "NÃO ENCONTRADO",
