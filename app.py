@@ -125,15 +125,15 @@ def extrair_dados_cliente_cdr(img, texto):
     print("📜 [CDR] Texto detectado:")
     print(texto)
 
-    # ⚔️ Ticket — aceita variações tipo 'ticket:', 'ticket', 'cket:', etc
+    # Ticket
     ticket = re.search(r"(?:ticket|cket)[\s:]*([0-9]{5,})", texto)
 
-    # 📄 Outros Docs — captura com ou sem underline, com ponto ou dois pontos
-    outros_docs = re.search(r"outros[\s_]*docs[.:;\-]?\s*([0-9]{4,})", texto)
+    # Outros Docs — agora aceita ponto ANTES dos dois pontos, tipo "outros_docs.:"
+    outros_docs = re.search(r"outros[\s_]*docs[.:;\-]*[:]?[\s]*([0-9]{4,})", texto)
 
-    # ⚖️ Peso Líquido — aceita erro de OCR como 'liquiduido', 'líquidouido', etc
+    # Peso Líquido — aceita duplicação de ":" e erro de digitação na palavra
     peso_liquido = re.search(
-        r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[.:;\-]?\s*([0-9]{4,6})",
+        r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{1,2}\s*([0-9]{4,6})",
         texto
     )
 
