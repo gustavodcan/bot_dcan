@@ -19,22 +19,9 @@ clientes_validos = ["arcelormittal", "gerdau", "raízen", "mahle", "orizon", "cd
 def preprocessar_imagem(caminho):
     imagem = Image.open(caminho)
 
-    # 1. Converte pra escala de cinza
-    imagem = imagem.convert("L")
-
     # 2. Aumenta a imagem
     largura, altura = imagem.size
     imagem = imagem.resize((largura * 2, altura * 2), Image.LANCZOS)
-
-    # 3. Aumenta contraste
-    enhancer = ImageEnhance.Contrast(imagem)
-    imagem = enhancer.enhance(2.0)  # pode ajustar pra 1.5 ou 3.0 conforme imagem
-
-    # 4. Binariza (threshold)
-    imagem = imagem.point(lambda x: 0 if x < 140 else 255, '1')
-
-    # 5. Aplica sharpen
-    imagem = imagem.filter(ImageFilter.SHARPEN)
 
     return imagem
 
@@ -168,8 +155,6 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
     with open("preprocessado.jpg", "rb") as f:
         imagem_bytes = f.read()
 
-
-    # Chaves falsas - substitui pelas reais no ambiente
     AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT", "https://ocr-bot-dcan.cognitiveservices.azure.com")
     AZURE_KEY = os.getenv("AZURE_KEY", "EO6zkOWHACWpvBqvCSChh9kVh30qboMx9Q6dI52UFnnt7unNo4HLJQQJ99BGACZoyfiXJ3w3AAAFACOGspAv")
 
@@ -184,7 +169,7 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
     for region in ocr_json.get("regions", []):
         for line in region.get("lines", []):
             for word in line["words"]:
-                texto += word["text"] + " "
+                texto += word["text"] + "\n"
 
     print(f"📜 Texto detectado ({cliente}):")
     print(texto)
