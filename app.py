@@ -79,8 +79,8 @@ def extrair_dados_cliente_cdr(img, texto):
     print(texto)
 
     ticket = re.search(r"ticket[:\-]?\s*(\d{5,}/\d{4})", texto, re.IGNORECASE)
-    outros_docs = re.search(r"outros\s+docs\.?\s*[:\-]?\s*(\d+)", texto, re.IGNORECASE)
-    peso_liquido = re.search(r"peso\s+líquido.*?[:\-]?\s*(\d[\d\.,]*)", texto, re.IGNORECASE)
+    nf = re.search(r"outros\s+docs\.?\s*[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    peso= re.search(r"quido.*?[:\-]?\s*(\d[\d\.,]*)", texto, re.IGNORECASE)
 
     return {
         "ticket": ticket.group(1) if ticket else "NÃO ENCONTRADO",
@@ -92,10 +92,10 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     print("📜 Texto detectado:")
     print(texto)
     
-    peso = re.search(r"Tara.*?(\d+)", texto, re.IGNORECASE | re.DOTALL)
-    nf = re.search(r"Nota\s*Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
+    peso = re.search(r"^Tara\s+\d{2}/\d{2}\s+\d{2}:\d{2}\s+(\d+)", texto, re.MULTILINE)
+    nf = re.search(r"Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
     brm = re.search(r"BRM MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
-    
+
     return {
         "peso_tara": peso.group(1) if peso else "NÃO ENCONTRADO",
         "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
