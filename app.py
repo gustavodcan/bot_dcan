@@ -125,9 +125,23 @@ def extrair_dados_cliente_cdr(img, texto):
     print("📜 [CDR] Texto detectado:")
     print(texto)
 
-    ticket = re.search(r"mtr[’']?s?:?\s*(\d{5,})", texto)
-    outros_docs = re.search(r"outros[_\s]?docs[:\-]?\s*(\d+)", texto)
-    peso_liquido = re.search(r"peso\s+líquido\s*\(kg\)[:\-]?\s*(\d{4,6})", texto)
+    # ⚔️ Ticket — aceita variações tipo 'ticket:', 'ticket', 'cket:', etc
+    ticket = re.search(r"(?:ticket|cket)[\s:]*([0-9]{5,})", texto)
+
+    # 📄 Outros Docs — captura com ou sem underline, com ponto ou dois pontos
+    outros_docs = re.search(r"outros[\s_]*docs[.:;\-]?\s*([0-9]{4,})", texto)
+
+    # ⚖️ Peso Líquido — aceita erro de OCR como 'liquiduido', 'líquidouido', etc
+    peso_liquido = re.search(
+        r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[.:;\-]?\s*([0-9]{4,6})",
+        texto
+    )
+
+    # 🧠 Debug dos dados extraídos
+    print("🎯 Dados extraídos:")
+    print(f"Ticket: {ticket.group(1) if ticket else 'Não encontrado'}")
+    print(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'Não encontrado'}")
+    print(f"Peso Líquido: {peso_liquido.group(1) if peso_liquido else 'Não encontrado'}")
 
     return {
         "ticket": ticket.group(1) if ticket else "NÃO ENCONTRADO",
