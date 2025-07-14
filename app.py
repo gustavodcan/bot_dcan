@@ -196,7 +196,7 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
 
     texto = limpar_texto_ocr(texto)
 
-    print(f"📜 Texto detectado ({cliente}):")
+    print(f"📜 Texto detectado (cliente={cliente}):")
     print(texto)
 
     cliente = cliente.lower()
