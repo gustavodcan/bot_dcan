@@ -152,7 +152,7 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
     img = preprocessar_imagem(caminho_imagem)
     img.save("preprocessado.jpg")
     with open("preprocessado.jpg", "rb") as f:
-    imagem_bytes = f.read()
+        imagem_bytes = f.read()
 
 
     # Chaves falsas - substitui pelas reais no ambiente
