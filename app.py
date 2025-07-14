@@ -20,8 +20,13 @@ CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 clientes_validos = ["arcelormittal", "gerdau", "raízen", "mahle", "orizon", "cdr", "saae"]
 
 def get_google_client():
-    creds_json = os.getenv("GOOGLE_CREDS")
-    creds_dict = json.loads(creds_json)
+    cred_path = "google_creds.json"
+    if not os.path.exists(cred_path):
+        raise FileNotFoundError("Arquivo de credencial não encontrado no caminho esperado.")
+
+    with open(cred_path, "r") as f:
+        creds_dict = json.load(f)
+
     credentials = service_account.Credentials.from_service_account_info(creds_dict)
     return vision.ImageAnnotatorClient(credentials=credentials)
 
