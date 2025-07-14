@@ -16,6 +16,18 @@ CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
 clientes_validos = ["arcelormittal", "gerdau", "raízen", "mahle", "orizon", "cdr", "saae"]
 
+def limpar_texto_ocr(texto):
+    texto = texto.lower()
+    texto = texto.replace("kg;", "kg:")
+    texto = texto.replace("kg)", "kg:")
+    texto = texto.replace("ko:", "kg:")
+    texto = texto.replace("liquido", "líquido")
+    texto = texto.replace("outros docs.", "outros_docs")
+    texto = texto.replace(":", ": ")
+    texto = re.sub(r"[^a-z0-9\s:/\.,-]", "", texto)  # remove símbolos zoados
+    texto = re.sub(r"\s{2,}", " ", texto)  # normaliza espaços
+    return texto.strip()
+
 def ocr_azure(imagem_bytes, endpoint, key):
     ocr_url = f"{endpoint}/vision/v3.2/ocr"
     headers = {
@@ -89,12 +101,12 @@ def extrair_dados_cliente_cdr(img, texto):
     print("📜 [CDR] Texto detectado:")
     print(texto)
 
-    ticket = re.search(r"(ticket|cket)[:\-]?\s*(\d{5,}/\d{4})", texto, re.IGNORECASE)
-    outros_docs = re.search(r"outros\s+docs[\.:;\-]?\s*(\d+)", texto, re.IGNORECASE)
-    peso_liquido = re.search(r"liquido.*?[\.:;\-]?\s*(\d[\d\.,]*)", texto, re.IGNORECASE)
+    ticket = re.search(r"mtr[’']?s?:?\s*(\d{5,})", texto)
+    outros_docs = re.search(r"outros[_\s]?docs[:\-]?\s*(\d+)", texto)
+    peso_liquido = re.search(r"peso\s+líquido\s*\(kg\)[:\-]?\s*(\d{4,6})", texto)
 
     return {
-        "ticket": ticket.group(2) if ticket else "NÃO ENCONTRADO",
+        "ticket": ticket.group(1) if ticket else "NÃO ENCONTRADO",
         "outros_docs": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO",
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
     }
@@ -137,7 +149,7 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
     AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT", "https://ocr-bot-dcan.cognitiveservices.azure.com")
     AZURE_KEY = os.getenv("AZURE_KEY", "EO6zkOWHACWpvBqvCSChh9kVh30qboMx9Q6dI52UFnnt7unNo4HLJQQJ99BGACZoyfiXJ3w3AAAFACOGspAv")
 
-    try:
+        try:
         ocr_json = ocr_azure(imagem_bytes, AZURE_ENDPOINT, AZURE_KEY)
     except Exception as e:
         print(f"❌ Erro ao chamar Azure OCR: {e}")
