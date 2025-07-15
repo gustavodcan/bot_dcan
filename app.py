@@ -202,7 +202,6 @@ def extrair_dados_cliente_raízen(img, texto):
     return {"protocolo": "placeholder", "peso_liquido": "placeholder", "doc_referencia": "placeholder"}
 
 def extrair_dados_cliente_mahle(img, texto):
-    def extrair_dados_cliente_mahle(img, texto):
     print("📜 [MAHLE] Texto detectado:")
     print(texto)
 
