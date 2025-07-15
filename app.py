@@ -173,32 +173,42 @@ def extrair_dados_cliente_gerdau(img, texto):
     nf_val = "NÃO ENCONTRADO"
     peso_liquido_val = "NÃO ENCONTRADO"
 
-    # 🎯 TICKET - só aceita exatamente 8 dígitos (exatamente)
+    # 🎯 TICKET com exatamente 8 dígitos
     for linha in linhas:
         ticket_match = re.search(r"\b\d{8}\b", linha)
         if ticket_match:
             ticket_val = ticket_match.group()
             break
 
-    # 📄 NOTA FISCAL - antes do hífen
+    # 📄 NOTA FISCAL antes do hífen
     for linha in linhas:
-        nf_match = re.search(r"\b(\d{6,})-\d{2,}\b", linha)
+        nf_match = re.search(r"\b(\d+)-\d+\b", linha)
         if nf_match:
             nf_val = nf_match.group(1)
             break
 
-    # ⚖️ PESO LÍQUIDO - após linha com "peso líquido", pula linhas com horário
+    # ⚖️ PESO LÍQUIDO mais inteligente
+    idx_linha_peso = -1
     for i, linha in enumerate(linhas):
-        if "peso" in linha.lower() and "líquid" in linha.lower():
-            for offset in range(1, 4):
-                if i + offset < len(linhas):
-                    proxima_linha = linhas[i + offset]
-                    if not re.search(r"\d{2}:\d{2}:\d{2}", proxima_linha):
-                        peso_match = re.search(r"\d{2,3},\d{2,3}", proxima_linha)
-                        if peso_match:
-                            peso_liquido_val = peso_match.group()
-                            break
+        if "peso" in linha.lower() and "liqu" in linha.lower():
+            idx_linha_peso = i
             break
+
+    # Procura padrão "00,000 to" logo antes ou depois da linha
+    if idx_linha_peso != -1:
+        alvos = []
+        if idx_linha_peso - 1 >= 0:
+            alvos.append(linhas[idx_linha_peso - 1])
+        if idx_linha_peso + 1 < len(linhas):
+            alvos.append(linhas[idx_linha_peso + 1])
+        if idx_linha_peso + 2 < len(linhas):
+            alvos.append(linhas[idx_linha_peso + 2])
+
+        for linha in alvos:
+            match = re.search(r"\b(\d{2,3},\d{2,3})\s+to\b", linha)
+            if match and not re.search(r"\d{2}:\d{2}:\d{2}", linha):  # ignora se tiver horário
+                peso_liquido_val = match.group(1)
+                break
 
     print("🎯 Dados extraídos:")
     print(f"Ticket: {ticket_val}")
@@ -210,6 +220,7 @@ def extrair_dados_cliente_gerdau(img, texto):
         "nota_fiscal": nf_val,
         "peso_liquido": peso_liquido_val
     }
+
     
 def extrair_dados_cliente_raízen(img, texto):
     return {"protocolo": "placeholder", "peso_liquido": "placeholder", "doc_referencia": "placeholder"}
