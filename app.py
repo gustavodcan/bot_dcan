@@ -192,7 +192,6 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     print(f"BRM MES: {brm_mes_val}")
 
     return {
-        "peso_tara": peso_tara_val,
         "peso_liquido": peso_liquido_val,
         "nota_fiscal": nota_fiscal_val,
         "brm_mes": brm_mes_val
