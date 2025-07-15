@@ -173,35 +173,32 @@ def extrair_dados_cliente_gerdau(img, texto):
     nf_val = "NÃO ENCONTRADO"
     peso_liquido_val = "NÃO ENCONTRADO"
 
+    # 🎯 TICKET - só aceita exatamente 8 dígitos (exatamente)
+    for linha in linhas:
+        ticket_match = re.search(r"\b\d{8}\b", linha)
+        if ticket_match:
+            ticket_val = ticket_match.group()
+            break
+
+    # 📄 NOTA FISCAL - antes do hífen
+    for linha in linhas:
+        nf_match = re.search(r"\b(\d{6,})-\d{2,}\b", linha)
+        if nf_match:
+            nf_val = nf_match.group(1)
+            break
+
+    # ⚖️ PESO LÍQUIDO - após linha com "peso líquido", pula linhas com horário
     for i, linha in enumerate(linhas):
-        # 🎯 Ticket
-        if "ticket" in linha.lower():
-            for offset in range(3):
-                if i + offset < len(linhas):
-                    match = re.search(r"\d{5,}", linhas[i + offset])
-                    if match:
-                        ticket_val = match.group()
-                        break
-
-        # 🧾 Nota Fiscal
-        if nf_val == "NÃO ENCONTRADO":
-            nf_match = re.search(r"\d{5,}-\d{2}", linha)
-            if nf_match:
-                nf_val = nf_match.group()
-
-        # ⚖️ Peso Líquido
         if "peso" in linha.lower() and "líquid" in linha.lower():
-            pesos_encontrados = []
-            for offset in range(4):
+            for offset in range(1, 4):
                 if i + offset < len(linhas):
-                    encontrados = re.findall(r"\d{2,3},\d{2,3}", linhas[i + offset])
-                    pesos_encontrados.extend(encontrados)
-
-            if pesos_encontrados:
-                # pega o maior valor numérico como peso líquido
-                pesos_convertidos = [float(p.replace(",", ".")) for p in pesos_encontrados]
-                maior = max(pesos_convertidos)
-                peso_liquido_val = str(maior).replace(".", ",")
+                    proxima_linha = linhas[i + offset]
+                    if not re.search(r"\d{2}:\d{2}:\d{2}", proxima_linha):
+                        peso_match = re.search(r"\d{2,3},\d{2,3}", proxima_linha)
+                        if peso_match:
+                            peso_liquido_val = peso_match.group()
+                            break
+            break
 
     print("🎯 Dados extraídos:")
     print(f"Ticket: {ticket_val}")
@@ -213,7 +210,7 @@ def extrair_dados_cliente_gerdau(img, texto):
         "nota_fiscal": nf_val,
         "peso_liquido": peso_liquido_val
     }
-
+    
 def extrair_dados_cliente_raízen(img, texto):
     return {"protocolo": "placeholder", "peso_liquido": "placeholder", "doc_referencia": "placeholder"}
 
