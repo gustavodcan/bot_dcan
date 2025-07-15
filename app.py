@@ -173,13 +173,18 @@ def extrair_dados_cliente_gerdau(img, texto):
     ticket_match = re.search(r"\b(\d{8})\b", texto)
     ticket_val = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
 
-    # Nota fiscal: qualquer número antes do hífen, pega só antes do primeiro '-'
+    # Nota fiscal: número antes do primeiro hífen
     nota_fiscal_match = re.search(r"(\d+)[-]", texto)
     nota_fiscal_val = nota_fiscal_match.group(1) if nota_fiscal_match else "NÃO ENCONTRADO"
 
-    # Peso líquido: busca padrão '00,000 to' no texto todo
-    peso_liquido_match = re.search(r"\b(\d{2,3}[.,]\d{3})\s+to\b", texto, re.IGNORECASE | re.MULTILINE)
-    peso_liquido_val = peso_liquido_match.group(1).replace(",", ".") if peso_liquido_match else "NÃO ENCONTRADO"
+    # Peso líquido: procura por 'xx,xxx to' sem horário na linha
+    peso_liquido_val = "NÃO ENCONTRADO"
+    linhas = texto.splitlines()
+    for linha in linhas:
+        match = re.search(r"\b(\d{2,3}[.,]\d{3})\s+to\b", linha)
+        if match and not re.search(r"\d{2}:\d{2}:\d{2}", linha):
+            peso_liquido_val = match.group(1).replace(",", ".")
+            break
 
     print("🎯 Dados extraídos:")
     print(f"Ticket: {ticket_val}")
@@ -192,7 +197,6 @@ def extrair_dados_cliente_gerdau(img, texto):
         "peso_liquido": peso_liquido_val
     }
 
-    
 def extrair_dados_cliente_raízen(img, texto):
     return {"protocolo": "placeholder", "peso_liquido": "placeholder", "doc_referencia": "placeholder"}
 
