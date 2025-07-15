@@ -227,7 +227,7 @@ def extrair_dados_cliente_mahle(img, texto):
             for j in range(i+1, len(linhas)):
                 linha_peso = linhas[j].strip().lower()
                 if "kg" in linha_peso:
-                    match = re.search(r"(\d+[.,]?\d*)", linha_peso)
+                    match = re.search(r"(?<!-)(\d+[.,]?\d*)\s*kg", linha_peso)
                     if match:
                         peso_liquido_val = match.group(1).replace(",", ".")
                         indice_peso_liquido = j
