@@ -225,14 +225,17 @@ def extrair_dados_cliente_mahle(img, texto):
 
         # Peso líquido
         if "peso líquid" in linha_lower and peso_liquido_val == "NÃO ENCONTRADO":
-            # próxima linha que seja só número, sem kg
-            for j in range(i+1, len(linhas)):
-                valor_peso = linhas[j].strip().replace(",", ".")
-                if re.match(r"^\d+(\.\d+)?$", valor_peso):
-                    peso_liquido_val = valor_peso
-                    indice_peso_liquido = j
-                    print(f"Peso líquido encontrado: {peso_liquido_val}")
-                    break
+    for j in range(i+1, len(linhas)):
+        linha_peso = linhas[j].strip().lower()
+        # Verifica se tem "kg" na linha
+        if "kg" in linha_peso:
+            # Extrai só o número (aceita vírgula ou ponto decimal)
+            match = re.search(r"(\d+[.,]?\d*)", linha_peso)
+            if match:
+                peso_liquido_val = match.group(1).replace(",", ".")
+                indice_peso_liquido = j
+                print(f"Peso líquido encontrado: {peso_liquido_val}")
+                break
 
     # Agora procura nota fiscal no texto todo, mas só depois do peso líquido (se achou)
     if indice_peso_liquido != -1:
