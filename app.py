@@ -225,8 +225,8 @@ def extrair_dados_cliente_mahle(img, texto):
 
         # Peso líquido
         if "peso líquid" in linha_lower and peso_liquido_val == "NÃO ENCONTRADO":
-    for j in range(i+1, len(linhas)):
-        linha_peso = linhas[j].strip().lower()
+            for j in range(i+1, len(linhas)):
+                linha_peso = linhas[j].strip().lower()
         # Verifica se tem "kg" na linha
         if "kg" in linha_peso:
             # Extrai só o número (aceita vírgula ou ponto decimal)
