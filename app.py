@@ -159,16 +159,11 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     peso_liquido_val = "NÃO ENCONTRADO"
     nota_fiscal_val = "NÃO ENCONTRADO"
     brm_mes_val = "NÃO ENCONTRADO"
-    peso_tara_val = "NÃO ENCONTRADO"
 
     # Pegando BRM MES e Tara (do jeito antigo, pra manter)
     brm = re.search(r"BRM MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
     if brm:
         brm_mes_val = brm.group(1)
-    
-    peso_tara = re.search(r"^Tara\s+\d{2}/\d{2}\s+\d{2}:\d{2}\s+(\d+)", texto, re.MULTILINE)
-    if peso_tara:
-        peso_tara_val = peso_tara.group(1)
 
     # Nota fiscal só até a barra (antes da barra)
     nf = re.search(r"Fiscal[:\-]?\s*([\d]+)", texto, re.IGNORECASE)
@@ -531,7 +526,7 @@ def webhook():
                     msg = (
                         f"📋 Recebi os dados:\n"
                         f"Cliente: {cliente.title()}\n"
-                        f"Peso Líquido: {dados.get('peso_tara')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido_val')}\n"
                         f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
                         f"Ticket: {dados.get('brm_mes')}\n\n"
                         f"Está correto?"
