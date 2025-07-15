@@ -165,59 +165,30 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     }
 
 def extrair_dados_cliente_gerdau(img, texto):
-    print("📜 [GERDAU] Texto detectado:")
+    print("[GERDAU] Extraindo dados...")
+    print("📜 Texto para extração:")
     print(texto)
 
-    linhas = texto.splitlines()
-    ticket_val = "NÃO ENCONTRADO"
-    nf_val = "NÃO ENCONTRADO"
-    peso_liquido_val = "NÃO ENCONTRADO"
+    # Ticket: exatamente 8 dígitos
+    ticket_match = re.search(r"\b(\d{8})\b", texto)
+    ticket_val = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
 
-    # 🎯 TICKET com exatamente 8 dígitos
-    for linha in linhas:
-        ticket_match = re.search(r"\b\d{8}\b", linha)
-        if ticket_match:
-            ticket_val = ticket_match.group()
-            break
+    # Nota fiscal: qualquer número antes do hífen, pega só antes do primeiro '-'
+    nota_fiscal_match = re.search(r"(\d+)[-]", texto)
+    nota_fiscal_val = nota_fiscal_match.group(1) if nota_fiscal_match else "NÃO ENCONTRADO"
 
-    # 📄 NOTA FISCAL antes do hífen
-    for linha in linhas:
-        nf_match = re.search(r"\b(\d+)-\d+\b", linha)
-        if nf_match:
-            nf_val = nf_match.group(1)
-            break
-
-    # ⚖️ PESO LÍQUIDO mais inteligente
-    idx_linha_peso = -1
-    for i, linha in enumerate(linhas):
-        if "peso" in linha.lower() and "liqu" in linha.lower():
-            idx_linha_peso = i
-            break
-
-    # Procura padrão "00,000 to" logo antes ou depois da linha
-    if idx_linha_peso != -1:
-        alvos = []
-        if idx_linha_peso - 1 >= 0:
-            alvos.append(linhas[idx_linha_peso - 1])
-        if idx_linha_peso + 1 < len(linhas):
-            alvos.append(linhas[idx_linha_peso + 1])
-        if idx_linha_peso + 2 < len(linhas):
-            alvos.append(linhas[idx_linha_peso + 2])
-
-        for linha in alvos:
-            match = re.search(r"\b(\d{2,3},\d{2,3})\s+to\b", linha)
-            if match and not re.search(r"\d{2}:\d{2}:\d{2}", linha):  # ignora se tiver horário
-                peso_liquido_val = match.group(1)
-                break
+    # Peso líquido: busca padrão '00,000 to' no texto todo
+    peso_liquido_match = re.search(r"\b(\d{2,3}[.,]\d{3})\s+to\b", texto, re.IGNORECASE | re.MULTILINE)
+    peso_liquido_val = peso_liquido_match.group(1).replace(",", ".") if peso_liquido_match else "NÃO ENCONTRADO"
 
     print("🎯 Dados extraídos:")
     print(f"Ticket: {ticket_val}")
-    print(f"Nota Fiscal: {nf_val}")
+    print(f"Nota Fiscal: {nota_fiscal_val}")
     print(f"Peso Líquido: {peso_liquido_val}")
 
     return {
         "ticket": ticket_val,
-        "nota_fiscal": nf_val,
+        "nota_fiscal": nota_fiscal_val,
         "peso_liquido": peso_liquido_val
     }
 
