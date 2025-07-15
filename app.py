@@ -174,8 +174,9 @@ def extrair_dados_cliente_gerdau(img, texto):
     ticket_val = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
 
     # Nota fiscal: número antes do primeiro hífen
-    nota_fiscal_match = re.search(r"(\d+)[-]", texto)
-    nota_fiscal_val = nota_fiscal_match.group(1) if nota_fiscal_match else "NÃO ENCONTRADO"
+    matches_nota = re.findall(r"\b(\d{3,10})-\d{1,3}\b", texto)
+    if matches_nota:
+        nota_fiscal_val = matches_nota[0]
 
     # Peso líquido: procura por 'xx,xxx to' sem horário na linha
     peso_liquido_val = "NÃO ENCONTRADO"
