@@ -165,19 +165,54 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     }
 
 def extrair_dados_cliente_gerdau(img, texto):
-    print("📜 Texto recebido para extração:")
+    print("📜 [GERDAU] Texto detectado:")
     print(texto)
-    
-    peso_liquido = re.search(r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{1,2}\s*([0-9]{4,6})",texto)
-    nf = re.search(r"n[uú]mero[\s_]*doc[\:][.:;\-]*[:]?[\s]*([0-9]{4,})", texto)
-    ticket = re.search(r"(?:ticket|cket)[\s:]*([0-9/]{5,})", texto)
+
+    linhas = texto.splitlines()
+    ticket_val = "NÃO ENCONTRADO"
+    nf_val = "NÃO ENCONTRADO"
+    peso_liquido_val = "NÃO ENCONTRADO"
+
+    for i, linha in enumerate(linhas):
+        # 🎯 Ticket
+        if "ticket" in linha.lower():
+            for offset in range(3):
+                if i + offset < len(linhas):
+                    match = re.search(r"\d{5,}", linhas[i + offset])
+                    if match:
+                        ticket_val = match.group()
+                        break
+
+        # 🧾 Nota Fiscal
+        if nf_val == "NÃO ENCONTRADO":
+            nf_match = re.search(r"\d{5,}-\d{2}", linha)
+            if nf_match:
+                nf_val = nf_match.group()
+
+        # ⚖️ Peso Líquido
+        if "peso" in linha.lower() and "líquid" in linha.lower():
+            pesos_encontrados = []
+            for offset in range(4):
+                if i + offset < len(linhas):
+                    encontrados = re.findall(r"\d{2,3},\d{2,3}", linhas[i + offset])
+                    pesos_encontrados.extend(encontrados)
+
+            if pesos_encontrados:
+                # pega o maior valor numérico como peso líquido
+                pesos_convertidos = [float(p.replace(",", ".")) for p in pesos_encontrados]
+                maior = max(pesos_convertidos)
+                peso_liquido_val = str(maior).replace(".", ",")
+
+    print("🎯 Dados extraídos:")
+    print(f"Ticket: {ticket_val}")
+    print(f"Nota Fiscal: {nf_val}")
+    print(f"Peso Líquido: {peso_liquido_val}")
 
     return {
-        "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO",
-        "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
-        "ticket": ticket.group(1) if ticket else "NÃO ENCONTRADO"
+        "ticket": ticket_val,
+        "nota_fiscal": nf_val,
+        "peso_liquido": peso_liquido_val
     }
-
 
 def extrair_dados_cliente_raízen(img, texto):
     return {"protocolo": "placeholder", "peso_liquido": "placeholder", "doc_referencia": "placeholder"}
