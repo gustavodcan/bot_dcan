@@ -154,48 +154,39 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     print("📜 Texto recebido para extração:")
     print(texto)
 
-    linhas = texto.splitlines()
+    # Nota fiscal: pega só até a barra
+    nf_match = re.search(r"fiscal[:\-]?\s*([\d]+)", texto, re.IGNORECASE)
+    nota_val = nf_match.group(1) if nf_match else "NÃO ENCONTRADO"
 
-    peso_liquido_val = "NÃO ENCONTRADO"
-    nota_fiscal_val = "NÃO ENCONTRADO"
-    brm_mes_val = "NÃO ENCONTRADO"
+    # BRM
+    brm_match = re.search(r"brm\s+mes[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    brm_val = brm_match.group(1) if brm_match else "NÃO ENCONTRADO"
 
-    # Pegando BRM MES e Tara (do jeito antigo, pra manter)
-    brm = re.search(r"BRM MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
-    if brm:
-        brm_mes_val = brm.group(1)
+    # Peso líquido: extrai todas as linhas com só número de 4 ou 5 dígitos
+    numeros = re.findall(r"^\s*(\d{4,5})\s*$", texto, re.MULTILINE)
+    print(f"Números isolados encontrados: {numeros}")
 
-    # Nota fiscal só até a barra (antes da barra)
-    nf = re.search(r"Fiscal[:\-]?\s*([\d]+)", texto, re.IGNORECASE)
-    if nf:
-        nota_fiscal_val = nf.group(1)
-
-    # Pega só linhas com números puros (4 ou 5 dígitos)
-    pesos_encontrados = []
-    for linha in linhas:
-        linha_limpa = linha.strip()
-        # Só números, no mínimo 4 dígitos e no máximo 5
-        if re.fullmatch(r"\d{4,5}", linha_limpa):
-            pesos_encontrados.append(int(linha_limpa))
-
-    # Regra do peso líquido
-    if len(pesos_encontrados) == 2:
-        peso_liquido_val = str(pesos_encontrados[0])
-    elif len(pesos_encontrados) >= 3:
-        peso_liquido_val = str(pesos_encontrados[0] + pesos_encontrados[1])
-    elif len(pesos_encontrados) == 1:
-        peso_liquido_val = str(pesos_encontrados[0])
+    if len(numeros) == 2:
+        peso_liquido = numeros[0]
+    elif len(numeros) >= 3:
+        try:
+            peso_liquido = str(int(numeros[0]) + int(numeros[1]))
+        except:
+            peso_liquido = "NÃO ENCONTRADO"
+    else:
+        peso_liquido = "NÃO ENCONTRADO"
 
     print("🎯 Dados extraídos:")
-    print(f"Peso Líquido: {peso_liquido_val}")
-    print(f"Nota Fiscal: {nota_fiscal_val}")
-    print(f"BRM MES: {brm_mes_val}")
+    print(f"Nota Fiscal: {nota_val}")
+    print(f"BRM MES: {brm_val}")
+    print(f"Peso Líquido: {peso_liquido}")
 
     return {
-        "peso_liquido": peso_liquido_val,
-        "nota_fiscal": nota_fiscal_val,
-        "brm_mes": brm_mes_val
+        "nota_fiscal": nota_val,
+        "brm_mes": brm_val,
+        "peso_liquido": peso_liquido
     }
+
 
 def extrair_dados_cliente_gerdau(img, texto):
     print("[GERDAU] Extraindo dados...")
