@@ -153,15 +153,55 @@ def extrair_dados_cliente_cdr(img, texto):
 def extrair_dados_cliente_arcelormittal(img, texto):
     print("📜 Texto recebido para extração:")
     print(texto)
-    
-    peso = re.search(r"^Tara\s+\d{2}/\d{2}\s+\d{2}:\d{2}\s+(\d+)", texto, re.MULTILINE)
-    nf = re.search(r"Fiscal[:\-]?\s*([\d/]+)", texto, re.IGNORECASE)
+
+    linhas = texto.splitlines()
+
+    peso_liquido_val = "NÃO ENCONTRADO"
+    nota_fiscal_val = "NÃO ENCONTRADO"
+    brm_mes_val = "NÃO ENCONTRADO"
+    peso_tara_val = "NÃO ENCONTRADO"
+
+    # Pegando BRM MES e Tara (do jeito antigo, pra manter)
     brm = re.search(r"BRM MES[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    if brm:
+        brm_mes_val = brm.group(1)
+    
+    peso_tara = re.search(r"^Tara\s+\d{2}/\d{2}\s+\d{2}:\d{2}\s+(\d+)", texto, re.MULTILINE)
+    if peso_tara:
+        peso_tara_val = peso_tara.group(1)
+
+    # Nota fiscal só até a barra (antes da barra)
+    nf = re.search(r"Fiscal[:\-]?\s*([\d]+)", texto, re.IGNORECASE)
+    if nf:
+        nota_fiscal_val = nf.group(1)
+
+    # Pega só linhas com números puros (4 ou 5 dígitos)
+    pesos_encontrados = []
+    for linha in linhas:
+        linha_limpa = linha.strip()
+        # Só números, no mínimo 4 dígitos e no máximo 5
+        if re.fullmatch(r"\d{4,5}", linha_limpa):
+            pesos_encontrados.append(int(linha_limpa))
+
+    # Regra do peso líquido
+    if len(pesos_encontrados) == 2:
+        peso_liquido_val = str(pesos_encontrados[0])
+    elif len(pesos_encontrados) >= 3:
+        peso_liquido_val = str(pesos_encontrados[0] + pesos_encontrados[1])
+    elif len(pesos_encontrados) == 1:
+        peso_liquido_val = str(pesos_encontrados[0])
+
+    print("🎯 Dados extraídos:")
+    print(f"Peso Tara: {peso_tara_val}")
+    print(f"Peso Líquido: {peso_liquido_val}")
+    print(f"Nota Fiscal: {nota_fiscal_val}")
+    print(f"BRM MES: {brm_mes_val}")
 
     return {
-        "peso_tara": peso.group(1) if peso else "NÃO ENCONTRADO",
-        "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
-        "brm_mes": brm.group(1) if brm else "NÃO ENCONTRADO"
+        "peso_tara": peso_tara_val,
+        "peso_liquido": peso_liquido_val,
+        "nota_fiscal": nota_fiscal_val,
+        "brm_mes": brm_mes_val
     }
 
 def extrair_dados_cliente_gerdau(img, texto):
