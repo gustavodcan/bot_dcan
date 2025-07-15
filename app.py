@@ -187,7 +187,6 @@ def extrair_dados_cliente_arcelormittal(img, texto):
         peso_liquido_val = str(pesos_encontrados[0])
 
     print("🎯 Dados extraídos:")
-    print(f"Peso Tara: {peso_tara_val}")
     print(f"Peso Líquido: {peso_liquido_val}")
     print(f"Nota Fiscal: {nota_fiscal_val}")
     print(f"BRM MES: {brm_mes_val}")
@@ -522,7 +521,7 @@ def webhook():
                         f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
                         f"Está correto?"
                     )
-                case _:
+                case "arcelormittal":
                     msg = (
                         f"📋 Recebi os dados:\n"
                         f"Cliente: {cliente.title()}\n"
