@@ -165,7 +165,19 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     }
 
 def extrair_dados_cliente_gerdau(img, texto):
-    return {"nota_fiscal": "placeholder", "peso_tara": "placeholder", "numero_viagem": "placeholder"}
+        print("📜 Texto recebido para extração:")
+    print(texto)
+    
+    peso_liquido = re.search(r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{1,2}\s*([0-9]{4,6})",texto)
+    nf = re.search(r"n[uú]mero[\s_]*doc[\:][.:;\-]*[:]?[\s]*([0-9]{4,})", texto)
+    ticket = re.search(r"(?:ticket|cket)[\s:]*([0-9/]{5,})", texto)
+
+    return {
+        "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO",
+        "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
+        "ticket": ticket.group(1) if brm else "NÃO ENCONTRADO"
+    }
+
 
 def extrair_dados_cliente_raízen(img, texto):
     return {"protocolo": "placeholder", "peso_liquido": "placeholder", "doc_referencia": "placeholder"}
@@ -301,10 +313,10 @@ def webhook():
                 case "gerdau":
                     msg = (
                         f"📋 Recebi os dados:\n"
-                        f"Cliente: Gerdau\n"
+                        f"Cliente: {cliente.title()}\n"
+                        f"Ticket: {dados.get('ticket')}\n"
                         f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                        f"Peso Tara: {dados.get('peso_tara')}\n"
-                        f"Nº Viagem: {dados.get('numero_viagem')}\n\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
                         f"Está correto?"
                     )
                 case "raízen":
