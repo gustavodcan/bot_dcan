@@ -515,7 +515,7 @@ def webhook():
                     msg = (
                         f"📋 Recebi os dados:\n"
                         f"Cliente: {cliente.title()}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido_val')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
                         f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
                         f"Ticket: {dados.get('brm_mes')}\n\n"
                         f"Está correto?"
