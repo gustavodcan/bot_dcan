@@ -208,7 +208,33 @@ def extrair_dados_cliente_orizon(img, texto):
     return {"codigo": "placeholder", "peso": "placeholder", "documento": "placeholder"}
 
 def extrair_dados_cliente_saae(img, texto):
-    return {"protocolo": "placeholder", "volume": "placeholder", "data": "placeholder"}
+    print("📜 [CDR] Texto detectado:")
+    print(texto)
+
+    # 🎯 Ticket - captura número com ou sem barra e remove a barra depois
+    ticket_match = re.search(r"(?:ticket|cket)[\s:]*([0-9/]{5,})", texto)
+    ticket_val = ticket_match.group(1).replace("/", "") if ticket_match else "NÃO ENCONTRADO"
+
+    # 📄 Outros Docs - aceita ponto antes dos dois pontos, hífen, espaços, etc
+    outros_docs = re.search(r"outros[\s_]*docs[.:;\-]*[:]?[\s]*([0-9]{4,})", texto)
+
+    # ⚖️ Peso Líquido - aceita erros de OCR tipo 'liquiduido', ':' repetido, etc
+    peso_liquido = re.search(
+        r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{1,2}\s*([0-9]{4,6})",
+        texto
+    )
+
+    # 🧠 Log de debug pro Render ou local
+    print("🎯 Dados extraídos:")
+    print(f"Ticket: {ticket_val}")
+    print(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'Não encontrado'}")
+    print(f"Peso Líquido: {peso_liquido.group(1) if peso_liquido else 'Não encontrado'}")
+
+    return {
+        "ticket": ticket_val,
+        "outros_docs": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO",
+        "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
+    }
 
 def extrair_dados_da_imagem(caminho_imagem, cliente):
     img = preprocessar_imagem(caminho_imagem)
@@ -325,7 +351,7 @@ def webhook():
                         f"📋 Recebi os dados:\n"
                         f"Cliente: {cliente.title()}\n"
                         f"Ticket: {dados.get('ticket')}\n"
-                        f"Outros Docs: {dados.get('outros_docs')}\n"
+                        f"Nota Fiscal: {dados.get('outros_docs')}\n"
                         f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
                         f"Está correto?"
                     )
@@ -342,17 +368,17 @@ def webhook():
                     msg = (
                         f"📋 Recebi os dados:\n"
                         f"Cliente: Raízen\n"
-                        f"Protocolo: {dados.get('protocolo')}\n"
+                        f"Ticket: {dados.get('protocolo')}\n"
                         f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                        f"Doc Referência: {dados.get('doc_referencia')}\n\n"
+                        f"Nota Fiscal: {dados.get('doc_referencia')}\n\n"
                         f"Está correto?"
                     )
                 case "mahle":
                     msg = (
                         f"📋 Recebi os dados:\n"
                         f"Cliente: Mahle\n"
-                        f"Lote: {dados.get('lote')}\n"
-                        f"Peso: {dados.get('peso')}\n"
+                        f"Ticket: {dados.get('lote')}\n"
+                        f"Peso Líquido: {dados.get('peso')}\n"
                         f"Nota Fiscal: {dados.get('nota_fiscal')}\n\n"
                         f"Está correto?"
                     )
@@ -360,27 +386,27 @@ def webhook():
                     msg = (
                         f"📋 Recebi os dados:\n"
                         f"Cliente: Orizon\n"
-                        f"Código: {dados.get('codigo')}\n"
-                        f"Peso: {dados.get('peso')}\n"
-                        f"Documento: {dados.get('documento')}\n\n"
+                        f"Ticket: {dados.get('codigo')}\n"
+                        f"Peso Líquido: {dados.get('peso')}\n"
+                        f"Ticket: {dados.get('documento')}\n\n"
                         f"Está correto?"
                     )
                 case "saae":
                     msg = (
                         f"📋 Recebi os dados:\n"
-                        f"Cliente: SAAE\n"
-                        f"Protocolo: {dados.get('protocolo')}\n"
-                        f"Volume: {dados.get('volume')}\n"
-                        f"Data: {dados.get('data')}\n\n"
+                        f"Cliente: {cliente.title()}\n"
+                        f"Ticket: {dados.get('ticket')}\n"
+                        f"Nota Fiscal: {dados.get('outros_docs')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
                         f"Está correto?"
                     )
                 case _:
                     msg = (
                         f"📋 Recebi os dados:\n"
                         f"Cliente: {cliente.title()}\n"
-                        f"Peso Tara: {dados.get('peso_tara')}\n"
+                        f"Peso Líquido: {dados.get('peso_tara')}\n"
                         f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                        f"BRM: {dados.get('brm_mes')}\n\n"
+                        f"Ticket: {dados.get('brm_mes')}\n\n"
                         f"Está correto?"
                     )
 
