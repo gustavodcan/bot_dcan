@@ -210,7 +210,6 @@ def extrair_dados_cliente_mahle(img, texto):
     peso_liquido_val = "NÃO ENCONTRADO"
     nota_fiscal_val = "NÃO ENCONTRADO"
 
-    # Pra garantir que só pega nota depois do peso líquido, vou salvar o índice onde achou peso_liquido
     indice_peso_liquido = -1
 
     for i, linha in enumerate(linhas):
@@ -227,17 +226,17 @@ def extrair_dados_cliente_mahle(img, texto):
         if "peso líquid" in linha_lower and peso_liquido_val == "NÃO ENCONTRADO":
             for j in range(i+1, len(linhas)):
                 linha_peso = linhas[j].strip().lower()
-        # Verifica se tem "kg" na linha
-        if "kg" in linha_peso:
-            # Extrai só o número (aceita vírgula ou ponto decimal)
-            match = re.search(r"(\d+[.,]?\d*)", linha_peso)
-            if match:
-                peso_liquido_val = match.group(1).replace(",", ".")
-                indice_peso_liquido = j
-                print(f"Peso líquido encontrado: {peso_liquido_val}")
-                break
+                if "kg" in linha_peso:
+                    match = re.search(r"(\d+[.,]?\d*)", linha_peso)
+                    if match:
+                        peso_liquido_val = match.group(1).replace(",", ".")
+                        indice_peso_liquido = j
+                        print(f"Peso líquido encontrado: {peso_liquido_val}")
+                        break
+            if peso_liquido_val != "NÃO ENCONTRADO":
+                break  # Sai do for principal quando encontrar peso líquido
 
-    # Agora procura nota fiscal no texto todo, mas só depois do peso líquido (se achou)
+    # Nota fiscal só depois do peso líquido
     if indice_peso_liquido != -1:
         for linha in linhas[indice_peso_liquido+1:]:
             if re.match(r"^\d{4,}$", linha.strip()):
@@ -255,7 +254,6 @@ def extrair_dados_cliente_mahle(img, texto):
         "peso_liquido": peso_liquido_val,
         "nota_fiscal": nota_fiscal_val
     }
-
 
 def extrair_dados_cliente_orizon(img, texto):
     return {"codigo": "placeholder", "peso": "placeholder", "documento": "placeholder"}
