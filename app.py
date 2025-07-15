@@ -268,20 +268,20 @@ def extrair_dados_cliente_orizon(img, texto):
 
     # --- Peso Líquido ---
     match_peso = re.search(
-        r"peso[\s_]*l[ií]qu[ií]d[o0][\s_]*kg[:：]?\s*([0-9]{4,6})",
+        r"peso[\s_]*l[ií1!|][qg][uúü][ií1!|][d0o][a-z]*kg[:：]{0,2}\s*([0-9]{4,6})",
         texto_lower
     )
     if match_peso:
         peso_liquido_val = match_peso.group(1)
         print(f"Peso líquido encontrado: {peso_liquido_val}")
 
-    # --- Operação (Ticket) ---
+    # --- Ticket (padrão tipo TB0000108249 ou variações) ---
     match_ticket = re.search(
-        r"(?:opera[cçãaоo0]+|орега[cçãaоo0]+)[\s,:;-]*([ттt][вbв][оo]?[0-9]{6,})",
+        r"\b[tт][bв][оo0]?[0-9]{6,}\b",
         texto_lower
     )
     if match_ticket:
-        ticket_val = match_ticket.group(1).upper()
+        ticket_val = match_ticket.group(0).upper()
         print(f"Operação (ticket) encontrada: {ticket_val}")
 
     print("🎯 Dados extraídos:")
