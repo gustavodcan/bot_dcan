@@ -258,8 +258,42 @@ def extrair_dados_cliente_mahle(img, texto):
     }
 
 def extrair_dados_cliente_orizon(img, texto):
-    return {"codigo": "placeholder", "peso": "placeholder", "documento": "placeholder"}
+    print("📜 [ORIZON] Texto detectado:")
+    print(texto)
 
+    ticket_val = "NÃO ENCONTRADO"
+    peso_liquido_val = "NÃO ENCONTRADO"
+
+    texto_lower = texto.lower()
+
+    # --- Peso Líquido ---
+    match_peso = re.search(
+        r"peso[\s_]*l[ií]qu[ií]d[o0][\s_]*kg[:：]?\s*([0-9]{4,6})",
+        texto_lower
+    )
+    if match_peso:
+        peso_liquido_val = match_peso.group(1)
+        print(f"Peso líquido encontrado: {peso_liquido_val}")
+
+    # --- Operação (Ticket) ---
+    match_ticket = re.search(
+        r"(?:opera[cçãaоo0]+|орега[cçãaоo0]+)[\s,:;-]*([ттt][вbв][оo]?[0-9]{6,})",
+        texto_lower
+    )
+    if match_ticket:
+        ticket_val = match_ticket.group(1).upper()
+        print(f"Operação (ticket) encontrada: {ticket_val}")
+
+    print("🎯 Dados extraídos:")
+    print(f"Ticket: {ticket_val}")
+    print(f"Peso Líquido: {peso_liquido_val}")
+
+    return {
+        "ticket": ticket_val,
+        "peso_liquido": peso_liquido_val,
+        "nota_fiscal": "NÃO APLICÁVEL"
+    }
+    
 def extrair_dados_cliente_saae(img, texto):
     print("📜 [CDR] Texto detectado:")
     print(texto)
@@ -439,9 +473,9 @@ def webhook():
                     msg = (
                         f"📋 Recebi os dados:\n"
                         f"Cliente: Orizon\n"
-                        f"Ticket: {dados.get('codigo')}\n"
-                        f"Peso Líquido: {dados.get('peso')}\n"
-                        f"Ticket: {dados.get('documento')}\n\n"
+                        f"Ticket: {dados.get('ticket')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal', 'Não se aplica')}\n\n"
                         f"Está correto?"
                     )
                 case "saae":
