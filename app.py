@@ -202,7 +202,58 @@ def extrair_dados_cliente_raízen(img, texto):
     return {"protocolo": "placeholder", "peso_liquido": "placeholder", "doc_referencia": "placeholder"}
 
 def extrair_dados_cliente_mahle(img, texto):
-    return {"lote": "placeholder", "peso": "placeholder", "nota_fiscal": "placeholder"}
+    def extrair_dados_cliente_mahle(img, texto):
+    print("📜 [MAHLE] Texto detectado:")
+    print(texto)
+
+    linhas = texto.splitlines()
+    ticket_val = "NÃO ENCONTRADO"
+    peso_liquido_val = "NÃO ENCONTRADO"
+    nota_fiscal_val = "NÃO ENCONTRADO"
+
+    # Pra garantir que só pega nota depois do peso líquido, vou salvar o índice onde achou peso_liquido
+    indice_peso_liquido = -1
+
+    for i, linha in enumerate(linhas):
+        linha_lower = linha.lower()
+
+        # Ticket
+        if "ticket de pesagem" in linha_lower:
+            match_ticket = re.search(r"ticket de pesagem\s*[-:]?\s*(\d+)", linha_lower)
+            if match_ticket:
+                ticket_val = match_ticket.group(1)
+                print(f"Ticket encontrado: {ticket_val}")
+
+        # Peso líquido
+        if "peso líquid" in linha_lower and peso_liquido_val == "NÃO ENCONTRADO":
+            # próxima linha que seja só número, sem kg
+            for j in range(i+1, len(linhas)):
+                valor_peso = linhas[j].strip().replace(",", ".")
+                if re.match(r"^\d+(\.\d+)?$", valor_peso):
+                    peso_liquido_val = valor_peso
+                    indice_peso_liquido = j
+                    print(f"Peso líquido encontrado: {peso_liquido_val}")
+                    break
+
+    # Agora procura nota fiscal no texto todo, mas só depois do peso líquido (se achou)
+    if indice_peso_liquido != -1:
+        for linha in linhas[indice_peso_liquido+1:]:
+            if re.match(r"^\d{4,}$", linha.strip()):
+                nota_fiscal_val = linha.strip()
+                print(f"Nota fiscal encontrada: {nota_fiscal_val}")
+                break
+
+    print("🎯 Dados extraídos:")
+    print(f"Ticket: {ticket_val}")
+    print(f"Peso Líquido: {peso_liquido_val}")
+    print(f"Nota Fiscal: {nota_fiscal_val}")
+
+    return {
+        "ticket": ticket_val,
+        "peso_liquido": peso_liquido_val,
+        "nota_fiscal": nota_fiscal_val
+    }
+
 
 def extrair_dados_cliente_orizon(img, texto):
     return {"codigo": "placeholder", "peso": "placeholder", "documento": "placeholder"}
@@ -377,8 +428,8 @@ def webhook():
                     msg = (
                         f"📋 Recebi os dados:\n"
                         f"Cliente: Mahle\n"
-                        f"Ticket: {dados.get('lote')}\n"
-                        f"Peso Líquido: {dados.get('peso')}\n"
+                        f"Ticket: {dados.get('ticket')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
                         f"Nota Fiscal: {dados.get('nota_fiscal')}\n\n"
                         f"Está correto?"
                     )
