@@ -175,7 +175,7 @@ def extrair_dados_cliente_gerdau(img, texto):
     return {
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO",
         "nota_fiscal": nf.group(1) if nf else "NÃO ENCONTRADO",
-        "ticket": ticket.group(1) if brm else "NÃO ENCONTRADO"
+        "ticket": ticket.group(1) if ticket else "NÃO ENCONTRADO"
     }
 
 
