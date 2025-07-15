@@ -165,7 +165,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     }
 
 def extrair_dados_cliente_gerdau(img, texto):
-        print("📜 Texto recebido para extração:")
+    print("📜 Texto recebido para extração:")
     print(texto)
     
     peso_liquido = re.search(r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{1,2}\s*([0-9]{4,6})",texto)
