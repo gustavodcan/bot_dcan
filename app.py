@@ -240,14 +240,26 @@ def extrair_dados_cliente_rio_das_pedras(img, texto):
                 print(f"Nota fiscal encontrada: {nota_val}")
                 break
 
-    # ⚖️ Peso líquido no formato xx.xxx.xxx kg (aceita variações como 'liquidouido', etc)
+    # ⚖️ Peso líquido com OCR zoado tipo 'liquidouido'
     match_peso = re.search(
-        r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*(\d{1,3}(?:\.\d{3})+)",
+        r"peso[\s_]*l[ií1!|][qg][uúü][ií1!|][d0o][a-z]*[:：\s_-]*([\d\.,]+)",
         texto.lower()
     )
     if match_peso:
-        peso_liquido_val = match_peso.group(1).replace(".", "")
-        print(f"Peso líquido encontrado: {peso_liquido_val} kg")
+        peso_raw = match_peso.group(1)
+        print(f"Peso bruto capturado: {peso_raw}")
+        try:
+            # Se tiver vírgula e ponto, trata como separador de milhar + decimal
+            if "," in peso_raw and "." in peso_raw:
+                peso_tratado = peso_raw.replace(".", "").replace(",", ".")
+            else:
+                peso_tratado = peso_raw.replace(",", "").replace(".", "")
+            # Transforma em float, depois força inteiro (sem casas decimais)
+            peso_liquido_val = str(int(float(peso_tratado)))
+        except Exception as e:
+            print(f"Erro ao converter peso: {e}")
+            peso_liquido_val = "NÃO ENCONTRADO"
+        print(f"Peso líquido tratado (inteiro): {peso_liquido_val}")
 
     print("🎯 Dados extraídos:")
     print(f"Nota Fiscal: {nota_val}")
