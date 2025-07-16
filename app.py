@@ -520,19 +520,21 @@ def webhook():
         nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
         if nota_digitada:
             nota_val = nota_digitada.group(0)
+            # Atualiza só a nota fiscal, mantendo os outros dados
             conversas[numero]["dados"]["nota_fiscal"] = nota_val
-            conversas[numero]["estado"] = "aguardando_confirmacao"
-
+            
             dados = conversas[numero]["dados"]
             cliente = conversas[numero]["cliente"]
+            
             msg = (
                 f"📋 Recebi os dados:\n"
                 f"Cliente: {cliente.title()}\n"
-                f"Ticket: {dados.get('ticket') or dados.get('brm_mes')}\n"
-                f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                f"Ticket: {dados.get('ticket', 'NÃO ENCONTRADO') or dados.get('brm_mes', 'NÃO ENCONTRADO')}\n"
+                f"Peso Líquido: {dados.get('peso_liquido', 'NÃO ENCONTRADO')}\n"
                 f"Nota Fiscal: {nota_val}\n\n"
                 f"Está correto?"
             )
+            conversas[numero]["estado"] = "aguardando_confirmacao"
             enviar_botoes_sim_nao(numero, msg)
         else:
             enviar_mensagem(numero, "❌ Não entendi a nota fiscal. Por favor, envie apenas o número da nota (ex: *7878*).")
