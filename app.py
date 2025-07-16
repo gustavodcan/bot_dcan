@@ -492,7 +492,9 @@ def webhook():
             conversas[numero]["dados"] = dados
             os.remove("ticket.jpg")
 
-            if cliente == "orizon" or (cliente == "cdr" and not dados.get("nota_fiscal") and not dados.get("outros_docs")):
+            nota = dados.get("nota_fiscal", "").strip().upper()
+            if cliente == "orizon" or (cliente == "cdr" and nota in ["NÃO ENCONTRADO", "", None]):
+
                 conversas[numero]["estado"] = "aguardando_nota_manual"
                 enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal (ex: *7878*) para continuar.")
                 return jsonify(status="solicitando nota manual")
