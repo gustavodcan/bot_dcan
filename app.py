@@ -17,7 +17,7 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
-clientes_validos = ["arcelormittal", "gerdau", "raízen", "mahle", "orizon", "cdr", "saae"]
+clientes_validos = ["arcelormittal", "gerdau", "rio das pedras", "mahle", "orizon", "cdr", "saae"]
 
 def get_google_client():
     cred_path = "google_creds.json"
@@ -106,7 +106,7 @@ def enviar_lista_clientes(numero, mensagem):
                 {"id": "arcelormittal", "title": "ArcelorMittal"},
                 {"id": "gerdau", "title": "Gerdau"},
                 {"id": "mahle", "title": "Mahle"},
-                {"id": "raízen", "title": "Raízen"},
+                {"id": "rio das pedras", "title": "Rio das Pedras"},
                 {"id": "orizon", "title": "Orizon"},
                 {"id": "cdr", "title": "CDR"},
                 {"id": "saae", "title": "SAAE"},
@@ -222,8 +222,39 @@ def extrair_dados_cliente_gerdau(img, texto):
         "peso_liquido": peso_liquido_val
     }
 
-def extrair_dados_cliente_raízen(img, texto):
-    return {"protocolo": "placeholder", "peso_liquido": "placeholder", "doc_referencia": "placeholder"}
+def extrair_dados_cliente_rio_das_pedras(img, texto):
+    print("📜 [RIO DAS PEDRAS] Texto detectado:")
+    print(texto)
+
+    nota_val = "NÃO ENCONTRADO"
+    peso_liquido_val = "NÃO ENCONTRADO"
+
+    linhas = texto.lower().splitlines()
+
+    # 🧾 Buscar número na linha que contém 'notas fiscais'
+    for linha in linhas:
+        if "notas fiscais" in linha:
+            match_nf = re.search(r"\b(\d{6,})\b", linha)
+            if match_nf:
+                nota_val = match_nf.group(1)
+                print(f"Nota fiscal encontrada: {nota_val}")
+                break
+
+    # ⚖️ Peso líquido no formato xx.xxx.xxx kg
+    match_peso = re.search(r"(\d{1,3}(?:\.\d{3})+)\s*kg", texto.lower())
+    if match_peso:
+        peso_liquido_val = match_peso.group(1).replace(".", "")
+        print(f"Peso líquido encontrado: {peso_liquido_val} kg")
+
+    print("🎯 Dados extraídos:")
+    print(f"Nota Fiscal: {nota_val}")
+    print(f"Peso Líquido: {peso_liquido_val}")
+
+    return {
+        "nota_fiscal": nota_val,
+        "peso_liquido": peso_liquido_val,
+        "ticket": "NÃO APLICÁVEL"
+    }
 
 def extrair_dados_cliente_mahle(img, texto):
     print("📜 [MAHLE] Texto detectado:")
@@ -319,7 +350,7 @@ def extrair_dados_cliente_orizon(img, texto):
     }
     
 def extrair_dados_cliente_saae(img, texto):
-    print("📜 [CDR] Texto detectado:")
+    print("📜 [SAAE] Texto detectado:")
     print(texto)
 
     # 🎯 Ticket - captura número com ou sem barra e remove a barra depois
@@ -376,8 +407,8 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
             return extrair_dados_cliente_arcelormittal(None, texto)
         case "gerdau":
             return extrair_dados_cliente_gerdau(None, texto)
-        case "raízen":
-            return extrair_dados_cliente_raízen(None, texto)
+        case "rio das pedras":
+            return extrair_dados_cliente_rio_das_pedras(None, texto)
         case "mahle":
             return extrair_dados_cliente_mahle(None, texto)
         case "orizon":
@@ -475,13 +506,13 @@ def webhook():
                         f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
                         f"Está correto?"
                     )
-                case "raízen":
+                case "rio das pedras":
                     msg = (
                         f"📋 Recebi os dados:\n"
-                        f"Cliente: Raízen\n"
-                        f"Ticket: {dados.get('protocolo')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                        f"Nota Fiscal: {dados.get('doc_referencia')}\n\n"
+                        f"Cliente: Rio das Pedras\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')} kg\n"
+                        f"Ticket: {dados.get('ticket')}\n\n"
                         f"Está correto?"
                     )
                 case "mahle":
