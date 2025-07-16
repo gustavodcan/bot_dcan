@@ -240,8 +240,11 @@ def extrair_dados_cliente_rio_das_pedras(img, texto):
                 print(f"Nota fiscal encontrada: {nota_val}")
                 break
 
-    # ⚖️ Peso líquido no formato xx.xxx.xxx kg
-    match_peso = re.search(r"(\d{1,3}(?:\.\d{3})+)\s*kg", texto.lower())
+    # ⚖️ Peso líquido no formato xx.xxx.xxx kg (aceita variações como 'liquidouido', etc)
+    match_peso = re.search(
+        r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*(\d{1,3}(?:\.\d{3})+)",
+        texto.lower()
+    )
     if match_peso:
         peso_liquido_val = match_peso.group(1).replace(".", "")
         print(f"Peso líquido encontrado: {peso_liquido_val} kg")
