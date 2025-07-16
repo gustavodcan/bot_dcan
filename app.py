@@ -576,6 +576,11 @@ def webhook():
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
             conversas[numero]["estado"] = "aguardando_imagem"
+
+            # 🧼 Limpa os dados antigos
+            conversas[numero].pop("cliente", None)
+            conversas[numero].pop("dados", None)
+        
         else:
             enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return jsonify(status="confirmação final")
