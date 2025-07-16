@@ -382,6 +382,8 @@ def extrair_dados_cliente_saae(img, texto):
     }
 
 def extrair_dados_da_imagem(caminho_imagem, numero):
+    conversas[numero] = conversas.get(numero, {})
+    
     img = preprocessar_imagem(caminho_imagem)
     img.save("preprocessado.jpg")
     with open("preprocessado.jpg", "rb") as f:
@@ -407,6 +409,12 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     if cliente_detectado == "cliente_desconhecido":
         enviar_mensagem(numero, "❌ Não consegui identificar o cliente a partir da imagem. Por favor, envie novamente com mais clareza ou entre em contato com a DCAN.")
         return {"erro": "cliente não identificado"}
+
+    # ⚠️ Fluxo especial pro SAAE
+    if cliente_detectado == "saae":
+        conversas[numero]["estado"] = "aguardando_destino_saae"
+        enviar_mensagem(numero, "🛣️ Cliente SAAE detectado! Por favor, informe o *destino da carga* (ex: Aterro São João).")
+        return {"status": "aguardando destino saae"}
 
     match cliente_detectado:
         case "cdr":
@@ -549,6 +557,40 @@ def webhook():
         else:
             enviar_mensagem(numero, "❌ Não entendi a nota fiscal. Por favor, envie apenas o número da nota (ex: *7878*).")
         return jsonify(status="nota fiscal recebida ou inválida")
+
+    if estado == "aguardando_destino_saae":
+    destino_digitado = texto_recebido.strip().title()
+
+    if len(destino_digitado) < 2:
+        enviar_mensagem(numero, "❌ Por favor, informe um destino válido.")
+        return jsonify(status="destino inválido")
+
+    # Armazena o destino
+    conversas[numero]["destino"] = destino_digitado
+
+    # Continua a extração com base na imagem anterior
+    try:
+        dados = extrair_dados_cliente_saae(None, conversas[numero].get("texto_ocr", ""))
+    except Exception as e:
+        enviar_mensagem(numero, f"❌ Erro ao extrair os dados do ticket. Tente novamente.\nErro: {e}")
+        conversas[numero]["estado"] = "aguardando_imagem"
+        return jsonify(status="erro extração saae")
+
+    dados["destino"] = destino_digitado
+    conversas[numero]["dados"] = dados
+    conversas[numero]["estado"] = "aguardando_confirmacao"
+
+    msg = (
+        f"📋 Recebi os dados:\n"
+        f"Cliente: SAAE\n"
+        f"Ticket: {dados.get('ticket')}\n"
+        f"Peso Líquido: {dados.get('peso_liquido')}\n"
+        f"Nota Fiscal: {dados.get('nota_fiscal', 'Não informada')}\n"
+        f"Destino: {destino_digitado}\n\n"
+        f"Está correto?"
+    )
+    enviar_botoes_sim_nao(numero, msg)
+    return jsonify(status="dados SAAE aguardando confirmação")
 
     if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
