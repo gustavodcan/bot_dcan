@@ -494,101 +494,101 @@ def webhook():
             conversas[numero]["dados"].update(dados)
             conversas[numero]["cliente"] = cliente
             conversas[numero]["estado"] = "aguardando_confirmacao"
-        match cliente:
-            case "cdr":
-                msg = (
-                    f"📋 Recebi os dados:\n"
-                    f"Cliente: CDR\n"
-                    f"Ticket: {dados.get('ticket')}\n"
-                    f"Nota Fiscal: {dados.get('outros_docs')}\n"
-                    f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
-                    f"Está correto?"
-                )
-            case "rio das pedras":
-                msg = (
-                    f"📋 Recebi os dados:\n"
-                    f"Cliente: Rio das Pedras\n"
-                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                    f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                    f"Ticket: {dados.get('ticket')}\n\n"
-                    f"Está correto?"
-                )
-            case "mahle":
-                msg = (
-                    f"📋 Recebi os dados:\n"
-                    f"Cliente: Mahle\n"
-                    f"Ticket: {dados.get('ticket')}\n"
-                    f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n\n"
-                    f"Está correto?"
-                )
-            case "orizon":
-                msg = (
-                    f"📋 Recebi os dados:\n"
-                    f"Cliente: Orizon\n"
-                    f"Ticket: {dados.get('ticket')}\n"
-                    f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                    f"Nota Fiscal: {dados.get('nota_fiscal', 'Não se aplica')}\n\n"
-                    f"Está correto?"
-                )
-            case "saae":
-                msg = (
-                    f"📋 Recebi os dados:\n"
-                    f"Cliente: SAAE\n"
-                    f"Ticket: {dados.get('ticket')}\n"
-                    f"Nota Fiscal: {dados.get('outros_docs')}\n"
-                    f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
-                    f"Está correto?"
-                )
-            case "gerdau":
-                msg = (
-                    f"📋 Recebi os dados:\n"
-                    f"Cliente: Gerdau\n"
-                    f"Ticket: {dados.get('ticket')}\n"
-                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                    f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
-                    f"Está correto?"
-                )
-            case "arcelormittal":
-                msg = (
-                    f"📋 Recebi os dados:\n"
-                    f"Cliente: ArcelorMittal\n"
-                    f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                    f"Ticket: {dados.get('brm_mes')}\n\n"
-                    f"Está correto?"
-                )
-            case _:
-                msg = (
-                    f"⚠️ Cliente '{cliente}' ainda não é suportado no momento.\n"
-                    f"Por favor, envie um novo ticket ou fale com a DCAN."
-                )
 
-        enviar_botoes_sim_nao(numero, msg)
-        os.remove("ticket.jpg")
-        return jsonify(status="imagem processada")
+            match cliente:
+                case "cdr":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: CDR\n"
+                        f"Ticket: {dados.get('ticket')}\n"
+                        f"Nota Fiscal: {dados.get('outros_docs')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
+                        f"Está correto?"
+                    )
+                case "rio das pedras":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: Rio das Pedras\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                        f"Ticket: {dados.get('ticket')}\n\n"
+                        f"Está correto?"
+                    )
+                case "mahle":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: Mahle\n"
+                        f"Ticket: {dados.get('ticket')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n\n"
+                        f"Está correto?"
+                    )
+                case "orizon":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: Orizon\n"
+                        f"Ticket: {dados.get('ticket')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal', 'Não se aplica')}\n\n"
+                        f"Está correto?"
+                    )
+                case "saae":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: SAAE\n"
+                        f"Ticket: {dados.get('ticket')}\n"
+                        f"Nota Fiscal: {dados.get('outros_docs')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
+                        f"Está correto?"
+                    )
+                case "gerdau":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: Gerdau\n"
+                        f"Ticket: {dados.get('ticket')}\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
+                        f"Está correto?"
+                    )
+                case "arcelormittal":
+                    msg = (
+                        f"📋 Recebi os dados:\n"
+                        f"Cliente: ArcelorMittal\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                        f"Ticket: {dados.get('brm_mes')}\n\n"
+                        f"Está correto?"
+                    )
+                case _:
+                    msg = (
+                        f"⚠️ Cliente '{cliente}' ainda não é suportado no momento.\n"
+                        f"Por favor, envie um novo ticket ou fale com a DCAN."
+                    )
 
-    else:
-        enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
-        return jsonify(status="aguardando imagem")
+            enviar_botoes_sim_nao(numero, msg)
+            os.remove("ticket.jpg")
+            return jsonify(status="imagem processada")
 
-    if estado == "aguardando_confirmacao":
+        else:
+            enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
+            return jsonify(status="aguardando imagem")
+
+    elif estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
             conversas.pop(numero)
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
             conversas[numero]["estado"] = "aguardando_imagem"
-
-            # 🧼 Limpa os dados antigos
             conversas[numero].pop("cliente", None)
             conversas[numero].pop("dados", None)
-        
         else:
             enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return jsonify(status="confirmação final")
 
-    return jsonify(status="sem ação definida")
+    else:
+        enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
+        return jsonify(status="aguardando imagem")
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
