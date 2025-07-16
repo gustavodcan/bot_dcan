@@ -485,7 +485,6 @@ def webhook():
             conversas[numero]["estado"] = "aguardando_imagem"
             return jsonify(status="cliente desconhecido")
 
-        # Atualiza o dicionário de conversa se ainda não tiver a chave 'dados'
         if "dados" not in conversas[numero]:
             conversas[numero]["dados"] = {}
 
@@ -493,7 +492,6 @@ def webhook():
         conversas[numero]["cliente"] = cliente
         conversas[numero]["estado"] = "aguardando_confirmacao"
 
-        # Monta a mensagem com base no cliente
         match cliente:
             case "cdr":
                 msg = (
@@ -501,15 +499,6 @@ def webhook():
                     f"Cliente: CDR\n"
                     f"Ticket: {dados.get('ticket')}\n"
                     f"Nota Fiscal: {dados.get('outros_docs')}\n"
-                    f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
-                    f"Está correto?"
-                )
-            case "gerdau":
-                msg = (
-                    f"📋 Recebi os dados:\n"
-                    f"Cliente: Gerdau\n"
-                    f"Ticket: {dados.get('ticket')}\n"
-                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
                     f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
                     f"Está correto?"
                 )
@@ -549,6 +538,15 @@ def webhook():
                     f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
                     f"Está correto?"
                 )
+            case "gerdau":
+                msg = (
+                    f"📋 Recebi os dados:\n"
+                    f"Cliente: Gerdau\n"
+                    f"Ticket: {dados.get('ticket')}\n"
+                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                    f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
+                    f"Está correto?"
+                )
             case "arcelormittal":
                 msg = (
                     f"📋 Recebi os dados:\n"
@@ -567,6 +565,7 @@ def webhook():
         enviar_botoes_sim_nao(numero, msg)
         os.remove("ticket.jpg")
         return jsonify(status="imagem processada")
+
     else:
         enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
         return jsonify(status="aguardando imagem")
