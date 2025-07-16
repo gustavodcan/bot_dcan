@@ -241,25 +241,21 @@ def extrair_dados_cliente_rio_das_pedras(img, texto):
                 break
 
     # ⚖️ Peso líquido com OCR zoado tipo 'liquidouido'
-    match_peso = re.search(
-        r"peso[\s_]*l[ií1!|][qg][uúü][ií1!|][d0o][a-z]*[:：\s_-]*([\d\.,]+)",
-        texto.lower()
-    )
-    if match_peso:
-        peso_raw = match_peso.group(1)
-        print(f"Peso bruto capturado: {peso_raw}")
-        try:
-            # Se tiver vírgula e ponto, trata como separador de milhar + decimal
-            if "," in peso_raw and "." in peso_raw:
-                peso_tratado = peso_raw.replace(".", "").replace(",", ".")
-            else:
-                peso_tratado = peso_raw.replace(",", "").replace(".", "")
-            # Transforma em float, depois força inteiro (sem casas decimais)
-            peso_liquido_val = str(int(float(peso_tratado)))
-        except Exception as e:
-            print(f"Erro ao converter peso: {e}")
-            peso_liquido_val = "NÃO ENCONTRADO"
-        print(f"Peso líquido tratado (inteiro): {peso_liquido_val}")
+    for linha in linhas:
+        if re.search(r"peso[\s_]*l[ií1!|][qg][uúü][ií1!|][d0o][a-z]*", linha):
+            print(f"Linha suspeita de peso: {linha}")
+            match_peso = re.search(r"([\d\.,]+)\s*kg", linha)
+            if match_peso:
+                peso_raw = match_peso.group(1)
+                print(f"Peso bruto capturado: {peso_raw}")
+                try:
+                    # Remove pontos, vírgulas, converte pra float, e força int
+                    peso_tratado = peso_raw.replace(".", "").replace(",", "")
+                    peso_liquido_val = str(int(peso_tratado))
+                except Exception as e:
+                    print(f"Erro ao converter peso: {e}")
+                    peso_liquido_val = "NÃO ENCONTRADO"
+                break
 
     print("🎯 Dados extraídos:")
     print(f"Nota Fiscal: {nota_val}")
