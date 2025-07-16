@@ -396,6 +396,7 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
         return {"erro": "Falha no OCR"}
 
     texto = limpar_texto_ocr(texto)
+    conversas[numero]["ocr_texto"] = texto
 
     cliente_detectado = detectar_cliente_por_texto(texto)
     print(f"[🕵️] Cliente detectado automaticamente: {cliente_detectado}")
@@ -520,17 +521,26 @@ def webhook():
         nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
         if nota_digitada:
             nota_val = nota_digitada.group(0)
-            # Atualiza só a nota fiscal, mantendo os outros dados
-            conversas[numero]["dados"]["nota_fiscal"] = nota_val
-            
-            dados = conversas[numero]["dados"]
-            cliente = conversas[numero]["cliente"]
-            
+
+            # 👇 Recupera os dados atuais e o cliente
+            dados_atuais = conversas[numero].get("dados", {})
+            cliente = conversas[numero].get("cliente")
+            texto_ocr = conversas[numero].get("ocr_texto", "")
+
+            # 🛠️ Se os dados anteriores estão bugados, reexecuta extração só para Orizon
+            if cliente == "orizon":
+                novos_dados = extrair_dados_cliente_orizon(None, texto_ocr)
+                dados_atuais.update(novos_dados)  # atualiza ticket e peso_liquido
+
+            # Atualiza nota manual
+            dados_atuais["nota_fiscal"] = nota_val
+            conversas[numero]["dados"] = dados_atuais
+
             msg = (
                 f"📋 Recebi os dados:\n"
                 f"Cliente: {cliente.title()}\n"
-                f"Ticket: {dados.get('ticket', 'NÃO ENCONTRADO') or dados.get('brm_mes', 'NÃO ENCONTRADO')}\n"
-                f"Peso Líquido: {dados.get('peso_liquido', 'NÃO ENCONTRADO')}\n"
+                f"Ticket: {dados_atuais.get('ticket', 'NÃO ENCONTRADO') or dados_atuais.get('brm_mes', 'NÃO ENCONTRADO')}\n"
+                f"Peso Líquido: {dados_atuais.get('peso_liquido', 'NÃO ENCONTRADO')}\n"
                 f"Nota Fiscal: {nota_val}\n\n"
                 f"Está correto?"
             )
