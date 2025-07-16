@@ -17,8 +17,6 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
-clientes_validos = ["arcelormittal", "gerdau", "rio das pedras", "mahle", "orizon", "cdr", "saae"]
-
 def get_google_client():
     cred_path = "google_creds.json"
     if not os.path.exists(cred_path):
@@ -42,6 +40,25 @@ def ler_texto_google_ocr(path_imagem):
 
     return texts[0].description if texts else ""
 
+def detectar_cliente_por_texto(texto):
+    texto = texto.lower()
+
+    if "ticket de pesagem recebimento" in texto:
+        return "rio das pedras"
+    elif "mahle" in texto:
+        return "mahle"
+    elif "orizon" in texto:
+        return "orizon"
+    elif "cdr pedreira" in texto or "cor pedreira" in texto:
+        return "cdr"
+    elif "serviço autônomo" in texto or "servico autonomo" in texto:
+        return "saae"
+    elif "gerdau" in texto:
+        return "gerdau"
+    elif "arcelormittal" in texto:
+        return "arcelormittal"
+    else:
+        return "cliente_desconhecido"
 
 def preprocessar_imagem(caminho):
     imagem = Image.open(caminho)
@@ -92,34 +109,6 @@ def enviar_botoes_sim_nao(numero, mensagem):
     }
     res = requests.post(url, json=payload, headers=headers)
     print(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
-
-
-def enviar_lista_clientes(numero, mensagem):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
-    payload = {
-        "phone": numero,
-        "message": mensagem,
-        "optionList": {
-            "title": "Clientes DCAN",
-            "buttonLabel": "Escolha o cliente",
-            "options": [
-                {"id": "arcelormittal", "title": "ArcelorMittal"},
-                {"id": "gerdau", "title": "Gerdau"},
-                {"id": "mahle", "title": "Mahle"},
-                {"id": "rio das pedras", "title": "Rio das Pedras"},
-                {"id": "orizon", "title": "Orizon"},
-                {"id": "cdr", "title": "CDR"},
-                {"id": "saae", "title": "SAAE"},
-            ]
-        }
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
-    }
-    res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
-
 
 def extrair_dados_cliente_cdr(img, texto):
     print("📜 [CDR] Texto detectado:")
@@ -389,7 +378,7 @@ def extrair_dados_cliente_saae(img, texto):
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
     }
 
-def extrair_dados_da_imagem(caminho_imagem, cliente):
+def extrair_dados_da_imagem(caminho_imagem, numero):
     img = preprocessar_imagem(caminho_imagem)
     img.save("preprocessado.jpg")
     with open("preprocessado.jpg", "rb") as f:
@@ -405,13 +394,14 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
 
     texto = limpar_texto_ocr(texto)
 
-    import sys
-    print(f"📜 Texto detectado (cliente={cliente}):")
-    print(texto)
-    sys.stdout.flush()
+    cliente_detectado = detectar_cliente_por_texto(texto)
+    print(f"[🕵️] Cliente detectado automaticamente: {cliente_detectado}")
 
-    cliente = cliente.lower()
-    match cliente:
+    if cliente_detectado == "cliente_desconhecido":
+        enviar_mensagem(numero, "❌ Não consegui identificar o cliente a partir da imagem. Por favor, envie novamente com mais clareza ou entre em contato com a DCAN.")
+        return {"erro": "cliente não identificado"}
+
+    match cliente_detectado:
         case "cdr":
             return extrair_dados_cliente_cdr(None, texto)
         case "arcelormittal":
@@ -432,6 +422,8 @@ def extrair_dados_da_imagem(caminho_imagem, cliente):
                 "outros_docs": "CLIENTE NÃO SUPORTADO",
                 "peso_liquido": "CLIENTE NÃO SUPORTADO"
             }
+    dados["cliente"] = cliente_detectado  # adiciona o cliente no dicionário
+    return dados
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -460,8 +452,8 @@ def webhook():
 
     if estado == "aguardando_confirmacao_motorista":
         if texto_recebido in ['sim', 's']:
-            enviar_lista_clientes(numero, "✅ Perfeito! Para qual cliente a descarga foi realizada?")
-            conversas[numero]["estado"] = "aguardando_cliente"
+            enviar_mensagem(numero, "✅ Perfeito! Por favor, envie a foto do ticket.")
+            conversas[numero]["estado"] = "aguardando_imagem"
     
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
@@ -469,15 +461,6 @@ def webhook():
         else:
             enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return jsonify(status="resposta motorista")
-
-    if estado == "aguardando_cliente":
-        if texto_recebido in clientes_validos:
-            conversas[numero]["dados"] = {"cliente": texto_recebido.title()}
-            enviar_mensagem(numero, f"🚚 Obrigado! Cliente informado: {texto_recebido.title()}.\nPor gentileza, envie a foto do ticket.")
-            conversas[numero]["estado"] = "aguardando_imagem"
-        else:
-            enviar_lista_clientes(numero, "❓ Por favor, selecione um cliente da lista abaixo.")
-        return jsonify(status="verificação cliente")
 
     if estado == "aguardando_imagem":
         if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
@@ -494,8 +477,8 @@ def webhook():
                 enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
                 return jsonify(status="erro ao baixar")
 
-            cliente = conversas[numero]["dados"].get("cliente", "").lower()
-            dados = extrair_dados_da_imagem("ticket.jpg", cliente)
+            dados = extrair_dados_da_imagem("ticket.jpg", numero)
+            cliente = dados.get("cliente", "desconhecido")
 
             # Monta a mensagem com base no cliente
             match cliente:
