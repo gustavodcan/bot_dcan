@@ -583,7 +583,7 @@ def webhook():
             
     if estado == "aguardando_nota_orizon":
         nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
-    
+
         if nota_digitada:
             nota_val = nota_digitada.group(0)
             dados_parciais = conversas[numero].get("dados_parciais", {})
@@ -591,19 +591,21 @@ def webhook():
             conversas[numero]["dados"] = dados_parciais
             conversas[numero]["estado"] = "aguardando_confirmacao"
 
-        msg = (
-            f"📋 Recebi os dados:\n"
-            f"Cliente: Orizon\n"
-            f"Ticket: {dados_parciais.get('ticket')}\n"
-            f"Peso Líquido: {dados_parciais.get('peso_liquido')}\n"
-            f"Nota Fiscal: {nota_val}\n\n"
-            f"Está correto?"
-        )
-        enviar_botoes_sim_nao(numero, msg)
-    else:
-        enviar_mensagem(numero, "❌ Não entendi a nota fiscal. Por favor, envie apenas o número da nota (ex: *7878*).")
-    return jsonify(status="nota fiscal recebida ou inválida")
+            msg = (
+                f"📋 Recebi os dados:\n"
+                f"Cliente: Orizon\n"
+                f"Ticket: {dados_parciais.get('ticket')}\n"
+                f"Peso Líquido: {dados_parciais.get('peso_liquido')}\n"
+                f"Nota Fiscal: {nota_val}\n\n"
+                f"Está correto?"
+            )
+            enviar_botoes_sim_nao(numero, msg)
+            return jsonify(status="nota fiscal processada com sucesso")
     
+        else:
+            enviar_mensagem(numero, "❌ Não entendi a nota fiscal. Por favor, envie apenas o número da nota (ex: *7878*).")
+            return jsonify(status="nota fiscal inválida")
+
     if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
