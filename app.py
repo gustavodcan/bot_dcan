@@ -463,35 +463,34 @@ def webhook():
         return jsonify(status="resposta motorista")
 
     if estado == "aguardando_imagem":
-    if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
-        url_img = data["image"]["imageUrl"]
-        try:
-            img_res = requests.get(url_img)
-            if img_res.status_code == 200:
-                with open("ticket.jpg", "wb") as f:
-                    f.write(img_res.content)
-            else:
+        if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
+            url_img = data["image"]["imageUrl"]
+            try:
+                img_res = requests.get(url_img)
+                if img_res.status_code == 200:
+                    with open("ticket.jpg", "wb") as f:
+                        f.write(img_res.content)
+                else:
+                    enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
+                    return jsonify(status="erro ao baixar")
+            except Exception:
                 enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
                 return jsonify(status="erro ao baixar")
-        except Exception:
-            enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
-            return jsonify(status="erro ao baixar")
 
-        dados = extrair_dados_da_imagem("ticket.jpg", numero)
-        cliente = detectar_cliente_por_texto(ler_texto_google_ocr("ticket.jpg"))
+            dados = extrair_dados_da_imagem("ticket.jpg", numero)
+            cliente = detectar_cliente_por_texto(ler_texto_google_ocr("ticket.jpg"))
 
-        if not cliente or cliente == "cliente_desconhecido":
-            enviar_mensagem(numero, "❌ Cliente não identificado. Por favor, envie uma nova imagem ou fale com a DCAN.")
-            conversas[numero]["estado"] = "aguardando_imagem"
-            return jsonify(status="cliente desconhecido")
+            if not cliente or cliente == "cliente_desconhecido":
+                enviar_mensagem(numero, "❌ Cliente não identificado. Por favor, envie uma nova imagem ou fale com a DCAN.")
+                conversas[numero]["estado"] = "aguardando_imagem"
+                return jsonify(status="cliente desconhecido")
 
-        if "dados" not in conversas[numero]:
-            conversas[numero]["dados"] = {}
+            if "dados" not in conversas[numero]:
+                conversas[numero]["dados"] = {}
 
-        conversas[numero]["dados"].update(dados)
-        conversas[numero]["cliente"] = cliente
-        conversas[numero]["estado"] = "aguardando_confirmacao"
-
+            conversas[numero]["dados"].update(dados)
+            conversas[numero]["cliente"] = cliente
+            conversas[numero]["estado"] = "aguardando_confirmacao"
         match cliente:
             case "cdr":
                 msg = (
