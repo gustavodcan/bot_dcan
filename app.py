@@ -240,17 +240,15 @@ def extrair_dados_cliente_rio_das_pedras(img, texto):
                 print(f"Nota fiscal encontrada: {nota_val}")
                 break
 
-    # ⚖️ Peso líquido com OCR zuado tipo 'liquidouido', 'liqu1d0', 'líquldo', etc
+    # ⚖️ Peso líquido — aceita "líquidouido", "líquldo", etc mesmo sem "peso" antes
     for linha in linhas:
-        if re.search(r"peso.*liqu", linha):
-            print(f"[👁️] Linha suspeita de peso: {linha}")
-            # Tenta achar qualquer número estilo 19.940,000 ou 21.160.000 kg
-            match_peso = re.search(r"(\d{1,3}(?:[\.,]\d{3}){1,2})\s*kg", linha)
+        if re.search(r"l[ií1!|][qg][uúü][ií1!|][d0o][a-z]*[:：-]*", linha):
+            print(f"[👁️] Linha suspeita de peso líquido: {linha}")
+            match_peso = re.search(r"(\d{1,3}(?:[.,]\d{3}){1,2})\s*kg", linha)
             if match_peso:
                 peso_raw = match_peso.group(1)
                 print(f"[⚖️] Peso bruto capturado: {peso_raw}")
                 try:
-                    # Remove pontos e vírgulas, transforma em número inteiro
                     peso_limpo = peso_raw.replace(".", "").replace(",", "")
                     peso_liquido_val = str(int(peso_limpo))
                     print(f"[✅] Peso líquido final: {peso_liquido_val}")
@@ -524,7 +522,7 @@ def webhook():
                         f"📋 Recebi os dados:\n"
                         f"Cliente: Rio das Pedras\n"
                         f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')} kg\n"
+                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
                         f"Ticket: {dados.get('ticket')}\n\n"
                         f"Está correto?"
                     )
