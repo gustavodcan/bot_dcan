@@ -463,103 +463,113 @@ def webhook():
         return jsonify(status="resposta motorista")
 
     if estado == "aguardando_imagem":
-        if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
-            url_img = data["image"]["imageUrl"]
-            try:
-                img_res = requests.get(url_img)
-                if img_res.status_code == 200:
-                    with open("ticket.jpg", "wb") as f:
-                        f.write(img_res.content)
-                else:
-                    enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
-                    return jsonify(status="erro ao baixar")
-            except Exception:
+    if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
+        url_img = data["image"]["imageUrl"]
+        try:
+            img_res = requests.get(url_img)
+            if img_res.status_code == 200:
+                with open("ticket.jpg", "wb") as f:
+                    f.write(img_res.content)
+            else:
                 enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
                 return jsonify(status="erro ao baixar")
+        except Exception:
+            enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
+            return jsonify(status="erro ao baixar")
 
-            dados = extrair_dados_da_imagem("ticket.jpg", numero)
-            cliente = dados.get("cliente", "desconhecido")
+        dados = extrair_dados_da_imagem("ticket.jpg", numero)
+        cliente = detectar_cliente_por_texto(ler_texto_google_ocr("ticket.jpg"))
 
-            # Garante que a chave 'dados' existe
-            if "dados" not in conversas[numero]:
-                conversas[numero]["dados"] = {}
+        if not cliente or cliente == "cliente_desconhecido":
+            enviar_mensagem(numero, "❌ Cliente não identificado. Por favor, envie uma nova imagem ou fale com a DCAN.")
+            conversas[numero]["estado"] = "aguardando_imagem"
+            return jsonify(status="cliente desconhecido")
 
-                conversas[numero]["dados"].update(dados)
+        # Atualiza o dicionário de conversa se ainda não tiver a chave 'dados'
+        if "dados" not in conversas[numero]:
+            conversas[numero]["dados"] = {}
 
-            # Monta a mensagem com base no cliente
-            match cliente:
-                case "cdr":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: {cliente.title()}\n"
-                        f"Ticket: {dados.get('ticket')}\n"
-                        f"Nota Fiscal: {dados.get('outros_docs')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
-                        f"Está correto?"
-                    )
-                case "gerdau":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: {cliente.title()}\n"
-                        f"Ticket: {dados.get('ticket')}\n"
-                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
-                        f"Está correto?"
-                    )
-                case "rio das pedras":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: Rio das Pedras\n"
-                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                        f"Ticket: {dados.get('ticket')}\n\n"
-                        f"Está correto?"
-                    )
-                case "mahle":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: Mahle\n"
-                        f"Ticket: {dados.get('ticket')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n\n"
-                        f"Está correto?"
-                    )
-                case "orizon":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: Orizon\n"
-                        f"Ticket: {dados.get('ticket')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                        f"Nota Fiscal: {dados.get('nota_fiscal', 'Não se aplica')}\n\n"
-                        f"Está correto?"
-                    )
-                case "saae":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: {cliente.title()}\n"
-                        f"Ticket: {dados.get('ticket')}\n"
-                        f"Nota Fiscal: {dados.get('outros_docs')}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
-                        f"Está correto?"
-                    )
-                case "arcelormittal":
-                    msg = (
-                        f"📋 Recebi os dados:\n"
-                        f"Cliente: {cliente.title()}\n"
-                        f"Peso Líquido: {dados.get('peso_liquido')}\n"
-                        f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
-                        f"Ticket: {dados.get('brm_mes')}\n\n"
-                        f"Está correto?"
-                    )
+        conversas[numero]["dados"].update(dados)
+        conversas[numero]["cliente"] = cliente
+        conversas[numero]["estado"] = "aguardando_confirmacao"
 
-            conversas[numero]["dados"].update(dados)
-            conversas[numero]["estado"] = "aguardando_confirmacao"
-            enviar_botoes_sim_nao(numero, msg)
-            os.remove("ticket.jpg")
-            return jsonify(status="imagem processada")
-        else:
-            enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
-            return jsonify(status="aguardando imagem")
+        # Monta a mensagem com base no cliente
+        match cliente:
+            case "cdr":
+                msg = (
+                    f"📋 Recebi os dados:\n"
+                    f"Cliente: CDR\n"
+                    f"Ticket: {dados.get('ticket')}\n"
+                    f"Nota Fiscal: {dados.get('outros_docs')}\n"
+                    f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
+                    f"Está correto?"
+                )
+            case "gerdau":
+                msg = (
+                    f"📋 Recebi os dados:\n"
+                    f"Cliente: Gerdau\n"
+                    f"Ticket: {dados.get('ticket')}\n"
+                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                    f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
+                    f"Está correto?"
+                )
+            case "rio das pedras":
+                msg = (
+                    f"📋 Recebi os dados:\n"
+                    f"Cliente: Rio das Pedras\n"
+                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                    f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                    f"Ticket: {dados.get('ticket')}\n\n"
+                    f"Está correto?"
+                )
+            case "mahle":
+                msg = (
+                    f"📋 Recebi os dados:\n"
+                    f"Cliente: Mahle\n"
+                    f"Ticket: {dados.get('ticket')}\n"
+                    f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n\n"
+                    f"Está correto?"
+                )
+            case "orizon":
+                msg = (
+                    f"📋 Recebi os dados:\n"
+                    f"Cliente: Orizon\n"
+                    f"Ticket: {dados.get('ticket')}\n"
+                    f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                    f"Nota Fiscal: {dados.get('nota_fiscal', 'Não se aplica')}\n\n"
+                    f"Está correto?"
+                )
+            case "saae":
+                msg = (
+                    f"📋 Recebi os dados:\n"
+                    f"Cliente: SAAE\n"
+                    f"Ticket: {dados.get('ticket')}\n"
+                    f"Nota Fiscal: {dados.get('outros_docs')}\n"
+                    f"Peso Líquido: {dados.get('peso_liquido')}\n\n"
+                    f"Está correto?"
+                )
+            case "arcelormittal":
+                msg = (
+                    f"📋 Recebi os dados:\n"
+                    f"Cliente: ArcelorMittal\n"
+                    f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                    f"Nota Fiscal: {dados.get('nota_fiscal')}\n"
+                    f"Ticket: {dados.get('brm_mes')}\n\n"
+                    f"Está correto?"
+                )
+            case _:
+                msg = (
+                    f"⚠️ Cliente '{cliente}' ainda não é suportado no momento.\n"
+                    f"Por favor, envie um novo ticket ou fale com a DCAN."
+                )
+
+        enviar_botoes_sim_nao(numero, msg)
+        os.remove("ticket.jpg")
+        return jsonify(status="imagem processada")
+    else:
+        enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
+        return jsonify(status="aguardando imagem")
 
     if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
