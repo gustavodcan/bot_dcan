@@ -559,38 +559,38 @@ def webhook():
         return jsonify(status="nota fiscal recebida ou inválida")
 
     if estado == "aguardando_destino_saae":
-    destino_digitado = texto_recebido.strip().title()
+        destino_digitado = texto_recebido.strip().title()
 
-    if len(destino_digitado) < 2:
-        enviar_mensagem(numero, "❌ Por favor, informe um destino válido.")
-        return jsonify(status="destino inválido")
+        if len(destino_digitado) < 2:
+            enviar_mensagem(numero, "❌ Por favor, informe um destino válido.")
+            return jsonify(status="destino inválido")
 
-    # Armazena o destino
-    conversas[numero]["destino"] = destino_digitado
+        # Armazena o destino
+        conversas[numero]["destino"] = destino_digitado
 
-    # Continua a extração com base na imagem anterior
-    try:
-        dados = extrair_dados_cliente_saae(None, conversas[numero].get("texto_ocr", ""))
-    except Exception as e:
-        enviar_mensagem(numero, f"❌ Erro ao extrair os dados do ticket. Tente novamente.\nErro: {e}")
-        conversas[numero]["estado"] = "aguardando_imagem"
-        return jsonify(status="erro extração saae")
+        # Continua a extração com base na imagem anterior
+        try:
+            dados = extrair_dados_cliente_saae(None, conversas[numero].get("ocr_texto", ""))
+        except Exception as e:
+            enviar_mensagem(numero, f"❌ Erro ao extrair os dados do ticket. Tente novamente.\nErro: {e}")
+            conversas[numero]["estado"] = "aguardando_imagem"
+            return jsonify(status="erro extração saae")
 
-    dados["destino"] = destino_digitado
-    conversas[numero]["dados"] = dados
-    conversas[numero]["estado"] = "aguardando_confirmacao"
+        dados["destino"] = destino_digitado
+        conversas[numero]["dados"] = dados
+        conversas[numero]["estado"] = "aguardando_confirmacao"
 
-    msg = (
-        f"📋 Recebi os dados:\n"
-        f"Cliente: SAAE\n"
-        f"Ticket: {dados.get('ticket')}\n"
-        f"Peso Líquido: {dados.get('peso_liquido')}\n"
-        f"Nota Fiscal: {dados.get('nota_fiscal', 'Não informada')}\n"
-        f"Destino: {destino_digitado}\n\n"
-        f"Está correto?"
-    )
-    enviar_botoes_sim_nao(numero, msg)
-    return jsonify(status="dados SAAE aguardando confirmação")
+        msg = (
+            f"📋 Recebi os dados:\n"
+            f"Cliente: SAAE\n"
+            f"Ticket: {dados.get('ticket')}\n"
+            f"Peso Líquido: {dados.get('peso_liquido')}\n"
+            f"Nota Fiscal: {dados.get('nota_fiscal', 'Não informada')}\n"
+            f"Destino: {destino_digitado}\n\n"
+            f"Está correto?"
+        )
+        enviar_botoes_sim_nao(numero, msg)
+        return jsonify(status="destino recebido e aguardando confirmação")
 
     if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
