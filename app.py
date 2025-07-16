@@ -591,7 +591,6 @@ def webhook():
             f"Cliente: SAAE\n"
             f"Ticket: {dados.get('ticket')}\n"
             f"Peso Líquido: {dados.get('peso_liquido')}\n"
-            f"Nota Fiscal: {dados.get('nota_fiscal', 'Não informada')}\n"
             f"Destino: {destino_digitado}\n\n"
             f"Está correto?"
         )
