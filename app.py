@@ -418,7 +418,13 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
         case "mahle":
             return extrair_dados_cliente_mahle(None, texto)
         case "orizon":
-            return extrair_dados_cliente_orizon(None, texto)
+            dados_parciais = extrair_dados_cliente_orizon(None, texto)
+            # Armazena os dados parciais
+            conversas[numero]["estado"] = "aguardando_nota_orizon"
+            conversas[numero]["dados_parciais"] = dados_parciais
+            conversas[numero]["cliente"] = "orizon"
+            enviar_mensagem(numero, "📄 Identifiquei que o cliente é *Orizon*.\nPor favor, me diga o número da *Nota Fiscal* agora.")
+            # return {"status": "aguardando nota fiscal"}
         case "saae":
             return extrair_dados_cliente_saae(None, texto)
         case _:
@@ -574,8 +580,31 @@ def webhook():
         else:
             enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
             return jsonify(status="aguardando imagem")
+            
+    if estado == "aguardando_nota_orizon":
+        nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
+    
+        if nota_digitada:
+            nota_val = nota_digitada.group(0)
+            dados_parciais = conversas[numero].get("dados_parciais", {})
+            dados_parciais["nota_fiscal"] = nota_val
+            conversas[numero]["dados"] = dados_parciais
+            conversas[numero]["estado"] = "aguardando_confirmacao"
 
-    elif estado == "aguardando_confirmacao":
+        msg = (
+            f"📋 Recebi os dados:\n"
+            f"Cliente: Orizon\n"
+            f"Ticket: {dados_parciais.get('ticket')}\n"
+            f"Peso Líquido: {dados_parciais.get('peso_liquido')}\n"
+            f"Nota Fiscal: {nota_val}\n\n"
+            f"Está correto?"
+        )
+        enviar_botoes_sim_nao(numero, msg)
+    else:
+        enviar_mensagem(numero, "❌ Não entendi a nota fiscal. Por favor, envie apenas o número da nota (ex: *7878*).")
+    return jsonify(status="nota fiscal recebida ou inválida")
+    
+    if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
             conversas.pop(numero)
@@ -589,8 +618,10 @@ def webhook():
         return jsonify(status="confirmação final")
 
     else:
-        enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
-        return jsonify(status="aguardando imagem")
+        print(f"⚠️ Estado inesperado: {estado} para o número {numero}")
+        enviar_mensagem(numero, "⚠️ Estado desconhecido. Por favor, envie a imagem do ticket novamente.")
+        conversas[numero]["estado"] = "aguardando_imagem"
+        return jsonify(status="estado inesperado")
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
