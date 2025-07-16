@@ -143,7 +143,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     print("📜 Texto recebido para extração:")
     print(texto)
 
-    # Nota fiscal: pega só até a barra
+    # Nota fiscal
     nf_match = re.search(r"fiscal[:\-]?\s*([\d]+)", texto, re.IGNORECASE)
     nota_val = nf_match.group(1) if nf_match else "NÃO ENCONTRADO"
 
@@ -151,19 +151,22 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     brm_match = re.search(r"brm\s+mes[:\-]?\s*(\d+)", texto, re.IGNORECASE)
     brm_val = brm_match.group(1) if brm_match else "NÃO ENCONTRADO"
 
-    # Peso líquido: extrai todas as linhas com só número de 4 ou 5 dígitos
-    numeros = re.findall(r"^\s*(\d{4,5})\s*$", texto, re.MULTILINE)
+    # Peso líquido: captura todos os números que aparecem sozinhos em uma linha
+    numeros = re.findall(r"^\s*(\d{4,6})\s*$", texto, re.MULTILINE)
     print(f"Números isolados encontrados: {numeros}")
 
-    if len(numeros) == 2:
+    peso_liquido = "NÃO ENCONTRADO"
+
+    if len(numeros) == 1:
         peso_liquido = numeros[0]
-    elif len(numeros) >= 3:
+    elif len(numeros) > 1:
         try:
-            peso_liquido = str(int(numeros[0]) + int(numeros[1]))
-        except:
+            # Soma todos menos o último
+            valores = list(map(int, numeros[:-1]))
+            peso_liquido = str(sum(valores))
+        except Exception as e:
+            print(f"[❌] Erro ao somar pesos: {e}")
             peso_liquido = "NÃO ENCONTRADO"
-    else:
-        peso_liquido = "NÃO ENCONTRADO"
 
     print("🎯 Dados extraídos:")
     print(f"Nota Fiscal: {nota_val}")
@@ -175,7 +178,6 @@ def extrair_dados_cliente_arcelormittal(img, texto):
         "brm_mes": brm_val,
         "peso_liquido": peso_liquido
     }
-
 
 def extrair_dados_cliente_gerdau(img, texto):
     print("[GERDAU] Extraindo dados...")
