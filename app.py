@@ -397,6 +397,9 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     cliente_detectado = detectar_cliente_por_texto(texto)
     print(f"[🕵️] Cliente detectado automaticamente: {cliente_detectado}")
 
+    # 🚨 Adiciona isso aqui!
+    conversas[numero]["cliente"] = cliente_detectado
+
     if cliente_detectado == "cliente_desconhecido":
         enviar_mensagem(numero, "❌ Não consegui identificar o cliente a partir da imagem. Por favor, envie novamente com mais clareza ou entre em contato com a DCAN.")
         return {"erro": "cliente não identificado"}
@@ -478,7 +481,7 @@ def webhook():
                 return jsonify(status="erro ao baixar")
 
             dados = extrair_dados_da_imagem("ticket.jpg", numero)
-            cliente = detectar_cliente_por_texto(ler_texto_google_ocr("ticket.jpg"))
+            cliente = conversas[numero].get("cliente")
 
             if not cliente or cliente == "cliente_desconhecido":
                 enviar_mensagem(numero, "❌ Cliente não identificado. Por favor, envie uma nova imagem ou fale com a DCAN.")
