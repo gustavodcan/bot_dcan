@@ -480,6 +480,12 @@ def webhook():
             dados = extrair_dados_da_imagem("ticket.jpg", numero)
             cliente = dados.get("cliente", "desconhecido")
 
+            # Garante que a chave 'dados' existe
+            if "dados" not in conversas[numero]:
+                conversas[numero]["dados"] = {}
+
+                conversas[numero]["dados"].update(dados)
+
             # Monta a mensagem com base no cliente
             match cliente:
                 case "cdr":
