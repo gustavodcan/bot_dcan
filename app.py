@@ -490,6 +490,12 @@ def webhook():
                 return jsonify(status="erro ao baixar")
 
             dados = extrair_dados_da_imagem("ticket.jpg", numero)
+
+            # Para o fluxo se for o SAAE e estiver esperando destino
+            if dados.get("status") == "aguardando destino saae":
+                return jsonify(status="aguardando destino saae")
+
+            # Continua normal para os outros
             cliente = conversas[numero].get("cliente")
 
             if not cliente or cliente == "cliente_desconhecido":
