@@ -513,6 +513,25 @@ def webhook():
                 enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal para continuar\n.(Ex: *7878*).")
                 return jsonify(status="solicitando nota manual")
 
+            # 🛡️ Checagem de campos obrigatórios
+            campos_obrigatorios = ["ticket", "peso_liquido", "nota_fiscal"]
+            dados_faltando = [campo for campo in campos_obrigatorios if not dados_atuais.get(campo) or "NÃO ENCONTRADO" in str(dados_atuais.get(campo)).upper()]
+
+            # 🧱 Se estiver faltando qualquer dado essencial
+            if dados_faltando:
+                enviar_mensagem(
+                    numero,
+                    f"⚠️ Não consegui identificar todas informações\n"
+                    "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
+                )
+                conversas[numero]["estado"] = "aguardando_imagem"
+                conversas[numero].pop("dados", None)
+                try:
+                    os.remove("ticket.jpg")
+                except FileNotFoundError:
+                    pass
+                return jsonify(status="dados incompletos, aguardando nova imagem")
+
             # Mensagem padrão para confirmação
             msg = (
                 f"📋 Recebi os dados:\n"
