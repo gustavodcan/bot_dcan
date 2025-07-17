@@ -607,7 +607,7 @@ def webhook():
 
         # 🛡️ Checagem de campos obrigatórios
          campos_obrigatorios = ["ticket", "peso_liquido", "destino"]
-         dados_faltando = [campo for campo in campos_obrigatorios if not dados_atuais.get(campo) or "NÃO ENCONTRADO" in str(dados_atuais.get(campo)).upper()]
+         dados_faltando = [campo for campo in campos_obrigatorios if not dados.get(campo) or "NÃO ENCONTRADO" in str(dados.get(campo)).upper()]
 
          # 🧱 Se estiver faltando qualquer dado essencial
         if dados_faltando:
