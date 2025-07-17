@@ -35,13 +35,15 @@ def conectar_google_sheets():
 
 # Função pra criar client do Google Vision OCR direto da variável de ambiente (acc_ocr)
 def get_google_vision_client():
-    cred_json_str = os.getenv("GOOGLE_CREDS_JSON")
-    if not cred_json_str:
-        raise Exception("Variável de ambiente GOOGLE_CREDS_JSON não está definida!")
-    cred_info = json.loads(cred_json_str)
-    creds = Credentials.from_service_account_info(cred_info)
-    client = vision.ImageAnnotatorClient(credentials=creds)
-    return client
+    cred_path = "GOOGLE_CREDS_JSON"
+    if not os.path.exists(cred_path):
+        raise FileNotFoundError("Arquivo de credencial não encontrado no caminho esperado.")
+
+    with open(cred_path, "r") as f:
+        creds_dict = json.load(f)
+
+    credentials = service_account.Credentials.from_service_account_info(creds_dict)
+    return vision.ImageAnnotatorClient(credentials=credentials)
 
 def ler_texto_google_ocr(path_imagem):
     client = get_google_vision_client()
