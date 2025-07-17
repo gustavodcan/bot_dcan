@@ -498,10 +498,9 @@ def webhook():
             # Continua normal para os outros
             cliente = conversas[numero].get("cliente")
 
-            if not cliente or cliente == "cliente_desconhecido":
-                enviar_mensagem(numero, "❌ Cliente não identificado. Por favor, envie uma nova imagem ou fale com a DCAN.")
+            if dados.get("erro") == "cliente não identificado":
                 conversas[numero]["estado"] = "aguardando_imagem"
-                return jsonify(status="cliente desconhecido")
+                return jsonify(status="cliente desconhecido (mensagem já enviada)")
 
             conversas[numero]["cliente"] = cliente
             conversas[numero]["dados"] = dados
