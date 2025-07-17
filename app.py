@@ -606,22 +606,22 @@ def webhook():
         conversas[numero]["estado"] = "aguardando_confirmacao"
 
         # 🛡️ Checagem de campos obrigatórios
-         campos_obrigatorios = ["ticket", "peso_liquido", "destino"]
-         dados_faltando = [campo for campo in campos_obrigatorios if not dados.get(campo) or "NÃO ENCONTRADO" in str(dados.get(campo)).upper()]
+        campos_obrigatorios = ["ticket", "peso_liquido", "destino"]
+        dados_faltando = [campo for campo in campos_obrigatorios if not dados.get(campo) or "NÃO ENCONTRADO" in str(dados.get(campo)).upper()]
 
          # 🧱 Se estiver faltando qualquer dado essencial
         if dados_faltando:
             enviar_mensagem(
                 numero,
-                   f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
+                f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
                 "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
               )
             conversas[numero]["estado"] = "aguardando_imagem"
             conversas[numero].pop("dados", None)
-             try:
-                 os.remove("ticket.jpg")
-             except FileNotFoundError:
-                 pass
+            try:
+                os.remove("ticket.jpg")
+            except FileNotFoundError:
+                pass
             return jsonify(status="dados incompletos, aguardando nova imagem")
 
         msg = (
