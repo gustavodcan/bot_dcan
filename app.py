@@ -524,7 +524,10 @@ def webhook():
 
             conversas[numero]["cliente"] = cliente
             conversas[numero]["dados"] = dados
-            os.remove("ticket.jpg")
+            try:
+                os.remove("ticket.jpg")
+            except FileNotFoundError:
+                pass
 
             nota = dados.get("nota_fiscal", "").strip().upper()
             if cliente == "orizon" or (cliente == "cdr" and nota in ["NÃO ENCONTRADO", "", None]):
