@@ -606,24 +606,24 @@ def webhook():
         conversas[numero]["dados"] = dados
         conversas[numero]["estado"] = "aguardando_confirmacao"
 
-         # 🛡️ Checagem de campos obrigatórios
-            campos_obrigatorios = ["ticket", "peso_liquido", "nota_fiscal"]
-            dados_faltando = [campo for campo in campos_obrigatorios if not dados_atuais.get(campo) or "NÃO ENCONTRADO" in str(dados_atuais.get(campo)).upper()]
+        # 🛡️ Checagem de campos obrigatórios
+         campos_obrigatorios = ["ticket", "peso_liquido", "destino"]
+         dados_faltando = [campo for campo in campos_obrigatorios if not dados_atuais.get(campo) or "NÃO ENCONTRADO" in str(dados_atuais.get(campo)).upper()]
 
-            # 🧱 Se estiver faltando qualquer dado essencial
-            if dados_faltando:
-                enviar_mensagem(
-                    numero,
-                    f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
-                    "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
-                )
-                conversas[numero]["estado"] = "aguardando_imagem"
-                conversas[numero].pop("dados", None)
-                try:
-                    os.remove("ticket.jpg")
-                except FileNotFoundError:
-                    pass
-                return jsonify(status="dados incompletos, aguardando nova imagem")
+         # 🧱 Se estiver faltando qualquer dado essencial
+        if dados_faltando:
+            enviar_mensagem(
+                numero,
+                   f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
+                "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
+              )
+            conversas[numero]["estado"] = "aguardando_imagem"
+            conversas[numero].pop("dados", None)
+             try:
+                 os.remove("ticket.jpg")
+             except FileNotFoundError:
+                 pass
+            return jsonify(status="dados incompletos, aguardando nova imagem")
 
         msg = (
             f"📋 Recebi os dados:\n"
