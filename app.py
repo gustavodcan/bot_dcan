@@ -491,6 +491,22 @@ def webhook():
 
             dados = extrair_dados_da_imagem("ticket.jpg", numero)
 
+            # 🛡️ Checagem de campos obrigatórios
+            campos_obrigatorios = ["ticket", "peso_liquido", "nota_fiscal"]
+            dados_faltando = [campo for campo in campos_obrigatorios if not dados.get(campo) or "NÃO ENCONTRADO" in str(dados.get(campo)).upper()]
+
+            # 🧱 Se estiver faltando qualquer dado essencial
+            if dados_faltando:
+                enviar_mensagem(
+                    numero,
+                    f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
+                    "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
+                )
+                conversas[numero]["estado"] = "aguardando_imagem"
+                conversas[numero].pop("dados", None)
+                os.remove("ticket.jpg")
+                return jsonify(status="dados incompletos, aguardando nova imagem")
+
             # Para o fluxo se for o SAAE e estiver esperando destino
             if dados.get("status") == "aguardando destino saae":
                 return jsonify(status="aguardando destino saae")
