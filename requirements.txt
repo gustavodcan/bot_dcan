@@ -5,3 +5,5 @@ requests
 google-cloud-vision
 google-auth
 azure-storage-file-share
+gspread
+oauth2client
