@@ -407,13 +407,13 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     conversas[numero]["cliente"] = cliente_detectado
 
     if cliente_detectado == "cliente_desconhecido":
-        enviar_mensagem(numero, "❌ Não consegui identificar o cliente a partir da imagem. Por favor, envie novamente com mais clareza ou entre em contato com a DCAN.")
+        enviar_mensagem(numero, "❌ Não consegui identificar o cliente a partir da imagem. Por favor, envie novamente com mais clareza ou entre em contato com seu programador.")
         return {"erro": "cliente não identificado"}
 
     # ⚠️ Fluxo especial pro SAAE
     if cliente_detectado == "saae":
         conversas[numero]["estado"] = "aguardando_destino_saae"
-        enviar_mensagem(numero, "🛣️ Cliente SAAE detectado! Por favor, informe o *destino da carga* (ex: Aterro São João).")
+        enviar_mensagem(numero, "🛣️ Cliente SAAE detectado!\nPor favor, informe o *destino da carga*\n(ex: ETA Vitória).")
         return {"status": "aguardando destino saae"}
 
     match cliente_detectado:
@@ -459,7 +459,7 @@ def webhook():
         return jsonify(status="ignorado")
 
     if not estado:
-        enviar_botoes_sim_nao(numero, "👋 Olá! Tudo bem? Sou o bot de tickets da DCAN Transportes.\nVocê é motorista em viagem pela DCAN?")
+        enviar_botoes_sim_nao(numero, "👋 Olá! Tudo bem?\nSou o bot de tickets da DCAN Transportes.\n\nVocê é motorista em viagem pela DCAN?")
         conversas[numero] = {"estado": "aguardando_confirmacao_motorista"}
         return jsonify(status="aguardando confirmação de motorista")
 
@@ -468,7 +468,7 @@ def webhook():
             enviar_mensagem(numero, "✅ Perfeito! Por favor, envie a foto do ticket.")
             conversas[numero]["estado"] = "aguardando_imagem"
         elif texto_recebido in ['não', 'nao', 'n']:
-            enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (XX) XXXX-XXXX. Obrigado!")
+            enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (11) 91253-8457.\nObrigado!")
             conversas.pop(numero)
         else:
             enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
@@ -510,7 +510,7 @@ def webhook():
             if cliente == "orizon" or (cliente == "cdr" and nota in ["NÃO ENCONTRADO", "", None]):
 
                 conversas[numero]["estado"] = "aguardando_nota_manual"
-                enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal (ex: *7878*) para continuar.")
+                enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal para continuar\n.(Ex: *7878*).")
                 return jsonify(status="solicitando nota manual")
 
             # Mensagem padrão para confirmação
@@ -558,7 +558,7 @@ def webhook():
             if dados_faltando:
                 enviar_mensagem(
                     numero,
-                    f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
+                    f"⚠️ Não consegui identificar todas informações\n"
                     "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
                 )
                 conversas[numero]["estado"] = "aguardando_imagem"
@@ -580,7 +580,7 @@ def webhook():
             conversas[numero]["estado"] = "aguardando_confirmacao"
             enviar_botoes_sim_nao(numero, msg)
         else:
-            enviar_mensagem(numero, "❌ Não entendi a nota fiscal. Por favor, envie apenas o número da nota (ex: *7878*).")
+            enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
         return jsonify(status="nota fiscal recebida ou inválida")
 
     if estado == "aguardando_destino_saae":
@@ -597,7 +597,7 @@ def webhook():
         try:
             dados = extrair_dados_cliente_saae(None, conversas[numero].get("ocr_texto", ""))
         except Exception as e:
-            enviar_mensagem(numero, f"❌ Erro ao extrair os dados do ticket. Tente novamente.\nErro: {e}")
+            enviar_mensagem(numero, f"❌ Erro ao extrair os dados do ticket.\nTente novamente.\nErro: {e}")
             conversas[numero]["estado"] = "aguardando_imagem"
             return jsonify(status="erro extração saae")
 
