@@ -149,7 +149,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     nota_val = nf_match.group(1) if nf_match else "NÃO ENCONTRADO"
 
     # BRM
-    brm_match = re.search(r"b[rf]m\s+mes[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    brm_match = re.search(r"b[rfi][mm]\s+mes[:\-]?\s*(\d+)", texto, re.IGNORECASE)
     brm_val = brm_match.group(1) if brm_match else "NÃO ENCONTRADO"
 
     # Peso líquido: captura todos os números que aparecem sozinhos em uma linha
