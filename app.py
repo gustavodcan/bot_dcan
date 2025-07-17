@@ -7,6 +7,8 @@ import os
 import json
 from google.oauth2 import service_account
 from google.cloud import vision
+import gspread
+from google.oauth2.service_account import Credentials
 
 app = Flask(__name__)
 conversas = {}
@@ -17,19 +19,32 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
-def get_google_client():
-    cred_path = "google_creds.json"
-    if not os.path.exists(cred_path):
-        raise FileNotFoundError("Arquivo de credencial não encontrado no caminho esperado.")
+# Função pra criar client do Google Sheets direto da variável de ambiente (acc_servico)
+def conectar_google_sheets():
+    cred_json_str = os.getenv("acc_servico")
+    if not cred_json_str:
+        raise Exception("Variável de ambiente acc_servico não está definida!")
+    cred_info = json.loads(cred_json_str)
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    creds = Credentials.from_service_account_info(cred_info, scopes=scopes)
+    client = gspread.authorize(creds)
+    return client
 
-    with open(cred_path, "r") as f:
-        creds_dict = json.load(f)
-
-    credentials = service_account.Credentials.from_service_account_info(creds_dict)
-    return vision.ImageAnnotatorClient(credentials=credentials)
+# Função pra criar client do Google Vision OCR direto da variável de ambiente (acc_ocr)
+def get_google_vision_client():
+    cred_json_str = os.getenv("google_creds.json")
+    if not cred_json_str:
+        raise Exception("Variável de ambiente google_creds.json não está definida!")
+    cred_info = json.loads(cred_json_str)
+    creds = Credentials.from_service_account_info(cred_info)
+    client = vision.ImageAnnotatorClient(credentials=creds)
+    return client
 
 def ler_texto_google_ocr(path_imagem):
-    client = get_google_client()
+    client = get_google_vision_client()
 
     with open(path_imagem, "rb") as image_file:
         content = image_file.read()
@@ -392,7 +407,10 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     try:
         img.save("ticket_pre_google.jpg")  # salvar temporário pra OCR
         texto = ler_texto_google_ocr("ticket_pre_google.jpg")
-        os.remove("ticket_pre_google.jpg")
+       try:
+            os.remove("ticket.jpg")
+        except FileNotFoundError:
+            pass
     except Exception as e:
         print(f"❌ Erro no OCR Google: {e}")
         return {"erro": "Falha no OCR"}
@@ -679,6 +697,26 @@ def webhook():
     enviar_mensagem(numero, "⚠️ Estado desconhecido. Por favor, envie a imagem do ticket novamente.")
     conversas[numero]["estado"] = "aguardando_imagem"
     return jsonify(status="estado inesperado")
+
+def enviar_dados():
+    try:
+        dados = request.json  # espera receber JSON no corpo da requisição
+        # Exemplo de campos esperados
+        data = dados.get("data")
+        cliente = dados.get("cliente")
+        ticket = dados.get("ticket")
+        nota_fiscal = dados.get("nota_fiscal")
+        peso = dados.get("peso")
+        destino = dados.get("destino")
+        telefone = dados.get("telefone")
+
+        client = conectar_google_sheets()
+        planilha = client.open("tickets_dcan").sheet1  # ou open_by_key("SUA_PLANILHA_ID")
+        planilha.append_row([data, cliente, ticket, nota_fiscal, peso, destino, telefone])
+
+        return jsonify({"status": "sucesso", "msg": "Dados enviados para Google Sheets!"})
+    except Exception as e:
+        return jsonify({"status": "erro", "msg": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
