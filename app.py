@@ -529,7 +529,7 @@ def webhook():
             if dados_faltando:
                 enviar_mensagem(
                     numero,
-                    f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
+                    f"⚠️ Não consegui identificar todas informações\n"
                     "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
                 )
                 conversas[numero]["estado"] = "aguardando_imagem"
