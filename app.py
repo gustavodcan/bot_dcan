@@ -407,7 +407,7 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     try:
         img.save("ticket_pre_google.jpg")  # salvar temporário pra OCR
         texto = ler_texto_google_ocr("ticket_pre_google.jpg")
-       try:
+        try:
             os.remove("ticket.jpg")
         except FileNotFoundError:
             pass
