@@ -491,71 +491,71 @@ def webhook():
 
             dados = extrair_dados_da_imagem("ticket.jpg", numero)
 
-        # Para o fluxo se for o SAAE e estiver esperando destino
-        if dados.get("status") == "aguardando destino saae":
-            return jsonify(status="aguardando destino saae")
+            # Para o fluxo se for o SAAE e estiver esperando destino
+            if dados.get("status") == "aguardando destino saae":
+                return jsonify(status="aguardando destino saae")
 
-        # Continua normal para os outros
-        cliente = conversas[numero].get("cliente")
+            # Continua normal para os outros
+            cliente = conversas[numero].get("cliente")
 
-        if dados.get("erro") == "cliente não identificado":
-            conversas[numero]["estado"] = "aguardando_imagem"
-            return jsonify(status="cliente desconhecido (mensagem já enviada)")
+            if dados.get("erro") == "cliente não identificado":
+                conversas[numero]["estado"] = "aguardando_imagem"
+                return jsonify(status="cliente desconhecido (mensagem já enviada)")
 
-        conversas[numero]["cliente"] = cliente
-        conversas[numero]["dados"] = dados
-        os.remove("ticket.jpg")
+            conversas[numero]["cliente"] = cliente
+            conversas[numero]["dados"] = dados
+            os.remove("ticket.jpg")
 
-        nota = dados.get("nota_fiscal", "").strip().upper()
-        if cliente == "orizon" or (cliente == "cdr" and nota in ["NÃO ENCONTRADO", "", None]):
-            conversas[numero]["estado"] = "aguardando_nota_manual"
-            enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal para continuar\n(Ex: *7878*).")
-            return jsonify(status="solicitando nota manual")
+            nota = dados.get("nota_fiscal", "").strip().upper()
+            if cliente == "orizon" or (cliente == "cdr" and nota in ["NÃO ENCONTRADO", "", None]):
+                conversas[numero]["estado"] = "aguardando_nota_manual"
+                enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal para continuar\n(Ex: *7878*).")
+                return jsonify(status="solicitando nota manual")
 
-        # 🛡️ Checagem de campos obrigatórios com valores reais
-        ticket_ou_brm = dados.get("ticket") or dados.get("brm_mes")
-        campos_obrigatorios = {
-            "ticket ou brm_mes": ticket_ou_brm,
-            "peso_liquido": dados.get("peso_liquido"),
-            "nota_fiscal": dados.get("nota_fiscal")
-        }
+            # 🛡️ Checagem de campos obrigatórios com valores reais
+            ticket_ou_brm = dados.get("ticket") or dados.get("brm_mes")
+            campos_obrigatorios = {
+                "ticket ou brm_mes": ticket_ou_brm,
+                "peso_liquido": dados.get("peso_liquido"),
+                "nota_fiscal": dados.get("nota_fiscal")
+            }
 
-        dados_faltando = [
-            nome for nome, valor in campos_obrigatorios.items()
-            if not valor or "NÃO ENCONTRADO" in str(valor).upper()
-        ]
+            dados_faltando = [
+                nome for nome, valor in campos_obrigatorios.items()
+                if not valor or "NÃO ENCONTRADO" in str(valor).upper()
+            ]
 
-        # 🧱 Se estiver faltando qualquer dado essencial
-        if dados_faltando:
-            enviar_mensagem(
-                numero,
-                f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
-                "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
+            # 🧱 Se estiver faltando qualquer dado essencial
+            if dados_faltando:
+                enviar_mensagem(
+                    numero,
+                    f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
+                    "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
+                )
+                conversas[numero]["estado"] = "aguardando_imagem"
+                conversas[numero].pop("dados", None)
+                try:
+                    os.remove("ticket.jpg")
+                except FileNotFoundError:
+                    pass
+                return jsonify(status="dados incompletos, aguardando nova imagem")
+
+            # Mensagem padrão para confirmação
+            msg = (
+                f"📋 Recebi os dados:\n"
+                f"Cliente: {cliente.title()}\n"
+                f"Ticket: {ticket_ou_brm}\n"
+                f"Peso Líquido: {dados.get('peso_liquido')}\n"
+                f"Nota Fiscal: {dados.get('nota_fiscal') or dados.get('outros_docs') or 'Não encontrada'}\n\n"
+                f"Está correto?"
             )
-            conversas[numero]["estado"] = "aguardando_imagem"
-            conversas[numero].pop("dados", None)
-            try:
-                os.remove("ticket.jpg")
-            except FileNotFoundError:
-                pass
-            return jsonify(status="dados incompletos, aguardando nova imagem")
+            conversas[numero]["estado"] = "aguardando_confirmacao"
+            enviar_botoes_sim_nao(numero, msg)
+            return jsonify(status="dados extraídos e aguardando confirmação")
 
-        # Mensagem padrão para confirmação
-        msg = (
-            f"📋 Recebi os dados:\n"
-            f"Cliente: {cliente.title()}\n"
-            f"Ticket: {ticket_ou_brm}\n"
-            f"Peso Líquido: {dados.get('peso_liquido')}\n"
-            f"Nota Fiscal: {dados.get('nota_fiscal') or dados.get('outros_docs') or 'Não encontrada'}\n\n"
-            f"Está correto?"
-        )
-        conversas[numero]["estado"] = "aguardando_confirmacao"
-        enviar_botoes_sim_nao(numero, msg)
-        return jsonify(status="dados extraídos e aguardando confirmação")
-
-    else:
-        enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
-        return jsonify(status="aguardando imagem")
+        else:
+            enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
+            return jsonify(status="aguardando imagem")
 
     if estado == "aguardando_nota_manual":
         nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
