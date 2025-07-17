@@ -474,22 +474,22 @@ def webhook():
             enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return jsonify(status="resposta motorista")
 
-if estado == "aguardando_imagem":
-    if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
-        url_img = data["image"]["imageUrl"]
-        try:
-            img_res = requests.get(url_img)
-            if img_res.status_code == 200:
-                with open("ticket.jpg", "wb") as f:
-                    f.write(img_res.content)
-            else:
+    if estado == "aguardando_imagem":
+        if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
+            url_img = data["image"]["imageUrl"]
+            try:
+                img_res = requests.get(url_img)
+                if img_res.status_code == 200:
+                    with open("ticket.jpg", "wb") as f:
+                        f.write(img_res.content)
+                else:
+                    enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
+                    return jsonify(status="erro ao baixar")
+            except Exception:
                 enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
                 return jsonify(status="erro ao baixar")
-        except Exception:
-            enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
-            return jsonify(status="erro ao baixar")
 
-        dados = extrair_dados_da_imagem("ticket.jpg", numero)
+            dados = extrair_dados_da_imagem("ticket.jpg", numero)
 
         # Para o fluxo se for o SAAE e estiver esperando destino
         if dados.get("status") == "aguardando destino saae":
