@@ -716,7 +716,7 @@ def enviar_dados():
         telefone = dados.get("telefone")
 
         client = conectar_google_sheets()
-        planilha = client.open("tickets_dcan").sheet1  # ou open_by_key("SUA_PLANILHA_ID")
+        planilha = client.open("tickets_dcan").tickets_dcan  # ou open_by_key("SUA_PLANILHA_ID")
         planilha.append_row([data, cliente, ticket, nota_fiscal, peso, destino, telefone])
 
         return jsonify({"status": "sucesso", "msg": "Dados enviados para Google Sheets!"})
