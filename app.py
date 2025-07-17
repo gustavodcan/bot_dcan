@@ -55,7 +55,7 @@ def detectar_cliente_por_texto(texto):
         return "saae"
     elif "gerdau" in texto:
         return "gerdau"
-    elif "arcelormittal" in texto:
+    elif "arcelormittal" in texto or "arcelor" in texto or "am iracemapolis:
         return "arcelormittal"
     else:
         return "cliente_desconhecido"
