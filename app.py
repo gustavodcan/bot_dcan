@@ -687,6 +687,20 @@ def webhook():
 
     if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
+             dados_confirmados = conversas[numero]["dados"]
+        
+             # Preparar dados para envio ao Sheets
+             payload = {
+                "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "cliente": conversas[numero].get("cliente"),
+                "ticket": dados_confirmados.get("ticket"),
+                "nota_fiscal": dados_confirmados.get("nota_fiscal"),
+                "peso": dados_confirmados.get("peso_liquido"),
+                "destino": dados_confirmados.get("destino", "N/A"),
+                "telefone": numero
+            }
+
+            requests.post("https://bot-dcan.onrender.com/enviar_dados", json=payload)
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
             conversas.pop(numero)
         elif texto_recebido in ['não', 'nao', 'n']:
@@ -703,6 +717,7 @@ def webhook():
     conversas[numero]["estado"] = "aguardando_imagem"
     return jsonify(status="estado inesperado")
 
+@app.route('/enviar_dados', methods=['POST'])
 def enviar_dados():
     try:
         dados = request.json  # espera receber JSON no corpo da requisição
@@ -716,7 +731,7 @@ def enviar_dados():
         telefone = dados.get("telefone")
 
         client = conectar_google_sheets()
-        planilha = client.open("tickets_dcan").tickets_dcan  # ou open_by_key("SUA_PLANILHA_ID")
+        planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
         planilha.append_row([data, cliente, ticket, nota_fiscal, peso, destino, telefone])
 
         return jsonify({"status": "sucesso", "msg": "Dados enviados para Google Sheets!"})
