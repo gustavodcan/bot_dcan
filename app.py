@@ -687,10 +687,10 @@ def webhook():
 
     if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
-             dados_confirmados = conversas[numero]["dados"]
+            dados_confirmados = conversas[numero]["dados"]
         
-             # Preparar dados para envio ao Sheets
-             payload = {
+            # Preparar dados para envio ao Sheets
+            payload = {
                 "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "cliente": conversas[numero].get("cliente"),
                 "ticket": dados_confirmados.get("ticket"),
