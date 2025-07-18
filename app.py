@@ -190,7 +190,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
 
     return {
         "nota_fiscal": nota_val,
-        "brm_mes": brm_val,
+        "ticket": brm_val,
         "peso_liquido": peso_liquido
     }
 
@@ -270,7 +270,7 @@ def extrair_dados_cliente_rio_das_pedras(img, texto):
     return {
         "nota_fiscal": nota_val,
         "peso_liquido": peso_liquido_val,
-        "ticket": "NÃO APLICÁVEL"
+        "ticket": "N/A"
     }
 
 def extrair_dados_cliente_mahle(img, texto):
@@ -391,6 +391,7 @@ def extrair_dados_cliente_saae(img, texto):
 
     return {
         "ticket": ticket_val,
+        "nota_fiscal": ticket_val,
         "outros_docs": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO",
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
     }
@@ -729,6 +730,7 @@ def enviar_dados():
         # Exemplo de campos esperados
         data = dados.get("data")
         cliente = dados.get("cliente")
+        cliente = cliente.upper() if cliente else ''
         ticket = dados.get("ticket")
         nota_fiscal = dados.get("nota_fiscal")
         peso = dados.get("peso")
