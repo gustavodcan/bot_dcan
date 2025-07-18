@@ -459,6 +459,14 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     dados["cliente"] = cliente_detectado  # adiciona o cliente no dicionário
     return dados
 
+@app.route('/teste_variavel')
+def teste_variavel():
+    variavel = os.getenv("acc_servico")
+    if variavel:
+        return jsonify({"status": "encontrada", "variavel": variavel[:50] + "..."})  # exibe só os primeiros 50 caracteres
+    else:
+        return jsonify({"status": "não encontrada"})
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
