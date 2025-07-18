@@ -9,6 +9,7 @@ from google.oauth2 import service_account
 from google.cloud import vision
 import gspread
 from google.oauth2.service_account import Credentials
+from datetime import datetime
 
 app = Flask(__name__)
 conversas = {}
