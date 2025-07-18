@@ -20,6 +20,10 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
+@app.route('/listar_vars')
+def listar_vars():
+    return jsonify({key: os.getenv(key)[:50]+"..." for key in os.environ})
+
 # Função pra criar client do Google Sheets direto da variável de ambiente (acc_servico)
 def conectar_google_sheets():
     cred_json_str = os.getenv("acc_servico")
