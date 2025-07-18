@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify
 from datetime import datetime
 from PIL import Image, ImageEnhance, ImageFilter
-from google.oauth2 import service_account
+from google.oauth2.service_account import Credentials
 from google.cloud import vision
 import requests, re, os, json, gspread
 
