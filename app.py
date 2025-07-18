@@ -1,33 +1,29 @@
+#Importação de Bibliotecas
 from flask import Flask, request, jsonify
-import requests
-from PIL import Image, ImageEnhance, ImageFilter
-import pytesseract
-import re
-import os
-import json
-from google.oauth2 import service_account
-from google.cloud import vision
-import gspread
-from google.oauth2.service_account import Credentials
 from datetime import datetime
+from PIL import Image, ImageEnhance, ImageFilter
+from google.oauth2 import service_account, Credentials
+from google.cloud import vision
+import requests, re, os, json, gspread
 
 app = Flask(__name__)
 conversas = {}
 
-pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-
+#Trazendo Variaveis do Render
 INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
+#Conexão do OCR Google
 def get_google_vision_client():
-    cred_path = "/etc/secrets/GOOGLE_CREDS_JSON"  # Ajustado para padrão Render
+    cred_path = "/etc/secrets/GOOGLE_CREDS_JSON"
     with open(cred_path, "r") as f:
         creds_dict = json.load(f)
 
     credentials = service_account.Credentials.from_service_account_info(creds_dict)
     return vision.ImageAnnotatorClient(credentials=credentials)
 
+#Conexão do Planilha Google
 def conectar_google_sheets():
     cred_path = "/etc/secrets/acc_servico"
     with open(cred_path, 'r') as f:
@@ -42,6 +38,7 @@ def conectar_google_sheets():
     client = gspread.authorize(creds)
     return client
 
+#Ativa o uso do OCR
 def ler_texto_google_ocr(path_imagem):
     client = get_google_vision_client()
 
@@ -54,6 +51,7 @@ def ler_texto_google_ocr(path_imagem):
 
     return texts[0].description if texts else ""
 
+#Identificação de cliente através do texto extraído
 def detectar_cliente_por_texto(texto):
     texto = texto.lower()
 
@@ -74,15 +72,16 @@ def detectar_cliente_por_texto(texto):
     else:
         return "cliente_desconhecido"
 
+#Pequeno processamento de imagem *upscaling*
 def preprocessar_imagem(caminho):
     imagem = Image.open(caminho)
 
-    # 2. Aumenta a imagem
     largura, altura = imagem.size
     imagem = imagem.resize((largura * 2, altura * 2), Image.LANCZOS)
 
     return imagem
 
+#Tratar texto OCR, deixar tudo em minisculo e caracteres
 def limpar_texto_ocr(texto):
     texto = texto.lower()
     texto = texto.replace("kg;", "kg:")
@@ -90,10 +89,11 @@ def limpar_texto_ocr(texto):
     texto = texto.replace("ko:", "kg:")
     texto = texto.replace("liq", "líquido")
     texto = texto.replace("outros docs", "outros_docs")
-    texto = re.sub(r"[^\w\s:/\.,-]", "", texto)  # remove símbolos bizarros
+    texto = re.sub(r"[^\w\s:/\.,-]", "", texto)
     texto = re.sub(r"\s{2,}", " ", texto)
     return texto
 
+#Envia texto simples para "Motorista"
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
     payload = {"phone": numero, "message": texto}
@@ -104,7 +104,7 @@ def enviar_mensagem(numero, texto):
     res = requests.post(url, json=payload, headers=headers)
     print(f"[🟢 Texto simples enviado] Status {res.status_code}: {res.text}")
 
-
+#Envia "Sim" e "Não" simples para "Motorista
 def enviar_botoes_sim_nao(numero, mensagem):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-button-list"
     payload = {
@@ -124,6 +124,7 @@ def enviar_botoes_sim_nao(numero, mensagem):
     res = requests.post(url, json=payload, headers=headers)
     print(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
 
+#Extraí Ticket, Nota Fiscal e Peso do cliente CDR
 def extrair_dados_cliente_cdr(img, texto):
     print("📜 [CDR] Texto detectado:")
     print(texto)
@@ -154,6 +155,7 @@ def extrair_dados_cliente_cdr(img, texto):
         "nota_fiscal": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO"
     }
 
+#Extraí Ticket, Nota Fiscal e Peso do cliente ArcelorMittal
 def extrair_dados_cliente_arcelormittal(img, texto):
     print("📜 Texto recebido para extração:")
     print(texto)
@@ -194,6 +196,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
         "peso_liquido": peso_liquido
     }
 
+#Extraí Ticket, Nota Fiscal e Peso do cliente Gerdau
 def extrair_dados_cliente_gerdau(img, texto):
     print("[GERDAU] Extraindo dados...")
     print("📜 Texto para extração:")
@@ -228,6 +231,7 @@ def extrair_dados_cliente_gerdau(img, texto):
         "peso_liquido": peso_liquido_val
     }
 
+#Extraí Ticket, Nota Fiscal e Peso do cliente Rio das Pedras
 def extrair_dados_cliente_rio_das_pedras(img, texto):
     print("📜 [RIO DAS PEDRAS] Texto detectado:")
     print(texto)
@@ -273,6 +277,7 @@ def extrair_dados_cliente_rio_das_pedras(img, texto):
         "ticket": "N/A"
     }
 
+#Extraí Ticket, Nota Fiscal e Peso do cliente Mahle
 def extrair_dados_cliente_mahle(img, texto):
     print("📜 [MAHLE] Texto detectado:")
     print(texto)
@@ -329,6 +334,7 @@ def extrair_dados_cliente_mahle(img, texto):
         "nota_fiscal": nota_fiscal_val
     }
 
+#Extraí Ticket, Nota Fiscal e Peso do cliente Orizon
 def extrair_dados_cliente_orizon(img, texto):
     print("📜 [ORIZON] Texto detectado:")
     print(texto)
@@ -365,7 +371,8 @@ def extrair_dados_cliente_orizon(img, texto):
         "peso_liquido": peso_liquido_val,
         "nota_fiscal": "NÃO APLICÁVEL"
     }
-    
+
+#Extraí Ticket, Nota Fiscal e Peso do cliente SAAE
 def extrair_dados_cliente_saae(img, texto):
     print("📜 [SAAE] Texto detectado:")
     print(texto)
@@ -396,6 +403,7 @@ def extrair_dados_cliente_saae(img, texto):
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
     }
 
+#Uso do OCR, conversação da imagem para o texto
 def extrair_dados_da_imagem(caminho_imagem, numero):
     conversas[numero] = conversas.get(numero, {})
     
@@ -405,7 +413,7 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
         imagem_bytes = f.read()
 
     try:
-        img.save("ticket_pre_google.jpg")  # salvar temporário pra OCR
+        img.save("ticket_pre_google.jpg")
         texto = ler_texto_google_ocr("ticket_pre_google.jpg")
         try:
             os.remove("ticket.jpg")
@@ -421,7 +429,7 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     cliente_detectado = detectar_cliente_por_texto(texto)
     print(f"[🕵️] Cliente detectado automaticamente: {cliente_detectado}")
 
-    # 🚨 Adiciona isso aqui!
+    #Detecta qual o cliente lido/extraido
     conversas[numero]["cliente"] = cliente_detectado
 
     if cliente_detectado == "cliente_desconhecido":
@@ -431,7 +439,7 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     # ⚠️ Fluxo especial pro SAAE
     if cliente_detectado == "saae":
         conversas[numero]["estado"] = "aguardando_destino_saae"
-        enviar_mensagem(numero, "🛣️ Cliente SAAE detectado!\nPor favor, informe o *destino da carga*\n(ex: ETA Vitória).")
+        enviar_mensagem(numero, "🛣️ Cliente SAAE detectado!\nPor favor, informe a *origem da carga*\n(ex: ETA Vitória).")
         return {"status": "aguardando destino saae"}
 
     match cliente_detectado:
@@ -453,17 +461,11 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
                 "outros_docs": "CLIENTE NÃO SUPORTADO",
                 "peso_liquido": "CLIENTE NÃO SUPORTADO"
             }
-    dados["cliente"] = cliente_detectado  # adiciona o cliente no dicionário
+    #Adiciona o cliente no dicionário
+    dados["cliente"] = cliente_detectado
     return dados
 
-@app.route('/teste_variavel')
-def teste_variavel():
-    variavel = os.getenv("acc_servico")
-    if variavel:
-        return jsonify({"status": "encontrada", "variavel": variavel[:50] + "..."})  # exibe só os primeiros 50 caracteres
-    else:
-        return jsonify({"status": "não encontrada"})
-
+#Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
@@ -483,12 +485,14 @@ def webhook():
 
     if tipo != "ReceivedCallback":
         return jsonify(status="ignorado")
-
+        
+    #Se o bot não esta aguardando nada:
     if not estado:
         enviar_botoes_sim_nao(numero, "👋 Olá! Tudo bem?\nSou o bot de tickets da DCAN Transportes.\n\nVocê é motorista em viagem pela DCAN?")
         conversas[numero] = {"estado": "aguardando_confirmacao_motorista"}
         return jsonify(status="aguardando confirmação de motorista")
 
+    #Se o bot esta aguardando "sim" ou "não" do motorista:
     if estado == "aguardando_confirmacao_motorista":
         if texto_recebido in ['sim', 's']:
             enviar_mensagem(numero, "✅ Perfeito! Por favor, envie a foto do ticket.")
@@ -500,6 +504,7 @@ def webhook():
             enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return jsonify(status="resposta motorista")
 
+    #Se o bot esta aguardando a foto do motorista:
     if estado == "aguardando_imagem":
         if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
             url_img = data["image"]["imageUrl"]
@@ -508,6 +513,7 @@ def webhook():
                 if img_res.status_code == 200:
                     with open("ticket.jpg", "wb") as f:
                         f.write(img_res.content)
+                #Quebra de url ou tempo de resposta
                 else:
                     enviar_mensagem(numero, "❌ Erro ao baixar a imagem. Tente novamente.")
                     return jsonify(status="erro ao baixar")
@@ -517,11 +523,11 @@ def webhook():
 
             dados = extrair_dados_da_imagem("ticket.jpg", numero)
 
-            # Para o fluxo se for o SAAE e estiver esperando destino
+            #Para o fluxo se cliente for SAAE e espera destino
             if dados.get("status") == "aguardando destino saae":
                 return jsonify(status="aguardando destino saae")
 
-            # Continua normal para os outros
+            #Continua normal para os outros
             cliente = conversas[numero].get("cliente")
 
             if dados.get("erro") == "cliente não identificado":
@@ -535,13 +541,14 @@ def webhook():
             except FileNotFoundError:
                 pass
 
+            #Se o cliente for Orizon, já solicita nota
             nota = dados.get("nota_fiscal", "").strip().upper()
             if cliente == "orizon" or (cliente == "cdr" and nota in ["NÃO ENCONTRADO", "", None]):
                 conversas[numero]["estado"] = "aguardando_nota_manual"
                 enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal para continuar\n(Ex: *7878*).")
                 return jsonify(status="solicitando nota manual")
 
-            # 🛡️ Checagem de campos obrigatórios com valores reais
+            #Checagem de campos obrigatórios com valores reais
             ticket_ou_brm = dados.get("ticket") or dados.get("brm_mes")
             campos_obrigatorios = {
                 "ticket ou brm_mes": ticket_ou_brm,
@@ -554,7 +561,7 @@ def webhook():
                 if not valor or "NÃO ENCONTRADO" in str(valor).upper()
             ]
 
-            # 🧱 Se estiver faltando qualquer dado essencial
+            #Se estiver faltando qualquer dado essencial
             if dados_faltando:
                 enviar_mensagem(
                     numero,
@@ -569,7 +576,7 @@ def webhook():
                     pass
                 return jsonify(status="dados incompletos, aguardando nova imagem")
 
-            # Mensagem padrão para confirmação
+            #Mensagem padrão para confirmação
             msg = (
                 f"📋 Recebi os dados:\n"
                 f"Cliente: {cliente.title()}\n"
@@ -585,32 +592,33 @@ def webhook():
         else:
             enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
             return jsonify(status="aguardando imagem")
-
+            
+    #Se o bot esta aguardando o numero da nota:
     if estado == "aguardando_nota_manual":
         nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
         if nota_digitada:
             nota_val = nota_digitada.group(0)
 
-            # 👇 Recupera os dados atuais e o cliente
+            #Recupera os dados atuais e o cliente
             dados_atuais = conversas[numero].get("dados", {})
             cliente = conversas[numero].get("cliente")
             texto_ocr = conversas[numero].get("ocr_texto", "")
 
-            # 🛠️ Se os dados anteriores estão bugados, reexecuta extração só para Orizon
+            #Se os dados anteriores estão bugados, reexecuta extração só para Orizon
             if cliente == "orizon":
                 novos_dados = extrair_dados_cliente_orizon(None, texto_ocr)
                 dados_atuais.update(novos_dados)  # atualiza ticket e peso_liquido
 
-            # Atualiza nota manual
+            #Atualiza nota manual
             dados_atuais["nota_fiscal"] = nota_val
             conversas[numero]["dados"] = dados_atuais
 
 
-            # 🛡️ Checagem de campos obrigatórios
+            #Checagem de campos obrigatórios
             campos_obrigatorios = ["ticket", "peso_liquido", "nota_fiscal"]
             dados_faltando = [campo for campo in campos_obrigatorios if not dados_atuais.get(campo) or "NÃO ENCONTRADO" in str(dados_atuais.get(campo)).upper()]
 
-            # 🧱 Se estiver faltando qualquer dado essencial
+            #Se estiver faltando qualquer dado essencial
             if dados_faltando:
                 enviar_mensagem(
                     numero,
@@ -639,6 +647,7 @@ def webhook():
             enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
         return jsonify(status="nota fiscal recebida ou inválida")
 
+    #Bot está aguardando Origem SAAE
     if estado == "aguardando_destino_saae":
         destino_digitado = texto_recebido.strip().title()
 
@@ -646,10 +655,10 @@ def webhook():
             enviar_mensagem(numero, "❌ Por favor, informe um destino válido.")
             return jsonify(status="destino inválido")
 
-        # Armazena o destino
+        #Armazena o destino
         conversas[numero]["destino"] = destino_digitado
 
-        # Continua a extração com base na imagem anterior
+        #Continua a extração com base na imagem anterior
         try:
             dados = extrair_dados_cliente_saae(None, conversas[numero].get("ocr_texto", ""))
         except Exception as e:
@@ -661,11 +670,11 @@ def webhook():
         conversas[numero]["dados"] = dados
         conversas[numero]["estado"] = "aguardando_confirmacao"
 
-        # 🛡️ Checagem de campos obrigatórios
+        #Checagem de campos obrigatórios
         campos_obrigatorios = ["ticket", "peso_liquido", "destino"]
         dados_faltando = [campo for campo in campos_obrigatorios if not dados.get(campo) or "NÃO ENCONTRADO" in str(dados.get(campo)).upper()]
 
-         # 🧱 Se estiver faltando qualquer dado essencial
+         #Se estiver faltando qualquer dado essencial
         if dados_faltando:
             enviar_mensagem(
                 numero,
@@ -685,17 +694,18 @@ def webhook():
             f"Cliente: SAAE\n"
             f"Ticket: {dados.get('ticket')}\n"
             f"Peso Líquido: {dados.get('peso_liquido')}\n"
-            f"Destino: {destino_digitado}\n\n"
+            f"Origem: {destino_digitado}\n\n"
             f"Está correto?"
         )
         enviar_botoes_sim_nao(numero, msg)
         return jsonify(status="destino recebido e aguardando confirmação")
 
+    #Bot aguardando confirmação "Sim" e "Não" dos dados extraídos
     if estado == "aguardando_confirmacao":
         if texto_recebido in ['sim', 's']:
             dados_confirmados = conversas[numero]["dados"]
         
-            # Preparar dados para envio ao Sheets
+            #Preparar dados para envio ao Sheets
             payload = {
                 "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "cliente": conversas[numero].get("cliente"),
@@ -705,7 +715,7 @@ def webhook():
                 "destino": dados_confirmados.get("destino", "N/A"),
                 "telefone": numero
             }
-
+            #Enviando "Ok" para o Motorista
             requests.post("https://bot-dcan.onrender.com/enviar_dados", json=payload)
             enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
             conversas.pop(numero)
@@ -723,11 +733,11 @@ def webhook():
     conversas[numero]["estado"] = "aguardando_imagem"
     return jsonify(status="estado inesperado")
 
+#Bloco de dados à serem enviados ao Sheets
 @app.route('/enviar_dados', methods=['POST'])
 def enviar_dados():
     try:
         dados = request.json  # espera receber JSON no corpo da requisição
-        # Exemplo de campos esperados
         data = dados.get("data")
         cliente = dados.get("cliente")
         cliente = cliente.upper() if cliente else ''
