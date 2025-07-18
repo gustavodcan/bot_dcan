@@ -20,18 +20,20 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
-@app.route("/ver_arquivos")
-def ver_arquivos():
-    raiz = os.listdir('.')
-    secrets = os.listdir('/etc/secrets/')
-    return jsonify({"raiz": raiz, "secrets": secrets})
+def get_google_vision_client():
+    cred_path = "/etc/secrets/GOOGLE_CREDS_JSON"  # Ajustado para padrão Render
+    with open(cred_path, "r") as f:
+        creds_dict = json.load(f)
 
-# Função pra criar client do Google Sheets direto da variável de ambiente (acc_servico)
+    credentials = service_account.Credentials.from_service_account_info(creds_dict)
+    return vision.ImageAnnotatorClient(credentials=credentials)
+
 def conectar_google_sheets():
-    cred_json_str = os.getenv("acc_servico")
-    if not cred_json_str:
-        raise Exception("Variável de ambiente acc_servico não está definida!")
+    cred_path = "/etc/secrets/acc_servico"
+    with open(cred_path, 'r') as f:
+        cred_json_str = f.read()
     cred_info = json.loads(cred_json_str)
+
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
@@ -39,18 +41,6 @@ def conectar_google_sheets():
     creds = Credentials.from_service_account_info(cred_info, scopes=scopes)
     client = gspread.authorize(creds)
     return client
-
-# Função pra criar client do Google Vision OCR direto da variável de ambiente (acc_ocr)
-def get_google_vision_client():
-    cred_path = "GOOGLE_CREDS_JSON"
-    if not os.path.exists(cred_path):
-        raise FileNotFoundError("Arquivo de credencial não encontrado no caminho esperado.")
-
-    with open(cred_path, "r") as f:
-        creds_dict = json.load(f)
-
-    credentials = service_account.Credentials.from_service_account_info(creds_dict)
-    return vision.ImageAnnotatorClient(credentials=credentials)
 
 def ler_texto_google_ocr(path_imagem):
     client = get_google_vision_client()
