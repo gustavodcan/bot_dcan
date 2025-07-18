@@ -20,9 +20,11 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
-@app.route('/listar_vars')
-def listar_vars():
-    return jsonify({key: os.getenv(key)[:50]+"..." for key in os.environ})
+@app.route("/ver_arquivos")
+def ver_arquivos():
+    raiz = os.listdir('.')
+    secrets = os.listdir('/etc/secrets/')
+    return jsonify({"raiz": raiz, "secrets": secrets})
 
 # Função pra criar client do Google Sheets direto da variável de ambiente (acc_servico)
 def conectar_google_sheets():
@@ -732,35 +734,25 @@ def webhook():
 
 @app.route('/enviar_dados', methods=['POST'])
 def enviar_dados():
-    dados = request.json
-    data = dados.get("data")
-    cliente = dados.get("cliente")
-    ticket = dados.get("ticket")
-    nota_fiscal = dados.get("nota_fiscal")
-    peso = dados.get("peso")
-    destino = dados.get("destino")
-    telefone = dados.get("telefone")
+    try:
+        dados = request.json  # espera receber JSON no corpo da requisição
+        # Exemplo de campos esperados
+        data = dados.get("data")
+        cliente = dados.get("cliente")
+        ticket = dados.get("ticket")
+        nota_fiscal = dados.get("nota_fiscal")
+        peso = dados.get("peso")
+        destino = dados.get("destino")
+        telefone = dados.get("telefone")
 
-    client = conectar_google_sheets()
-    print("✅ Cliente Google Sheets conectado com sucesso.")
+        client = conectar_google_sheets()
+        planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
+        planilha.append_row([data or '', cliente or '', ticket or '', nota_fiscal or '', peso or '', destino or '', telefone or ''])
 
-    planilha = client.open("tickets_dcan")
-    print("✅ Planilha 'tickets_dcan' aberta com sucesso.")
-
-    aba = planilha.worksheet("tickets_dcan")
-    print("✅ Aba 'tickets_dcan' acessada com sucesso.")
-
-    aba.append_row([
-        data or '',
-        cliente or '',
-        ticket or '',
-        nota_fiscal or '',
-        peso or '',
-        destino or '',
-        telefone or ''
-    ])
-
-    return jsonify({"status": "sucesso", "msg": "Dados enviados para Google Sheets!"})
+        return jsonify({"status": "sucesso", "msg": "Dados enviados para Google Sheets!"})
+    except Exception as e:
+        print(f"🚨 Erro detectado: {e}")
+        return jsonify({"status": "erro", "msg": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
