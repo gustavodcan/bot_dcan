@@ -733,10 +733,11 @@ def enviar_dados():
 
         client = conectar_google_sheets()
         planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
-        planilha.append_row([data, cliente, ticket, nota_fiscal, peso, destino, telefone])
+        planilha.append_row([data or '', cliente or '', ticket or '', nota_fiscal or '', peso or '', destino or '', telefone or ''])
 
         return jsonify({"status": "sucesso", "msg": "Dados enviados para Google Sheets!"})
     except Exception as e:
+        print(f"🚨 Erro detectado: {e}")
         return jsonify({"status": "erro", "msg": str(e)}), 500
 
 if __name__ == '__main__':
