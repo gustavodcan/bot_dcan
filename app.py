@@ -1,16 +1,12 @@
 #Importação de Bibliotecas
 from flask import Flask, request, jsonify
-import requests
+import requests, re, os, json, gspread
 from PIL import Image, ImageEnhance, ImageFilter
-import pytesseract
-import re
-import os
-import json
 from google.oauth2 import service_account
 from google.cloud import vision
-import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
+from azure.storage.fileshare import ShareFileClient
 
 app = Flask(__name__)
 conversas = {}
@@ -19,6 +15,23 @@ conversas = {}
 INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
+
+#Salvar Imagem
+def salvar_imagem_azure(local_path, nome_destino):
+    account_name = os.getenv("AZURE_FILE_ACCOUNT_NAME")
+    account_key = os.getenv("AZURE_FILE_ACCOUNT_KEY")
+    share_name = os.getenv("AZURE_FILE_SHARE_NAME")
+
+    file_client = ShareFileClient.from_connection_string(
+        conn_str=f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net",
+        share_name=share_name,
+        file_path=nome_destino
+    )
+
+    with open(local_path, "rb") as data:
+        file_client.upload_file(data)
+
+    print(f"✅ Arquivo enviado como: {nome_destino}")
 
 #Conexão do OCR Google
 def get_google_vision_client():
