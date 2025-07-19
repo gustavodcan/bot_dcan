@@ -464,10 +464,7 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     try:
         img.save("ticket_pre_google.jpg")
         texto = ler_texto_google_ocr("ticket_pre_google.jpg")
-        try:
-            os.remove("ticket.jpg")
-        except FileNotFoundError:
-            pass
+
     except Exception as e:
         print(f"❌ Erro no OCR Google: {e}")
         return {"erro": "Falha no OCR"}
