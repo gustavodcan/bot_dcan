@@ -16,7 +16,7 @@ INSTANCE_ID = os.getenv("INSTANCE_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
 
-#Salvar Imagem
+# Salvar imagem no Azure após confirmação
 def salvar_imagem_azure(local_path, nome_destino):
     account_name = os.getenv("AZURE_FILE_ACCOUNT_NAME")
     account_key = os.getenv("AZURE_FILE_ACCOUNT_KEY")
@@ -30,8 +30,38 @@ def salvar_imagem_azure(local_path, nome_destino):
 
     with open(local_path, "rb") as data:
         file_client.upload_file(data)
-
     print(f"✅ Arquivo enviado como: {nome_destino}")
+
+# Processamento final após confirmação
+def processar_confirmacao_final(numero):
+    dados = conversas[numero]["dados"]
+
+    payload = {
+        "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "cliente": conversas[numero].get("cliente", "").upper(),
+        "ticket": dados.get("ticket"),
+        "nota_fiscal": dados.get("nota_fiscal"),
+        "peso": dados.get("peso_liquido"),
+        "destino": dados.get("destino", "N/A"),
+        "telefone": numero
+    }
+
+    # Envia os dados para a rota existente /enviar_dados
+    try:
+        requests.post("http://localhost:10000/enviar_dados", json=payload)
+    except Exception as e:
+        print(f"Erro ao enviar dados para /enviar_dados: {e}")
+
+    nome_imagem = f"{payload['cliente']}_{payload['nota_fiscal']}.jpg"
+    salvar_imagem_azure("ticket.jpg", nome_imagem)
+
+    try:
+        os.remove("ticket.jpg")
+    except FileNotFoundError:
+        pass
+
+    enviar_mensagem(numero, "✅ Dados confirmados, imagem salva e planilha atualizada! Obrigado e boa viagem!")
+    conversas.pop(numero)
 
 #Conexão do OCR Google
 def get_google_vision_client():
@@ -734,10 +764,8 @@ def webhook():
                 "destino": dados_confirmados.get("destino", "N/A"),
                 "telefone": numero
             }
-            #Enviando "Ok" para o Motorista
-            requests.post("https://bot-dcan.onrender.com/enviar_dados", json=payload)
-            enviar_mensagem(numero, "✅ Dados confirmados! Salvando as informações. Obrigado!")
-            conversas.pop(numero)
+            #Chamando def para salvar e mandar agradecimento
+            processar_confirmacao_final(numero)
         elif texto_recebido in ['não', 'nao', 'n']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
             conversas[numero]["estado"] = "aguardando_imagem"
