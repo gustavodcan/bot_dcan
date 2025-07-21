@@ -52,7 +52,7 @@ def processar_confirmacao_final(numero):
     except Exception as e:
         print(f"Erro ao enviar dados para /enviar_dados: {e}")
 
-    nome_imagem = f"{payload['cliente']}_{payload['nota_fiscal']}.jpg"
+    nome_imagem = f"{payload['cliente']}/{payload['cliente']}_{payload['nota_fiscal']}.jpg"
     salvar_imagem_azure("ticket.jpg", nome_imagem)
 
     try:
@@ -60,7 +60,7 @@ def processar_confirmacao_final(numero):
     except FileNotFoundError:
         pass
 
-    enviar_mensagem(numero, "✅ Dados confirmados, imagem salva e planilha atualizada! Obrigado e boa viagem!")
+    enviar_mensagem(numero, "✅ Dados confirmados, Salvando as informações! Obrigado!")
     conversas.pop(numero)
 
 #Conexão do OCR Google
