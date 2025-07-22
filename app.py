@@ -641,9 +641,12 @@ def webhook():
             conversas[numero]["estado"] = "aguardando_imagem"
         elif texto_recebido in ['foto_nf']:
             enviar_mensagem(numero, "🔧 O envio de nota fiscal ainda está em desenvolvimento. Em breve estará disponível!")
-            conversas.pop(numero)
+            conversas[numero]["estado"] = "finalizado"
+            conversas.pop(numero, None)
         else:
-            enviar_mensagem(numero, "Entre em contato com o motorista.")
+            enviar_mensagem(numero, "Entre em contato com o programador.")
+            conversas[numero]["estado"] = "finalizado"
+            conversas.pop(numero, None)
         return jsonify(status="resposta motorista")
 
     if estado.startswith("aguardando_descricao_"):
