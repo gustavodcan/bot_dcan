@@ -614,6 +614,7 @@ def webhook():
 
     texto_recebido = mensagem_original.strip().lower()
 
+    estado = conversas.get(numero, {}).get("estado")
 
     if tipo != "ReceivedCallback":
         return jsonify(status="ignorado")
