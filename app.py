@@ -511,9 +511,94 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     dados["cliente"] = cliente_detectado
     return dados
 
+def enviar_lista_setor(numero, mensagem):
+    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
+    payload = {
+        "phone": numero,
+        "message": mensagem,
+        "optionList": {
+            "title": "Setores DCAN",
+            "buttonLabel": "Escolha o setor",
+            "options": [
+                {"id": "comercial", "title": "Comercial"},
+                {"id": "faturamento", "title": "Faturamento"},
+                {"id": "financeiro", "title": "Financeiro"},
+                {"id": "recursos humanos", "title": "Recursos Humanos"},
+                {"id": "operacao", "title": "Operação"},
+            ]
+        }
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Client-Token": CLIENT_TOKEN
+    }
+    res = requests.post(url, json=payload, headers=headers)
+    print(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
+
+# Redireciona mensagem digitada para número do setor
+def encaminhar_para_setor(numero_usuario, setor, mensagem):
+    mapa_setores = {
+        "comercial": "5511912538457",
+        "faturamento": "5511912538457",
+        "financeiro": "5511912538457",
+        "rh": "5511912538457"
+    }
+    numero_destino = mapa_setores.get(setor)
+    if not numero_destino:
+        print(f"Setor '{setor}' não encontrado.")
+        return
+
+    texto = f"📥 Atendimento automático\n\nTelefone: {numero_usuario}\nSetor: {setor.title()}\nMensagem: {mensagem}"
+
+    url = f"https://api.z-api.io/instances/{os.getenv('INSTANCE_ID')}/token/{os.getenv('API_TOKEN')}/send-text"
+    payload = {
+        "phone": numero_destino,
+        "message": texto
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Client-Token": os.getenv("CLIENT_TOKEN")
+    }
+    res = requests.post(url, json=payload, headers=headers)
+    print(f"[📨 Encaminhado para {setor}] Status {res.status_code}: {res.text}")
+
+# Trata descrições fornecidas para setores não-operacionais
+def tratar_descricao_setor(numero, texto_recebido):
+    setor = conversas[numero].get("setor")
+    if setor:
+        encaminhar_para_setor(numero_usuario=numero, setor=setor, mensagem=texto_recebido)
+        enviar_mensagem(numero, f"📨 Sua mensagem foi encaminhada ao setor {setor.title()}. Em breve alguém entrará em contato.")
+        conversas.pop(numero)
+    else:
+        enviar_mensagem(numero, "⚠️ Setor não identificado. Vamos começar novamente.")
+        enviar_lista_setor(numero)
+        conversas[numero] = {"estado": "aguardando_setor"}
+
+    # Envia botões quando usuário escolhe Operação
+def enviar_opcoes_operacao(numero):
+    url = f"https://api.z-api.io/instances/{os.getenv('INSTANCE_ID')}/token/{os.getenv('API_TOKEN')}/send-button-list"
+    payload = {
+        "phone": numero,
+        "message": "Você está falando com o setor de Operações. O que deseja fazer?",
+        "buttonList": {
+            "buttons": [
+                {"id": "falar_programador", "label": "Falar com programador"},
+                {"id": "foto_nf", "label": "Enviar foto NF"},
+                {"id": "foto_ticket", "label": "Enviar foto ticket"}
+            ]
+        }
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Client-Token": os.getenv("CLIENT_TOKEN")
+    }
+    res = requests.post(url, json=payload, headers=headers)
+    print(f"[🟦 Botões operação enviados] Status {res.status_code}: {res.text}")
+
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
 def webhook():
+    global conversas
     data = request.json
     print("🛰️ Webhook recebido:")
     print(data)
@@ -534,20 +619,31 @@ def webhook():
         
     #Se o bot não esta aguardando nada:
     if not estado:
-        enviar_botoes_sim_nao(numero, "👋 Olá! Tudo bem?\nSou o bot de tickets da DCAN Transportes.\n\nVocê é motorista em viagem pela DCAN?")
-        conversas[numero] = {"estado": "aguardando_confirmacao_motorista"}
-        return jsonify(status="aguardando confirmação de motorista")
+        enviar_lista_setor(numero, "👋 Olá! Sou o bot de atendimento da DCAN Transportes. Como posso te ajudar?")
+        conversas[numero] = {"estado": "aguardando_confirmacao_setor"}
+        return jsonify(status="aguardando confirmação do setor")
+
+    if estado == "aguardando_confirmacao_setor":
+        if texto_recebido in ["comercial", "faturamento", "financeiro", "recursos humanos"]:
+            conversas[numero] = {"estado": f"aguardando_descricao_{texto_recebido}", "setor": texto_recebido}
+            enviar_mensagem(numero, f"✏️ Por favor, descreva brevemente o motivo do seu contato com o setor {texto_recebido.title()}.")
+        elif texto_recebido == "operacao":
+            conversas[numero] = {"estado": "aguardando_opcao_operacao"}
+            enviar_opcoes_operacao(numero)
+        else:
+            enviar_lista_setor(numero, "❌ Opção inválida. Por favor, escolha uma opção da lista.")
+        return jsonify(status="resposta motorista")
 
     #Se o bot esta aguardando "sim" ou "não" do motorista:
-    if estado == "aguardando_confirmacao_motorista":
-        if texto_recebido in ['sim', 's']:
+    if estado == "aguardando_opcao_operacao":
+        if texto_recebido in ['foto_ticket']:
             enviar_mensagem(numero, "✅ Perfeito! Por favor, envie a foto do ticket.")
             conversas[numero]["estado"] = "aguardando_imagem"
-        elif texto_recebido in ['não', 'nao', 'n']:
-            enviar_mensagem(numero, "📞 Peço por gentileza então, que entre em contato com o número (11) 91253-8457.\nObrigado!")
+        elif texto_recebido in ['foto_nf']:
+            enviar_mensagem(numero, "🔧 O envio de nota fiscal ainda está em desenvolvimento. Em breve estará disponível!")
             conversas.pop(numero)
         else:
-            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
+            enviar_mensagem(numero, "Entre em contato com o motorista.")
         return jsonify(status="resposta motorista")
 
     #Se o bot esta aguardando a foto do motorista:
