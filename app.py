@@ -539,16 +539,16 @@ def enviar_lista_setor(numero, mensagem):
 def encaminhar_para_setor(numero_usuario, setor, mensagem):
     mapa_setores = {
         "comercial": "5515997008800",
-        "faturamento": "5511912538457",
-        "financeiro": "5511912538457",
-        "rh": "5511912538457"
+        "faturamento": "5515997008800",
+        "financeiro": "5515997008800",
+        "rh": "5515997008800"
     }
     numero_destino = mapa_setores.get(setor)
     if not numero_destino:
         print(f"Setor '{setor}' não encontrado.")
         return
 
-    texto = f"📥 Atendimento automático\n\nTelefone: {numero_usuario}\nSetor: {setor.title()}\nMensagem: {mensagem}"
+    texto = f"📥 Atendimento automático\nPor favor, não responda.\n\n O telefone: {numero_usuario} solicitou contato do setor {setor.title()} através da seguinte mensagem:\n{mensagem}"
 
     url = f"https://api.z-api.io/instances/{os.getenv('INSTANCE_ID')}/token/{os.getenv('API_TOKEN')}/send-text"
     payload = {
@@ -866,11 +866,6 @@ def webhook():
         else:
             enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return jsonify(status="confirmação final")
-
-    # Estado inesperado
-    enviar_mensagem(numero, "⚠️ Estado desconhecido. Por favor, envie a imagem do ticket novamente.")
-    conversas[numero]["estado"] = "aguardando_imagem"
-    return jsonify(status="estado inesperado")
 
 #Bloco de dados à serem enviados ao Sheets
 @app.route('/enviar_dados', methods=['POST'])
