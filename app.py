@@ -548,7 +548,7 @@ def encaminhar_para_setor(numero_usuario, setor, mensagem):
         print(f"Setor '{setor}' não encontrado.")
         return
 
-    texto = f"📥 Atendimento automático\nPor favor, não responda.\n\n O telefone: {numero_usuario} solicitou contato do setor {setor.title()} através da seguinte mensagem:\n{mensagem}"
+    texto = f"📥 Atendimento automático\nPor favor, não responda.\n\n O telefone: {numero_usuario} solicitou contato do setor {setor.title()} através da seguinte mensagem:\n\n{mensagem_original}"
 
     url = f"https://api.z-api.io/instances/{os.getenv('INSTANCE_ID')}/token/{os.getenv('API_TOKEN')}/send-text"
     payload = {
@@ -606,13 +606,14 @@ def webhook():
     tipo = data.get("type")
     numero = data.get("phone") or data.get("from")
 
-    texto_recebido = (
+    mensagem_original = (
         data.get("buttonsResponseMessage", {}).get("buttonId") or
         data.get("listResponseMessage", {}).get("selectedRowId") or
         data.get("text", {}).get("message", "")
-    ).strip().lower()
+    )
 
-    estado = conversas.get(numero, {}).get("estado")
+    texto_recebido = mensagem_original.strip().lower()
+
 
     if tipo != "ReceivedCallback":
         return jsonify(status="ignorado")
