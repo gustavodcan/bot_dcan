@@ -548,7 +548,7 @@ def encaminhar_para_setor(numero_usuario, setor, mensagem):
         print(f"Setor '{setor}' não encontrado.")
         return
 
-    texto = f"📥 Atendimento automático\nPor favor, não responda.\n\n O telefone: {numero_usuario} solicitou contato do setor {setor.title()} através da seguinte mensagem:\n\n{mensagem_original}"
+    texto = f"📥 Atendimento automático\nPor favor, não responda.\n\n O telefone: {numero_usuario} solicitou contato do setor {setor.title()} através da seguinte mensagem:\n\n{texto_recebido}"
 
     url = f"https://api.z-api.io/instances/{os.getenv('INSTANCE_ID')}/token/{os.getenv('API_TOKEN')}/send-text"
     payload = {
