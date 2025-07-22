@@ -872,6 +872,8 @@ def webhook():
             enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return jsonify(status="confirmação final")
 
+return jsonify(status="nenhuma ação tomada")
+
 #Bloco de dados à serem enviados ao Sheets
 @app.route('/enviar_dados', methods=['POST'])
 def enviar_dados():
