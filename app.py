@@ -566,7 +566,7 @@ def encaminhar_para_setor(numero_usuario, setor, mensagem):
 def tratar_descricao_setor(numero, texto_recebido):
     setor = conversas[numero].get("setor")
     if setor:
-        encaminhar_para_setor(numero_usuario=numero, setor=setor, mensagem=texto_recebido)
+        encaminhar_para_setor(numero_usuario=numero, setor=setor, mensagem=mensagem_original)
         enviar_mensagem(numero, f"📨 Sua mensagem foi encaminhada ao setor {setor.title()}. Em breve alguém entrará em contato.")
         conversas[numero]["estado"] = "finalizado"
         conversas.pop(numero, None)
