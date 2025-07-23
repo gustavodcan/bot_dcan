@@ -563,7 +563,7 @@ def encaminhar_para_setor(numero_usuario, setor, mensagem):
     print(f"[📨 Encaminhado para {setor}] Status {res.status_code}: {res.text}")
 
 # Trata descrições fornecidas para setores não-operacionais
-def tratar_descricao_setor(numero, texto_recebido):
+def tratar_descricao_setor(numero, mensagem_original):
     setor = conversas[numero].get("setor")
     if setor:
         encaminhar_para_setor(numero_usuario=numero, setor=setor, mensagem=mensagem_original)
