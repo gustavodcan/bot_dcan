@@ -520,11 +520,11 @@ def enviar_lista_setor(numero, mensagem):
             "title": "Setores DCAN",
             "buttonLabel": "Escolha o setor",
             "options": [
-                {"id": "comercial", "title": "Comercial", "Descrição Comercial"},
-                {"id": "faturamento", "title": "Faturamento", "Descrição Faturamento"},
-                {"id": "financeiro", "title": "Financeiro", "Descrição Financeiro"},
-                {"id": "recursos humanos", "title": "Recursos Humanos", "Descrição Recursos Humanos"},
-                {"id": "operacao", "title": "Operação", "Descrição Operação"},
+                {"id": "comercial", "description": "Descrição Comercial", "title": "Comercial"},
+                {"id": "faturamento", "description": "Descrição Faturamento", "title": "Faturamento"},
+                {"id": "financeiro",  "description": "Descrição Financeiro", "title": "Financeiro"},
+                {"id": "recursos humanos", "description": "Descrição Recursos Humanos", "title": "Recursos Humanos"},
+                {"id": "operacao", "description": "Descrição Operação", "title": "Operação"},
             ]
         }
     }
@@ -621,7 +621,7 @@ def webhook():
         
     #Se o bot não esta aguardando nada:
     if not estado:
-        enviar_lista_setor(numero, "👋 Olá! Sou o bot de atendimento da DCAN Transportes. Como posso te ajudar?")
+        enviar_lista_setor(numero, "👋 Olá! Sou o bot de atendimento da DCAN Transportes.\n\n Como posso te ajudar?")
         conversas[numero] = {"estado": "aguardando_confirmacao_setor"}
         return jsonify(status="aguardando confirmação do setor")
 
@@ -646,7 +646,7 @@ def webhook():
             conversas[numero]["estado"] = "finalizado"
             conversas.pop(numero, None)
         else:
-            enviar_mensagem(numero, "Entre em contato com o programador.")
+            enviar_mensagem(numero, "🔧 Entrrar em contato com o programador ainda está em desenvolvimento. Em breve estará disponível!")
             conversas[numero]["estado"] = "finalizado"
             conversas.pop(numero, None)
         return jsonify(status="resposta motorista")
