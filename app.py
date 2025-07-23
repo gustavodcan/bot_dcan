@@ -520,11 +520,11 @@ def enviar_lista_setor(numero, mensagem):
             "title": "Setores DCAN",
             "buttonLabel": "Escolha o setor",
             "options": [
-                {"id": "comercial", "title": "Comercial"},
-                {"id": "faturamento", "title": "Faturamento"},
-                {"id": "financeiro", "title": "Financeiro"},
-                {"id": "recursos humanos", "title": "Recursos Humanos"},
-                {"id": "operacao", "title": "Operação"},
+                {"id": "comercial", "title": "Comercial", "Descrição Comercial"},
+                {"id": "faturamento", "title": "Faturamento", "Descrição Faturamento"},
+                {"id": "financeiro", "title": "Financeiro", "Descrição Financeiro"},
+                {"id": "recursos humanos", "title": "Recursos Humanos", "Descrição Recursos Humanos"},
+                {"id": "operacao", "title": "Operação", "Descrição Operação"},
             ]
         }
     }
