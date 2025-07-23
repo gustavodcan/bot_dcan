@@ -652,7 +652,7 @@ def webhook():
         return jsonify(status="resposta motorista")
 
     if estado.startswith("aguardando_descricao_"):
-        tratar_descricao_setor(numero, texto_recebido)
+        tratar_descricao_setor(numero,  mensagem_original.strip())
 
     #Se o bot esta aguardando a foto do motorista:
     if estado == "aguardando_imagem":
