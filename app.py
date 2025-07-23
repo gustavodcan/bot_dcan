@@ -541,7 +541,7 @@ def encaminhar_para_setor(numero_usuario, setor, mensagem):
         "comercial": "5515997008800",
         "faturamento": "5515997008800",
         "financeiro": "5515997008800",
-        "rh": "5515997008800"
+        "recursos humanos": "5515997008800"
     }
     numero_destino = mapa_setores.get(setor)
     if not numero_destino:
