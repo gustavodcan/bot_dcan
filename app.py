@@ -108,6 +108,8 @@ def detectar_cliente_por_texto(texto):
         return "rio das pedras"
     elif "mahle" in texto:
         return "mahle"
+    elif "br-ml-pindamonhangaba" in texto:
+        return "gerdaupinda"
     elif "orizon" in texto:
         return "orizon"
     elif "cdr pedreira" in texto or "cor pedreira" in texto:
@@ -169,6 +171,38 @@ def enviar_botoes_sim_nao(numero, mensagem):
     }
     res = requests.post(url, json=payload, headers=headers)
     print(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
+
+
+#Extraí Ticket, Nota Fiscal e Peso do cliente Gerdau Pinda
+def extrair_dados_cliente_gerdaupinda(img, texto):
+    print("📜 [Gerdau Pinda] Texto detectado:")
+    print(texto)
+
+    # 🎯 Ticket - captura número com ou sem barra e remove a barra depois
+    ticket_match = re.search(r"(?:processo)[\s:]*([0-9/]{5,})", texto)
+    ticket_val = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
+
+    # 📄 Outros Docs - aceita ponto antes dos dois pontos, hífen, espaços, etc
+    outros_docs = re.search(r"NF[.:;\-]*[:]?[\s]", texto)
+
+    # ⚖️ Peso Líquido - aceita erros de OCR tipo 'liquiduido', ':' repetido, etc
+    peso_liquido = re.search(
+        r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{1,2}\s*([0-9]{4,6})",
+        texto
+    )
+
+    # 🧠 Log de debug pro Render ou local
+    print("🎯 Dados extraídos:")
+    print(f"Ticket: {ticket_val}")
+    print(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'Não encontrado'}")
+    print(f"Peso Líquido: {peso_liquido.group(1) if peso_liquido else 'Não encontrado'}")
+
+    return {
+        "ticket": ticket_val,
+        "outros_docs": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO",
+        "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO",
+        "nota_fiscal": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO"
+    }
 
 #Extraí Ticket, Nota Fiscal e Peso do cliente CDR
 def extrair_dados_cliente_cdr(img, texto):
@@ -508,6 +542,8 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
             return extrair_dados_cliente_rio_das_pedras(None, texto)
         case "mahle":
             return extrair_dados_cliente_mahle(None, texto)
+        case "gerdaupinda":
+            return extrair_dados_cliente_gerdaupinda(None, texto)
         case "saae":
             return extrair_dados_cliente_saae(None, texto)
         case _:
