@@ -116,7 +116,7 @@ def detectar_cliente_por_texto(texto):
         return "saae"
     elif "gerdau" in texto:
         return "gerdau"
-    elif "arcelormittal" in texto or "arcelor" in texto or "am iracemapolis" in texto:
+    elif "arcelormittal" in texto or "arcelor" in texto or "am iracemapolis" in texto or "brm" in texto:
         return "arcelormittal"
     else:
         return "cliente_desconhecido"
@@ -133,9 +133,6 @@ def preprocessar_imagem(caminho):
 #Tratar texto OCR, deixar tudo em minisculo e caracteres
 def limpar_texto_ocr(texto):
     texto = texto.lower()
-    texto = texto.replace("kg;", "kg:")
-    texto = texto.replace("kg)", "kg:")
-    texto = texto.replace("ko:", "kg:")
     texto = texto.replace("liq", "líquido")
     texto = texto.replace("outros docs", "outros_docs")
     texto = re.sub(r"[^\w\s:/\.,-]", "", texto)
@@ -227,11 +224,19 @@ def extrair_dados_cliente_arcelormittal(img, texto):
         peso_liquido = numeros[0]
     elif len(numeros) > 1:
         try:
-            # Soma todos menos o último
-            valores = list(map(int, numeros[:-1]))
-            peso_liquido = str(sum(valores))
+            # Pega o último número da lista
+            ultimo_numero = int(numeros[-1])
+
+            # Busca a última linha que contém "pb XXXX kg"
+            linhas_pb = re.findall(r"^.*pb\s+(\d{4,6})\s+kg.*$", texto, re.MULTILINE | re.IGNORECASE)
+            if linhas_pb:
+                valor_pb = int(linhas_pb[-1])
+                peso_liquido = str(valor_pb - ultimo_numero)
+            else:
+                print("[❌] Valor entre 'pb' e 'kg' não encontrado.")
+                peso_liquido = "NÃO ENCONTRADO"
         except Exception as e:
-            print(f"[❌] Erro ao somar pesos: {e}")
+            print(f"[❌] Erro ao calcular peso líquido: {e}")
             peso_liquido = "NÃO ENCONTRADO"
 
     print("🎯 Dados extraídos:")
