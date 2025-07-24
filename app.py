@@ -187,7 +187,7 @@ def extrair_dados_cliente_gerdaupinda(img, texto):
 
     # ⚖️ Peso Líquido - aceita erros de OCR tipo 'liquiduido', ':' repetido, etc
     peso_liquido = re.search(
-        r"(?i)peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*\n?([0-9]{4,6})",
+        r"(?i)[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*\n?([0-9]{4,6})",
         texto
     )
 
