@@ -109,7 +109,7 @@ def detectar_cliente_por_texto(texto):
     elif "mahle" in texto:
         return "mahle"
     elif "br-ml-pindamonhangaba" in texto:
-        return "gerdaupinda"
+        return "gerdau pindamonhangaba"
     elif "orizon" in texto:
         return "orizon"
     elif "cdr pedreira" in texto or "cor pedreira" in texto:
@@ -542,7 +542,7 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
             return extrair_dados_cliente_rio_das_pedras(None, texto)
         case "mahle":
             return extrair_dados_cliente_mahle(None, texto)
-        case "gerdaupinda":
+        case "gerdau pindamonhangaba":
             return extrair_dados_cliente_gerdaupinda(None, texto)
         case "saae":
             return extrair_dados_cliente_saae(None, texto)
