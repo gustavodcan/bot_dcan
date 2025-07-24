@@ -712,7 +712,7 @@ def webhook():
                 enviar_mensagem(
                     numero,
                     f"⚠️ Não consegui identificar todas informações\n"
-                    "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
+                    "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente.\nObs: Caso não consiga identificar no segundo envio, favor contatar seu programador!"
                 )
                 conversas[numero]["estado"] = "aguardando_imagem"
                 conversas[numero].pop("dados", None)
