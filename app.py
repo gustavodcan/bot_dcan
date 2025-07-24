@@ -206,9 +206,13 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     print("📜 Texto recebido para extração:")
     print(texto)
 
-    # Nota fiscal
     nf_match = re.search(r"fiscal[:\-]?\s*([\d]+)", texto, re.IGNORECASE)
-    nota_val = nf_match.group(1) if nf_match else "NÃO ENCONTRADO"
+    # Se não encontrar usando "fiscal", tenta buscar padrão tipo "10847/1"
+    if not nf_match:
+        alternativa_match = re.search(r"\b(\d{3,}/1)\b", texto)
+        nota_val = alternativa_match.group(1) if alternativa_match else "NÃO ENCONTRADO"
+    else:
+        nota_val = nf_match.group(1)
 
     # BRM
     brm_match = re.search(r"[be][rfi](?:m|im)\s+mes[:\-]?\s*(\d+)", texto, re.IGNORECASE)
