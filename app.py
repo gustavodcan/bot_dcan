@@ -209,7 +209,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
     nf_match = re.search(r"fiscal[:\-]?\s*([\d]+)", texto, re.IGNORECASE)
     # Se não encontrar usando "fiscal", tenta buscar padrão tipo "10847/1"
     if not nf_match:
-        alternativa_match = re.search(r"\b(\d{4,})(?=/1)\b")", texto)
+        alternativa_match = re.search(r"\b(\d{4,})(?=/1)\b", texto)
         nota_val = alternativa_match.group(1) if alternativa_match else "NÃO ENCONTRADO"
     else:
         nota_val = nf_match.group(1)
