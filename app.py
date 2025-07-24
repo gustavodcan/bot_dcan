@@ -183,11 +183,11 @@ def extrair_dados_cliente_gerdaupinda(img, texto):
     ticket_val = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
 
     # 📄 Outros Docs - aceita ponto antes dos dois pontos, hífen, espaços, etc
-    outros_docs = re.search(r"NF[.:;\-]*[:]?[\s]", texto)
+    outros_docs = re.search(r"docto[:：]?\s*nf\s*[-–—]?\s*(\d{4,8})", texto, re.IGNORECASE)
 
     # ⚖️ Peso Líquido - aceita erros de OCR tipo 'liquiduido', ':' repetido, etc
     peso_liquido = re.search(
-        r"peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{1,2}\s*([0-9]{4,6})",
+        r"(?i)peso[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*\n?([0-9]{4,6})",
         texto
     )
 
