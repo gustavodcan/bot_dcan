@@ -100,6 +100,42 @@ def ler_texto_google_ocr(path_imagem):
 
     return texts[0].description if texts else ""
 
+def extrair_chave_acesso(texto):
+    # Remove quebras de linha e normaliza texto
+    texto = texto.replace("\n", " ")
+
+    # Busca blocos de números com possível espaço entre eles
+    chaves_brutas = re.findall(r'(\d[\d\s]{42,})', texto)
+
+    for bruta in chaves_brutas:
+        chave = re.sub(r'\s+', '', bruta)  # Remove todos os espaços
+        if len(chave) == 44:
+            return chave
+
+    return None  # Se nenhuma chave válida encontrada
+
+if chave:
+    print(f"🔑 Chave de acesso encontrada: {chave}")
+else:
+    print("❌ Chave de acesso não encontrada.")
+
+def extrair_chave_confirmar(numero):
+    texto = conversas[numero].get("ocr_texto", "")
+    chave = extrair_chave_acesso(texto)
+
+    if chave:
+        conversas[numero]["chave_detectada"] = chave
+        conversas[numero]["estado"] = "aguardando_confirmacao_chave"
+        mensagem = (
+            f"🔎 Encontrei a seguinte *chave de acesso* na nota:\n\n"
+            f"`{chave}`\n\n"
+            f"✅ Por favor, *confirme se está correta* antes de continuar."
+        )
+        enviar_botoes_sim_nao(numero, mensagem)
+    else:
+        enviar_mensagem(numero, "❌ Não consegui identificar a chave de acesso na nota. Por favor, envie novamente ou digite a chave manualmente.")
+        conversas[numero]["estado"] = "aguardando_chave_manual"
+
 #Identificação de cliente através do texto extraído
 def detectar_cliente_por_texto(texto):
     texto = texto.lower()
@@ -698,6 +734,21 @@ def webhook():
 
     if estado.startswith("aguardando_descricao_"):
         tratar_descricao_setor(numero,  mensagem_original.strip())
+
+    #Confirmando chave
+    if estado == "aguardando_confirmacao_chave":
+    if texto_recebido in ['sim', 's']:
+        chave = conversas[numero]["chave_detectada"]
+        conversas[numero]["dados"]["nota_fiscal"] = chave
+        enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada.")
+        conversas[numero]["estado"] = "finalizado"
+    elif texto_recebido in ['nao', 'não', 'n']:
+        enviar_mensagem(numero, "🔁 OK! Por favor, envie novamente a foto da nota fiscal.")
+        conversas[numero]["estado"] = "aguardando_imagem"
+        conversas[numero].pop("chave_detectada", None)
+    else:
+        enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não* para confirmar a chave.")
+    return jsonify(status="confirmação chave de acesso")
 
     #Se o bot esta aguardando a foto do motorista:
     if estado == "aguardando_imagem":
