@@ -134,7 +134,7 @@ def extrair_chave_confirmar(numero):
         enviar_botoes_sim_nao(numero, mensagem)
     else:
         enviar_mensagem(numero, "❌ Não consegui identificar a chave de acesso na nota. Por favor, envie novamente ou digite a chave manualmente.")
-        conversas[numero]["estado"] = "aguardando_chave_manual"
+        conversas[numero]["estado"] = "aguardando_imagem_nf"
 
 #Identificação de cliente através do texto extraído
 def detectar_cliente_por_texto(texto):
