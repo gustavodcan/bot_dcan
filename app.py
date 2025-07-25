@@ -743,7 +743,7 @@ def webhook():
             conversas[numero]["estado"] = "finalizado"
         elif texto_recebido in ['nao', 'não', 'n']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie novamente a foto da nota fiscal.")
-            conversas[numero]["estado"] = "aguardando_imagem"
+            conversas[numero]["estado"] = "aguardando_imagem_nf"
             conversas[numero].pop("chave_detectada", None)
         else:
             enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não* para confirmar a chave.")
