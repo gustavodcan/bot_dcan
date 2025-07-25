@@ -737,18 +737,18 @@ def webhook():
 
     #Confirmando chave
     if estado == "aguardando_confirmacao_chave":
-    if texto_recebido in ['sim', 's']:
-        chave = conversas[numero]["chave_detectada"]
-        conversas[numero]["dados"]["nota_fiscal"] = chave
-        enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada.")
-        conversas[numero]["estado"] = "finalizado"
-    elif texto_recebido in ['nao', 'não', 'n']:
-        enviar_mensagem(numero, "🔁 OK! Por favor, envie novamente a foto da nota fiscal.")
-        conversas[numero]["estado"] = "aguardando_imagem"
-        conversas[numero].pop("chave_detectada", None)
-    else:
-        enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não* para confirmar a chave.")
-    return jsonify(status="confirmação chave de acesso")
+        if texto_recebido in ['sim', 's']:
+            chave = conversas[numero]["chave_detectada"]
+            conversas[numero]["dados"]["nota_fiscal"] = chave
+            enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada.")
+            conversas[numero]["estado"] = "finalizado"
+        elif texto_recebido in ['nao', 'não', 'n']:
+            enviar_mensagem(numero, "🔁 OK! Por favor, envie novamente a foto da nota fiscal.")
+            conversas[numero]["estado"] = "aguardando_imagem"
+            conversas[numero].pop("chave_detectada", None)
+        else:
+            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não* para confirmar a chave.")
+        return jsonify(status="confirmação chave de acesso")
 
     #Se o bot esta aguardando a foto do motorista:
     if estado == "aguardando_imagem":
