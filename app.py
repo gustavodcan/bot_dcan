@@ -105,10 +105,10 @@ def extrair_chave_acesso(texto):
     texto = texto.replace("\n", " ")
 
     # Busca blocos de números com possível espaço entre eles
-    chaves_brutas = re.findall(r'(\d[\d\s]{42,})', texto)
+    matches = re.findall(r'((?:\d{4,6}\s*){10,})', texto)
 
-    for bruta in chaves_brutas:
-        chave = re.sub(r'\s+', '', bruta)  # Remove todos os espaços
+    for bloco in matches:
+        chave = re.sub(r'\D', '', bloco)  # Remove tudo que não for número
         if len(chave) == 44:
             return chave
 
