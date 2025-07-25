@@ -128,12 +128,12 @@ def extrair_chave_confirmar(numero):
         conversas[numero]["estado"] = "aguardando_confirmacao_chave"
         mensagem = (
             f"🔎 Encontrei a seguinte *chave de acesso* na nota:\n\n"
-            f"`{chave}`\n\n"
+            f"{chave}\n\n"
             f"✅ Por favor, *confirme se está correta* antes de continuar."
         )
         enviar_botoes_sim_nao(numero, mensagem)
     else:
-        enviar_mensagem(numero, "❌ Não consegui identificar a chave de acesso na nota. Por favor, envie novamente ou digite a chave manualmente.")
+        enviar_mensagem(numero, "❌ Não consegui identificar a chave de acesso na nota. Por favor, envie novamente.")
         conversas[numero]["estado"] = "aguardando_imagem_nf"
 
 #Identificação de cliente através do texto extraído
