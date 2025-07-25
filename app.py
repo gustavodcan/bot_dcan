@@ -738,7 +738,6 @@ def webhook():
     if estado == "aguardando_confirmacao_chave":
         if texto_recebido in ['sim', 's']:
             chave = conversas[numero]["chave_detectada"]
-            conversas[numero]["dados"]["nota_fiscal"] = chave
             enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada.")
             conversas[numero]["estado"] = "finalizado"
         elif texto_recebido in ['nao', 'não', 'n']:
