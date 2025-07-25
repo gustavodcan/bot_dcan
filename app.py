@@ -114,10 +114,10 @@ def extrair_chave_acesso(texto):
 
     return None  # Se nenhuma chave válida encontrada
 
-if chave:
-    print(f"🔑 Chave de acesso encontrada: {chave}")
-else:
-    print("❌ Chave de acesso não encontrada.")
+    if chave:
+        print(f"🔑 Chave de acesso encontrada: {chave}")
+    else:
+        print("❌ Chave de acesso não encontrada.")
 
 def extrair_chave_confirmar(numero):
     texto = conversas[numero].get("ocr_texto", "")
