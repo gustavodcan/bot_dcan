@@ -723,9 +723,8 @@ def webhook():
             enviar_mensagem(numero, "✅ Perfeito! Por favor, envie a foto do ticket.")
             conversas[numero]["estado"] = "aguardando_imagem"
         elif texto_recebido in ['foto_nf']:
-            enviar_mensagem(numero, "🔧 O envio de nota fiscal ainda está em desenvolvimento. Em breve estará disponível!")
-            conversas[numero]["estado"] = "finalizado"
-            conversas.pop(numero, None)
+            enviar_mensagem(numero, "📸 Por favor, envie a *foto da nota fiscal* agora.")
+            conversas[numero]["estado"] = "aguardando_imagem_nf"
         else:
             enviar_mensagem(numero, "🔧 Entrrar em contato com o programador ainda está em desenvolvimento. Em breve estará disponível!")
             conversas[numero]["estado"] = "finalizado"
@@ -834,6 +833,34 @@ def webhook():
         else:
             enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
             return jsonify(status="aguardando imagem")
+
+    if estado == "aguardando_imagem_nf":
+        if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
+            url_img = data["image"]["imageUrl"]
+            try:
+                img_res = requests.get(url_img)
+                if img_res.status_code == 200:
+                    with open("nota.jpg", "wb") as f:
+                        f.write(img_res.content)
+                else:
+                    enviar_mensagem(numero, "❌ Erro ao baixar a imagem da nota. Tente novamente.")
+                    return jsonify(status="erro ao baixar")
+            except Exception:
+                enviar_mensagem(numero, "❌ Erro ao baixar a imagem da nota. Tente novamente.")
+                return jsonify(status="erro ao baixar")
+
+            # OCR da nota + tentativa de extração da chave
+            img = preprocessar_imagem("nota.jpg")
+            img.save("nota_pre_google.jpg")
+            texto = ler_texto_google_ocr("nota_pre_google.jpg")
+            texto = limpar_texto_ocr(texto)
+            conversas[numero]["ocr_texto"] = texto
+
+            extrair_chave_confirmar(numero)
+            return jsonify(status="chave extraída e aguardando confirmação")
+        else:
+            enviar_mensagem(numero, "📸 Por favor, envie uma imagem da nota fiscal.")
+            return jsonify(status="aguardando imagem nf")
             
     #Se o bot esta aguardando o numero da nota:
     if estado == "aguardando_nota_manual":
