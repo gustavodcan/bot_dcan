@@ -8,3 +8,4 @@ azure-storage-file-share
 gspread
 oauth2client
 azure-storage-file-share
+AesEverywhere
