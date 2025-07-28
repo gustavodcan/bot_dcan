@@ -736,26 +736,18 @@ def consultar_nfe_completa(chave_nfe):
 
         caminho = salvar_certificado_temporario()
         cert, senha = gerar_criptografia_infosimples(caminho)
+
+        print("🔐 Certificado criptografado (início):", cert[:50], "...")
+        print("🔐 Senha criptografada (início):", senha[:50], "...")
+        print("📨 Token usado:", os.environ.get("INFOSIMPLES_TOKEN", "❌ NÃO DEFINIDO"))
+        print("📨 AES usada:", os.environ.get("CHAVE_AES", "❌ NÃO DEFINIDA"))
+
         resultado = consultar_nfe_infosimples(chave_nfe, cert, senha)
 
-        if resultado.get("code") == 200:
-            dados = resultado.get("data", {})
-            print("\n✅ NF-e consultada com sucesso!")
-            print(f"➡️  Emitente: {dados.get('emitente')}")
-            print(f"➡️  Valor total: {dados.get('valor_total')}")
-            print(f"➡️  Número NF: {dados.get('numero_nf')}")
-            print(f"➡️  Série: {dados.get('serie')}")
-            print(f"➡️  Data de emissão: {dados.get('data_emissao')}")
-            print(f"➡️  Link DANFE PDF: {dados.get('danfe_pdf_url')}")
-            print(f"➡️  Link XML: {dados.get('xml_url')}")
-        else:
-            print("\n❌ Falha na consulta da NF-e")
-            print(f"Erro: {resultado.get('code_message')}")
-            if resultado.get("errors"):
-                print("Detalhes:")
-                for erro in resultado["errors"]:
-                    print(f" - {erro}")
+        if not resultado:
+            raise ValueError("Resposta da InfoSimples está vazia ou inválida.")
 
+        print("✅ Resposta da InfoSimples recebida com sucesso.")
         return resultado
 
     except Exception as e:
