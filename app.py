@@ -761,7 +761,11 @@ def consultar_nfe_completa(chave_nfe):
             "errors": [str(e)]
         }
     if resultado.get("code") == 200:
-        dados = resultado["data"]
+        dados = resultado.get("data", {})
+        # Garante que seja dict
+        if isinstance(dados, list):
+            dados = dados[0] if dados else {}
+        
         print("✅ NF-e consultada com sucesso:")
         print(f"➡️ Emitente: {dados.get('emitente')}")
         print(f"➡️ Valor total: {dados.get('valor_total')}")
