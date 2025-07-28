@@ -853,12 +853,25 @@ def webhook():
                     f"📁 [Baixar XML]({dados.get('xml_url')})"
                 )
             else:
+                cert_debug = os.environ.get("CERTIFICADO_BASE64", "")[:80]
+                aes_debug = os.environ.get("CHAVE_AES", "")[:20]
+                senha_debug = os.environ.get("CERTIFICADO_SENHA", "")[:20]
+
                 resposta = (
                     f"❌ *Erro ao consultar a nota.*\\n"
                     f"🔧 Motivo: {resultado.get('code_message') or 'Erro desconhecido.'}"
                 )
+
                 if resultado.get("errors"):
                     resposta += "\\n\\nDetalhes:\\n" + "\\n".join(f"- {e}" for e in resultado["errors"])
+
+                # Debug extra pra você (modo dev)
+                resposta += (
+                    "\\n\\n🚧 *DEBUG:*\\n"
+                    f"🔐 AES: `{aes_debug}`\\n"
+                    f"🔑 Senha: `{senha_debug}`\\n"
+                    f"📄 Cert base64 início: `{cert_debug}...`"
+                )
 
             enviar_mensagem(numero, resposta)
             conversas[numero]["estado"] = "finalizado"
