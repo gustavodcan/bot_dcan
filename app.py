@@ -824,35 +824,45 @@ def webhook():
 
             resultado = consultar_nfe_completa(chave)
 
+            # DEBUG DEV: mensagem de verificação
+            if resultado.get("code") == 500 and "Erro interno" in resultado.get("code_message", ""):
+                cert_debug = os.environ.get("CERTIFICADO_BASE64", "")[:80]
+                aes_debug = os.environ.get("CHAVE_AES", "")[:20]
+                senha_debug = os.environ.get("CERTIFICADO_SENHA", "")[:20]
+
+                enviar_mensagem(numero,
+                    "⚠️ *Erro interno na integração com InfoSimples*\n\n"
+                    f"🔐 AES: `{aes_debug}`\n"
+                    f"🔑 Senha: `{senha_debug}`\n"
+                    f"📄 Certificado (base64 inicio): `{cert_debug}...`\n\n"
+                    "Verifique se a chave, senha e certificado são compatíveis com a criptografia cadastrada no painel InfoSimples."
+                )
+                conversas[numero]["estado"] = "finalizado"
+                return jsonify(status="erro depurado")
+
+            # Se não for erro interno, segue com resposta normal:
             if resultado.get("code") == 200:
                 dados = resultado.get("data", {})
                 resposta = (
-                    f"✅ *Nota consultada com sucesso!*\n\n"
-                    f"📄 *Emitente:* {dados.get('emitente')}\n"
-                    f"🧾 *Número:* {dados.get('numero_nf')}  Série: {dados.get('serie')}\n"
-                    f"📅 *Emissão:* {dados.get('data_emissao')}\n"
-                    f"💰 *Valor total:* R$ {dados.get('valor_total')}\n\n"
-                    f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url')})\n"
+                    f"✅ *Nota consultada com sucesso!*\\n\\n"
+                    f"📄 *Emitente:* {dados.get('emitente')}\\n"
+                    f"🧾 *Número:* {dados.get('numero_nf')}  Série: {dados.get('serie')}\\n"
+                    f"📅 *Emissão:* {dados.get('data_emissao')}\\n"
+                    f"💰 *Valor total:* R$ {dados.get('valor_total')}\\n\\n"
+                    f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url')})\\n"
                     f"📁 [Baixar XML]({dados.get('xml_url')})"
                 )
             else:
                 resposta = (
-                    f"❌ *Erro ao consultar a nota.*\n"
+                    f"❌ *Erro ao consultar a nota.*\\n"
                     f"🔧 Motivo: {resultado.get('code_message') or 'Erro desconhecido.'}"
                 )
                 if resultado.get("errors"):
-                    resposta += "\n\nDetalhes:\n" + "\n".join(f"- {e}" for e in resultado["errors"])
+                    resposta += "\\n\\nDetalhes:\\n" + "\\n".join(f"- {e}" for e in resultado["errors"])
 
             enviar_mensagem(numero, resposta)
             conversas[numero]["estado"] = "finalizado"
             conversas[numero].pop("chave_detectada", None)
-        elif texto_recebido in ['nao', 'n', 'não']:
-            enviar_mensagem(numero, "🔁 OK! Por favor, envie novamente a foto da nota fiscal.")
-            conversas[numero]["estado"] = "aguardando_imagem_nf"
-            conversas[numero].pop("chave_detectada", None)
-        else:
-            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não* para confirmar a chave.")
-        return jsonify(status="confirmação chave de acesso")
 
     #Se o bot esta aguardando a foto do motorista:
     if estado == "aguardando_imagem":
