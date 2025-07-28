@@ -751,6 +751,30 @@ def consultar_nfe_completa(chave_nfe):
         finally:
             response.close()
 
+        if not resultado:
+            raise ValueError("Resposta da API veio vazia.")
+
+        if resultado.get("code") == 200:
+            dados = resultado.get("data", {})
+            if isinstance(dados, list):
+                dados = dados[0] if dados else {}
+
+            print("✅ NF-e consultada com sucesso:")
+            print(f"➡️ Emitente: {dados.get('emitente')}")
+            print(f"➡️ Valor total: {dados.get('valor_total')}")
+            print(f"➡️ Número NF: {dados.get('numero_nf')}")
+            print(f"➡️ Série: {dados.get('serie')}")
+            print(f"➡️ Emissão: {dados.get('data_emissao')}")
+            print(f"➡️ PDF: {dados.get('danfe_pdf_url')}")
+            print(f"➡️ XML: {dados.get('xml_url')}")
+        else:
+            print("❌ Erro ao consultar a nota.")
+            print(f"🔧 Motivo: {resultado.get('code_message')}")
+            if resultado.get("errors"):
+                print("Detalhes:")
+                for erro in resultado["errors"]:
+                    print(f" - {erro}")
+
         return resultado
 
     except Exception as e:
@@ -760,27 +784,6 @@ def consultar_nfe_completa(chave_nfe):
             "code_message": "Erro interno",
             "errors": [str(e)]
         }
-    if resultado.get("code") == 200:
-        dados = resultado.get("data", {})
-        # Garante que seja dict
-        if isinstance(dados, list):
-            dados = dados[0] if dados else {}
-        
-        print("✅ NF-e consultada com sucesso:")
-        print(f"➡️ Emitente: {dados.get('emitente')}")
-        print(f"➡️ Valor total: {dados.get('valor_total')}")
-        print(f"➡️ Número NF: {dados.get('numero_nf')}")
-        print(f"➡️ Série: {dados.get('serie')}")
-        print(f"➡️ Emissão: {dados.get('data_emissao')}")
-        print(f"➡️ PDF: {dados.get('danfe_pdf_url')}")
-        print(f"➡️ XML: {dados.get('xml_url')}")
-    else:
-        print("❌ Erro ao consultar a nota.")
-        print(f"🔧 Motivo: {resultado.get('code_message')}")
-        if resultado.get("errors"):
-            print("Detalhes:")
-            for erro in resultado["errors"]:
-                print(f" - {erro}")
 
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
