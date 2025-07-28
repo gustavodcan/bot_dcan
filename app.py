@@ -732,9 +732,9 @@ def consultar_nfe_infosimples(chave_nfe, pkcs12_cert, pkcs12_pass):
 
 def consultar_nfe_completa(chave_nfe):
     try:
-        cert_criptografado = os.environ["CERTIFICADO_CRYPT"]
-        senha_criptografada = os.environ["SENHA_CRYPT"]
-        token = os.environ["INFOSIMPLES_TOKEN"]
+        cert_criptografado = os.environ["CERTIFICADO_BASE64"]
+        senha_criptografada = os.environ["CERTIFICADO_SENHA"]
+        token = os.environ["CHAVE_AES"]
 
         url = "https://api.infosimples.com/api/v2/consultas/receita-federal/nfe"
         payload = {
