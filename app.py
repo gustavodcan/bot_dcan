@@ -731,25 +731,35 @@ def consultar_nfe_infosimples(chave_nfe, pkcs12_cert, pkcs12_pass):
     return resposta
 
 def consultar_nfe_completa(chave_nfe):
-    cert_criptografado = os.environ["CERTIFICADO_BASE64"]
-    senha_criptografada = os.environ["CERTIFICADO_SENHA"]
-    token = os.environ["CHAVE_AES"]
-
-    url = "https://api.infosimples.com/api/v2/consultas/receita-federal/nfe"
-    payload = {
-        "nfe": chave_nfe,
-        "pkcs12_cert": cert_criptografado,
-        "pkcs12_pass": senha_criptografada,
-        "token": token,
-        "timeout": 300
-    }
-
-    response = requests.post(url, json=payload)
     try:
-        resultado = response.json()
-    finally:
-        response.close()
+        cert_criptografado = os.environ["CERTIFICADO_CRYPT"]
+        senha_criptografada = os.environ["SENHA_CRYPT"]
+        token = os.environ["INFOSIMPLES_TOKEN"]
 
+        url = "https://api.infosimples.com/api/v2/consultas/receita-federal/nfe"
+        payload = {
+            "nfe": chave_nfe,
+            "pkcs12_cert": cert_criptografado,
+            "pkcs12_pass": senha_criptografada,
+            "token": token,
+            "timeout": 300
+        }
+
+        response = requests.post(url, json=payload)
+        try:
+            resultado = response.json()
+        finally:
+            response.close()
+
+        return resultado
+
+    except Exception as e:
+        print("❌ Erro inesperado ao consultar NF-e:", str(e))
+        return {
+            "code": 500,
+            "code_message": "Erro interno",
+            "errors": [str(e)]
+        }
     if resultado.get("code") == 200:
         dados = resultado["data"]
         print("✅ NF-e consultada com sucesso:")
@@ -833,6 +843,8 @@ def webhook():
             enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada. Consultando a nota...")
 
             resultado = consultar_nfe_completa(chave)
+            if not resultado:
+                resultado = {"code": 500, "code_message": "Erro inesperado", "errors": ["Resposta vazia da consulta."]}
 
             # DEBUG DEV: mensagem de verificação
             if resultado.get("code") == 500 and "Erro interno" in resultado.get("code_message", ""):
