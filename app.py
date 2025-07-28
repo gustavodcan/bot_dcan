@@ -676,6 +676,81 @@ def enviar_opcoes_operacao(numero):
     res = requests.post(url, json=payload, headers=headers)
     print(f"[🟦 Botões operação enviados] Status {res.status_code}: {res.text}")
 
+def aes_encrypt_urlsafe(texto, chave):
+    """Criptografa o texto com AES-256 ECB e aplica formatação URL-safe exigida pela InfoSimples"""
+    key = chave.encode('utf-8')
+    key = key.ljust(32, b'\0')[:32]  # Garante 32 bytes para AES-256
+    cipher = AES.new(key, AES.MODE_ECB)
+    texto_padded = pad(texto.encode('utf-8'), AES.block_size)
+    encrypted = cipher.encrypt(texto_padded)
+    b64 = base64.b64encode(encrypted).decode()
+    return b64.replace('+', '-').replace('/', '_').rstrip('=')
+
+def salvar_certificado_temporario():
+    cert_b64 = os.environ["CERTIFICADO_BASE64"]
+    cert_bytes = base64.b64decode(cert_b64)
+    
+    caminho_cert = "/tmp/certificado_temp.pfx"
+    with open(caminho_cert, "wb") as f:
+        f.write(cert_bytes)
+
+    return caminho_cert
+
+def gerar_criptografia_infosimples(caminho_cert):
+    senha_certificado = os.environ["CERTIFICADO_SENHA"]
+    chave_aes = os.environ["CHAVE_AES"]
+
+    with open(caminho_cert, "rb") as f:
+        cert_b64 = base64.b64encode(f.read()).decode()
+
+    pkcs12_cert = aes_encrypt_urlsafe(cert_b64, chave_aes)
+    pkcs12_pass = aes_encrypt_urlsafe(senha_certificado, chave_aes)
+
+    return pkcs12_cert, pkcs12_pass
+
+def consultar_nfe_infosimples(chave_nfe, pkcs12_cert, pkcs12_pass):
+    token = os.environ["INFOSIMPLES_TOKEN"]
+    url = "https://api.infosimples.com/api/v2/consultas/receita-federal/nfe"
+
+    payload = {
+        "nfe": chave_nfe,
+        "pkcs12_cert": pkcs12_cert,
+        "pkcs12_pass": pkcs12_pass,
+        "token": token,
+        "timeout": 300
+    }
+
+    response = requests.post(url, json=payload)
+    try:
+        resposta = response.json()
+    finally:
+        response.close()
+
+    return resposta
+
+def consultar_nfe_completa(chave_nfe):
+    caminho = salvar_certificado_temporario()
+    cert, senha = gerar_criptografia_infosimples(caminho)
+    resultado = consultar_nfe_infosimples(chave_nfe, cert, senha)
+
+    if resultado.get("code") == 200:
+        dados = resultado.get("data", {})
+        print("\n✅ NF-e consultada com sucesso!")
+        print(f"➡️  Emitente: {dados.get('emitente')}")
+        print(f"➡️  Valor total: {dados.get('valor_total')}")
+        print(f"➡️  Número NF: {dados.get('numero_nf')}")
+        print(f"➡️  Série: {dados.get('serie')}")
+        print(f"➡️  Data de emissão: {dados.get('data_emissao')}")
+        print(f"➡️  Link DANFE PDF: {dados.get('danfe_pdf_url')}")
+        print(f"➡️  Link XML: {dados.get('xml_url')}")
+    else:
+        print("\n❌ Falha na consulta da NF-e")
+        print(f"Erro: {resultado.get('code_message')}")
+        if resultado.get("errors"):
+            print("Detalhes:")
+            for erro in resultado["errors"]:
+                print(f" - {erro}")
+
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -738,9 +813,33 @@ def webhook():
     if estado == "aguardando_confirmacao_chave":
         if texto_recebido in ['sim', 's']:
             chave = conversas[numero]["chave_detectada"]
-            enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada.")
+            enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada. Consultando a nota...")
+
+            resultado = consultar_nfe_completa(chave)
+
+            if resultado.get("code") == 200:
+                dados = resultado.get("data", {})
+                resposta = (
+                    f"✅ *Nota consultada com sucesso!*\n\n"
+                    f"📄 *Emitente:* {dados.get('emitente')}\n"
+                    f"🧾 *Número:* {dados.get('numero_nf')}  Série: {dados.get('serie')}\n"
+                    f"📅 *Emissão:* {dados.get('data_emissao')}\n"
+                    f"💰 *Valor total:* R$ {dados.get('valor_total')}\n\n"
+                    f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url')})\n"
+                    f"📁 [Baixar XML]({dados.get('xml_url')})"
+                )
+            else:
+                resposta = (
+                    f"❌ *Erro ao consultar a nota.*\n"
+                    f"🔧 Motivo: {resultado.get('code_message') or 'Erro desconhecido.'}"
+                )
+                if resultado.get("errors"):
+                    resposta += "\n\nDetalhes:\n" + "\n".join(f"- {e}" for e in resultado["errors"])
+
+            enviar_mensagem(numero, resposta)
             conversas[numero]["estado"] = "finalizado"
-        elif texto_recebido in ['nao', 'não', 'n']:
+            conversas[numero].pop("chave_detectada", None)
+        elif texto_recebido in ['nao', 'n', 'não']:
             enviar_mensagem(numero, "🔁 OK! Por favor, envie novamente a foto da nota fiscal.")
             conversas[numero]["estado"] = "aguardando_imagem_nf"
             conversas[numero].pop("chave_detectada", None)
