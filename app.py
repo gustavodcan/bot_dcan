@@ -731,32 +731,42 @@ def consultar_nfe_infosimples(chave_nfe, pkcs12_cert, pkcs12_pass):
     return resposta
 
 def consultar_nfe_completa(chave_nfe):
+    cert_criptografado = os.environ["CERTIFICADO_BASE64"]
+    senha_criptografada = os.environ["CERTIFICADO_SENHA"]
+    token = os.environ["CHAVE_AES"]
+
+    url = "https://api.infosimples.com/api/v2/consultas/receita-federal/nfe"
+    payload = {
+        "nfe": chave_nfe,
+        "pkcs12_cert": cert_criptografado,
+        "pkcs12_pass": senha_criptografada,
+        "token": token,
+        "timeout": 300
+    }
+
+    response = requests.post(url, json=payload)
     try:
-        print(f"📦 Iniciando consulta da NF-e: {chave_nfe}")
+        resultado = response.json()
+    finally:
+        response.close()
 
-        caminho = salvar_certificado_temporario()
-        cert, senha = gerar_criptografia_infosimples(caminho)
-
-        print("🔐 Certificado criptografado (início):", cert[:50], "...")
-        print("🔐 Senha criptografada (início):", senha[:50], "...")
-        print("📨 Token usado:", os.environ.get("INFOSIMPLES_TOKEN", "❌ NÃO DEFINIDO"))
-        print("📨 AES usada:", os.environ.get("CHAVE_AES", "❌ NÃO DEFINIDA"))
-
-        resultado = consultar_nfe_infosimples(chave_nfe, cert, senha)
-
-        if not resultado:
-            raise ValueError("Resposta da InfoSimples está vazia ou inválida.")
-
-        print("✅ Resposta da InfoSimples recebida com sucesso.")
-        return resultado
-
-    except Exception as e:
-        print(f"❌ Erro inesperado na consulta da NF-e: {e}")
-        return {
-            "code": 500,
-            "code_message": "Erro interno na consulta da nota fiscal",
-            "errors": [str(e)]
-        }
+    if resultado.get("code") == 200:
+        dados = resultado["data"]
+        print("✅ NF-e consultada com sucesso:")
+        print(f"➡️ Emitente: {dados.get('emitente')}")
+        print(f"➡️ Valor total: {dados.get('valor_total')}")
+        print(f"➡️ Número NF: {dados.get('numero_nf')}")
+        print(f"➡️ Série: {dados.get('serie')}")
+        print(f"➡️ Emissão: {dados.get('data_emissao')}")
+        print(f"➡️ PDF: {dados.get('danfe_pdf_url')}")
+        print(f"➡️ XML: {dados.get('xml_url')}")
+    else:
+        print("❌ Erro ao consultar a nota.")
+        print(f"🔧 Motivo: {resultado.get('code_message')}")
+        if resultado.get("errors"):
+            print("Detalhes:")
+            for erro in resultado["errors"]:
+                print(f" - {erro}")
 
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
