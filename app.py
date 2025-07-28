@@ -731,27 +731,40 @@ def consultar_nfe_infosimples(chave_nfe, pkcs12_cert, pkcs12_pass):
     return resposta
 
 def consultar_nfe_completa(chave_nfe):
-    caminho = salvar_certificado_temporario()
-    cert, senha = gerar_criptografia_infosimples(caminho)
-    resultado = consultar_nfe_infosimples(chave_nfe, cert, senha)
+    try:
+        print(f"📦 Iniciando consulta da NF-e: {chave_nfe}")
 
-    if resultado.get("code") == 200:
-        dados = resultado.get("data", {})
-        print("\n✅ NF-e consultada com sucesso!")
-        print(f"➡️  Emitente: {dados.get('emitente')}")
-        print(f"➡️  Valor total: {dados.get('valor_total')}")
-        print(f"➡️  Número NF: {dados.get('numero_nf')}")
-        print(f"➡️  Série: {dados.get('serie')}")
-        print(f"➡️  Data de emissão: {dados.get('data_emissao')}")
-        print(f"➡️  Link DANFE PDF: {dados.get('danfe_pdf_url')}")
-        print(f"➡️  Link XML: {dados.get('xml_url')}")
-    else:
-        print("\n❌ Falha na consulta da NF-e")
-        print(f"Erro: {resultado.get('code_message')}")
-        if resultado.get("errors"):
-            print("Detalhes:")
-            for erro in resultado["errors"]:
-                print(f" - {erro}")
+        caminho = salvar_certificado_temporario()
+        cert, senha = gerar_criptografia_infosimples(caminho)
+        resultado = consultar_nfe_infosimples(chave_nfe, cert, senha)
+
+        if resultado.get("code") == 200:
+            dados = resultado.get("data", {})
+            print("\n✅ NF-e consultada com sucesso!")
+            print(f"➡️  Emitente: {dados.get('emitente')}")
+            print(f"➡️  Valor total: {dados.get('valor_total')}")
+            print(f"➡️  Número NF: {dados.get('numero_nf')}")
+            print(f"➡️  Série: {dados.get('serie')}")
+            print(f"➡️  Data de emissão: {dados.get('data_emissao')}")
+            print(f"➡️  Link DANFE PDF: {dados.get('danfe_pdf_url')}")
+            print(f"➡️  Link XML: {dados.get('xml_url')}")
+        else:
+            print("\n❌ Falha na consulta da NF-e")
+            print(f"Erro: {resultado.get('code_message')}")
+            if resultado.get("errors"):
+                print("Detalhes:")
+                for erro in resultado["errors"]:
+                    print(f" - {erro}")
+
+        return resultado
+
+    except Exception as e:
+        print(f"❌ Erro inesperado na consulta da NF-e: {e}")
+        return {
+            "code": 500,
+            "code_message": "Erro interno na consulta da nota fiscal",
+            "errors": [str(e)]
+        }
 
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
