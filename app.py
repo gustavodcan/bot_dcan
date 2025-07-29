@@ -866,7 +866,7 @@ def webhook():
                         dados = {}
 
                     emitente = dados.get("emitente", {})
-                    emitente_nome = emitente.get("nome_fantasia") or emitente.get("nome") or "Não informado"
+                    emitente_nome = emitente.get("nome") or emitente.get("nome_fantasia") or "Não informado"
                     emitente_cnpj = emitente.get("cnpj") or "Não informado"
                     
                     nfe = dados.get("nfe", {})
@@ -874,7 +874,7 @@ def webhook():
                     nfe_emissao = nfe.get("data_emissao") or "Não informado"
                 
                     destinatario = dados.get("destinatario", {})
-                    destinatario_nome = destinatario.get("nome_fantasia") or destinatario.get("nome") or "Não informado"
+                    destinatario_nome = destinatario.get("nome") or destinatario.get("nome_fantasia") or "Não informado"
                     destinatario_cnpj = destinatario.get("cnpj") or "Não informado"
                     
                     transporte = dados.get("transporte", {})
