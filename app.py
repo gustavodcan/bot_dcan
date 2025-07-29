@@ -784,7 +784,8 @@ if estado == "aguardando_confirmacao_chave":
         finally:
             conversas[numero]["estado"] = "finalizado"
             conversas[numero].pop("chave_detectada", None)
-            return jsonify(status=status_final)
+            
+        return jsonify(status=status_final)
 
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
