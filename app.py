@@ -890,13 +890,13 @@ def webhook():
                 cnpj = emitente.get("cnpj", "Não informado")
 
                 resposta = (
-                    f"✅ *Nota consultada com sucesso!*\\n\\n"
-                    f"📄 *Emitente:* {emitente_nome}\\n"
-                    f"🆔 *CNPJ:* {cnpj}\\n"
-                    f"🧾 *Número:* {dados.get('numero_nf', '---')}  Série: {dados.get('serie', '---')}\\n"
-                    f"📅 *Emissão:* {dados.get('data_emissao', '---')}\\n"
-                    f"💰 *Valor total:* R$ {dados.get('valor_total', '---')}\\n\\n"
-                    f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url', '#')})\\n"
+                    f"✅ *Nota consultada com sucesso!*\n\n"
+                    f"📄 *Emitente:* {emitente_nome}\n"
+                    f"🆔 *CNPJ:* {cnpj}\n"
+                    f"🧾 *Número:* {dados.get('numero_nf', '---')}  Série: {dados.get('serie', '---')}\n"
+                    f"📅 *Emissão:* {dados.get('data_emissao', '---')}\n"
+                    f"💰 *Valor total:* R$ {dados.get('valor_total', '---')}\n\n"
+                    f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url', '#')})\n"
                     f"📁 [Baixar XML]({dados.get('xml_url', '#')})"
                 )
             else:
