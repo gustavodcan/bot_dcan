@@ -874,7 +874,7 @@ def webhook():
                     nfe_emissao = nfe.get("data_emissao") or "Não informado"
                 
                     destinatario = dados.get("destinatario", {})
-                    destinatario_nome = destinatario.get("nome_fantasia") or emitente.get("nome") or "Não informado"
+                    destinatario_nome = destinatario.get("nome_fantasia") or destinatario.get("nome") or "Não informado"
                     destinatario_cnpj = destinatario.get("cnpj") or "Não informado"
                     
                     transporte = dados.get("transporte", {})
@@ -884,8 +884,8 @@ def webhook():
                         f"✅ *Nota consultada com sucesso!*\n\n"
                         f"*Emitente:* {emitente_nome}\n"
                         f"*Emitente CNPJ:* {emitente_cnpj}\n"
-                        f"*Remetente:* {emitente_nome}\n"
-                        f"*Remetente CNPJ:* {emitente_cnpj}\n"
+                        f"*Remetente:* {destinatario_nome}\n"
+                        f"*Remetente CNPJ:* {destinatario_cnpj}\n"
                         f"*Número:* {nfe_numero}\n"
                         f"*Emissão:* {nfe_emissao}\n"
                         f"*Modalidade:* {transporte_modalidade}\n"
