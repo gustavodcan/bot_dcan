@@ -859,8 +859,6 @@ def webhook():
             chave = conversas[numero]["chave_detectada"]
             enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada. Consultando a nota...")
 
-            status_final = "erro inesperado"  # valor padrão
-
             try:
                 resultado = consultar_nfe_completa(chave)
                 if not resultado:
@@ -868,7 +866,7 @@ def webhook():
 
                 if resultado.get("code") == 500 and "Erro interno" in resultado.get("code_message", ""):
                     enviar_mensagem(numero, "⚠️ *Erro interno na integração com InfoSimples.*\nFavor contatar o suporte.")
-                    status_final = "erro depurado"
+                    conversas[numero]["estado"] = "finalizado"
 
                 elif resultado.get("code") == 200:
                     dados_raw = resultado.get("data", {})
@@ -894,7 +892,7 @@ def webhook():
                         f"📁 [Baixar XML]({dados.get('xml_url', '#')})"
                     )
                     enviar_mensagem(numero, resposta)
-                    status_final = "nota consultada com sucesso"
+                    conversas[numero]["estado"] = "finalizado"
 
                 else:
                     resposta = (
@@ -904,17 +902,17 @@ def webhook():
                     if resultado.get("errors"):
                         resposta += "\nDetalhes:\n" + "\n".join(f"- {e}" for e in resultado["errors"])
                     enviar_mensagem(numero, resposta)
-                    status_final = "erro na consulta"
+                    conversas[numero]["estado"] = "finalizado"
 
             except Exception as e:
                 enviar_mensagem(numero, f"❌ Erro inesperado ao processar a nota:\n{str(e)}")
-                status_final = "erro inesperado"
+                conversas[numero]["estado"] = "finalizado"
 
             finally:
                 conversas[numero]["estado"] = "finalizado"
                 conversas[numero].pop("chave_detectada", None)
 
-            return jsonify(status=status_final)  # <- aqui agora está com a indentação correta
+            return jsonify(status="finalizado")
 
 
     #Se o bot esta aguardando a foto do motorista:
