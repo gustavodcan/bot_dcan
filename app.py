@@ -909,7 +909,7 @@ def webhook():
                 conversas[numero]["estado"] = "finalizado"
 
             finally:
-                conversas[numero]["estado"] = "finalizado"
+                conversas.pop(numero, None)
                 conversas[numero].pop("chave_detectada", None)
 
             return jsonify(status="finalizado")
