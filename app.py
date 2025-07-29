@@ -766,16 +766,6 @@ def consultar_nfe_completa(chave_nfe):
                 dados = dados_raw
             else:
                 raise ValueError("Formato inesperado no campo 'data' da resposta.")
-
-            print("✅ NF-e consultada com sucesso:")
-            print(f"➡️ Emitente: {dados.get('emitente')}")
-            print(f"➡️ Valor total: {dados.get('valor_total')}")
-            print(f"➡️ Número NF: {dados.get('numero_nf')}")
-            print(f"➡️ Série: {dados.get('serie')}")
-            print(f"➡️ Emissão: {dados.get('data_emissao')}")
-            print(f"➡️ PDF: {dados.get('danfe_pdf_url')}")
-            print(f"➡️ XML: {dados.get('xml_url')}")
-
         else:
             print("❌ Erro ao consultar a nota.")
             print(f"🔧 Motivo: {resultado.get('code_message')}")
@@ -783,9 +773,9 @@ def consultar_nfe_completa(chave_nfe):
                 print("Detalhes:")
                 for erro in resultado["errors"]:
                     print(f" - {erro}")
-
+                    
         return resultado
-
+        
     except Exception as e:
         print("❌ Erro inesperado ao consultar NF-e:", str(e))
         return {
@@ -793,8 +783,6 @@ def consultar_nfe_completa(chave_nfe):
             "code_message": "Erro interno",
             "errors": [str(e)]
         }
-
-
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -879,17 +867,24 @@ def webhook():
 
                     emitente = dados.get("emitente", {})
                     emitente_nome = emitente.get("nome_fantasia") or emitente.get("nome") or "Não informado"
-                    cnpj = emitente.get("cnpj", "Não informado")
+                    emitente_cnpj = emitente.get("cnpj", "Não informado")
+                    nfe = dados.get("nfe", {})
+                    nfe_numero = nfe.get("numero", "Não informado")
+                    destinatario = dados.get("destinatario", {})
+                    destinatario_nome = destinatario.get("nome_fantasia") or emitente.get("nome") or "Não informado"
+                    destinatario_cnpj = destinatario.get("cnpj", "Não informado")
+                    transporte = dados.get("transporte", {})
+                    transporte_modalidade = transporte.get("modalidade_frete", "Não informado")
 
                     resposta = (
                         f"✅ *Nota consultada com sucesso!*\n\n"
-                        f"📄 *Emitente:* {emitente_nome}\n"
-                        f"🆔 *CNPJ:* {cnpj}\n"
-                        f"🧾 *Número:* {dados.get('numero_nf', '---')}  Série: {dados.get('serie', '---')}\n"
-                        f"📅 *Emissão:* {dados.get('data_emissao', '---')}\n"
-                        f"💰 *Valor total:* R$ {dados.get('valor_total', '---')}\n\n"
-                        f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url', '#')})\n"
-                        f"📁 [Baixar XML]({dados.get('xml_url', '#')})"
+                        f"*Emitente:* {emitente_nome}\n"
+                        f"*Emitente CNPJ:* {emitente_cnpj}\n"
+                        f"*Remetente:* {emitente_nome}\n"
+                        f"*Remetente CNPJ:* {emitente_cnpj}\n"
+                        f"*Número:* {nfe_numero}\n"
+                        f"*Emissão:* {nfe_emissao}\n"
+                        f"*Modalidade:* {transporte_modalidade}\n"
                     )
                     enviar_mensagem(numero, resposta)
                     conversas[numero]["estado"] = "finalizado"
