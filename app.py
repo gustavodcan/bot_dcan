@@ -858,71 +858,57 @@ def webhook():
             chave = conversas[numero]["chave_detectada"]
             enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada. Consultando a nota...")
 
-            resultado = consultar_nfe_completa(chave)
-            if not resultado:
-                resultado = {"code": 500, "code_message": "Erro inesperado", "errors": ["Resposta vazia da consulta."]}
+            try:
+                resultado = consultar_nfe_completa(chave)
+                if not resultado:
+                    resultado = {"code": 500, "code_message": "Erro inesperado", "errors": ["Resposta vazia da consulta."]}
 
-            # DEBUG DEV: mensagem de verificação
-            if resultado.get("code") == 500 and "Erro interno" in resultado.get("code_message", ""):
-                cert_debug = os.environ.get("CERTIFICADO_BASE64", "")[:80]
-                aes_debug = os.environ.get("CHAVE_AES", "")[:20]
-                senha_debug = os.environ.get("CERTIFICADO_SENHA", "")[:20]
+                # Erro interno do próprio sistema
+                if resultado.get("code") == 500 and "Erro interno" in resultado.get("code_message", ""):
+                    enviar_mensagem(numero, "⚠️ *Erro interno na integração com InfoSimples.*\nFavor contatar o suporte.")
+            
+                elif resultado.get("code") == 200:
+                    dados_raw = resultado.get("data", {})
+                    if isinstance(dados_raw, list):
+                        dados = dados_raw[0] if dados_raw else {}
+                    elif isinstance(dados_raw, dict):
+                        dados = dados_raw
+                    else:
+                        dados = {}
 
-                enviar_mensagem(numero,
-                    "⚠️ *Erro interno na integração com InfoSimples*\n\n"
-                )
-                conversas[numero]["estado"] = "finalizado"
-                return jsonify(status="erro depurado")
+                    emitente = dados.get("emitente", {})
+                    emitente_nome = emitente.get("nome_fantasia") or emitente.get("nome") or "Não informado"
+                    cnpj = emitente.get("cnpj", "Não informado")
 
-            # Se não for erro interno, segue com resposta normal:
-            if resultado.get("code") == 200:
-                dados_raw = resultado.get("data", {})
+                    resposta = (
+                        f"✅ *Nota consultada com sucesso!*\n\n"
+                        f"📄 *Emitente:* {emitente_nome}\n"
+                        f"🆔 *CNPJ:* {cnpj}\n"
+                        f"🧾 *Número:* {dados.get('numero_nf', '---')}  Série: {dados.get('serie', '---')}\n"
+                        f"📅 *Emissão:* {dados.get('data_emissao', '---')}\n"
+                        f"💰 *Valor total:* R$ {dados.get('valor_total', '---')}\n\n"
+                        f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url', '#')})\n"
+                        f"📁 [Baixar XML]({dados.get('xml_url', '#')})"
+                    )
+                    enviar_mensagem(numero, resposta)
 
-                if isinstance(dados_raw, list):
-                    dados = dados_raw[0] if dados_raw else {}
-                elif isinstance(dados_raw, dict):
-                    dados = dados_raw
                 else:
-                    dados = {}
+                    resposta = (
+                        f"❌ *Erro ao consultar a nota.*\n"
+                        f"🔧 Motivo: {resultado.get('code_message') or 'Erro desconhecido.'}\n"
+                    )
+                    if resultado.get("errors"):
+                        resposta += "\nDetalhes:\n" + "\n".join(f"- {e}" for e in resultado["errors"])
 
-                emitente = dados.get("emitente", {})
-                emitente_nome = emitente.get("nome_fantasia") or emitente.get("nome") or "Não informado"
-                cnpj = emitente.get("cnpj", "Não informado")
+                    enviar_mensagem(numero, resposta)
 
-                resposta = (
-                    f"✅ *Nota consultada com sucesso!*\n\n"
-                    f"📄 *Emitente:* {emitente_nome}\n"
-                    f"🆔 *CNPJ:* {cnpj}\n"
-                    f"🧾 *Número:* {dados.get('numero_nf', '---')}  Série: {dados.get('serie', '---')}\n"
-                    f"📅 *Emissão:* {dados.get('data_emissao', '---')}\n"
-                    f"💰 *Valor total:* R$ {dados.get('valor_total', '---')}\n\n"
-                    f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url', '#')})\n"
-                    f"📁 [Baixar XML]({dados.get('xml_url', '#')})"
-                )
-            else:
-                cert_debug = os.environ.get("CERTIFICADO_BASE64", "")[:80]
-                aes_debug = os.environ.get("CHAVE_AES", "")[:20]
-                senha_debug = os.environ.get("CERTIFICADO_SENHA", "")[:20]
+            except Exception as e:
+                enviar_mensagem(numero, f"❌ Erro inesperado ao processar a nota:\n{str(e)}")
 
-                resposta = (
-                    f"❌ *Erro ao consultar a nota.*\\n"
-                    f"🔧 Motivo: {resultado.get('code_message') or 'Erro desconhecido.'}"
-                )
-
-                if resultado.get("errors"):
-                    resposta += "\\n\\nDetalhes:\\n" + "\\n".join(f"- {e}" for e in resultado["errors"])
-
-                # Debug extra pra você (modo dev)
-                resposta += (
-                    "\\n\\n🚧 *DEBUG:*\\n"
-                    f"🔐 AES: `{aes_debug}`\\n"
-                    f"🔑 Senha: `{senha_debug}`\\n"
-                    f"📄 Cert base64 início: `{cert_debug}...`"
-                )
-
-            enviar_mensagem(numero, resposta)
-            conversas[numero]["estado"] = "finalizado"
-            conversas[numero].pop("chave_detectada", None)
+            finally:
+                conversas[numero]["estado"] = "finalizado"
+                conversas[numero].pop("chave_detectada", None)
+                return jsonify(status="consulta finalizada")
 
     #Se o bot esta aguardando a foto do motorista:
     if estado == "aguardando_imagem":
