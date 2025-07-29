@@ -701,9 +701,7 @@ def salvar_certificado_temporario():
 def gerar_criptografia_infosimples(caminho_cert):
     senha_certificado = os.environ["CERTIFICADO_SENHA"]
     chave_aes = os.environ["CHAVE_AES"]
-
-    with open(caminho_cert, "rb") as f:
-        cert_b64 = base64.b64encode(f.read()).decode()
+    cert_b64 = os.environ["CERTIFICADO_BASE64"]
 
     pkcs12_cert = aes_encrypt_urlsafe(cert_b64, chave_aes)
     pkcs12_pass = aes_encrypt_urlsafe(senha_certificado, chave_aes)
