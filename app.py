@@ -728,64 +728,72 @@ def consultar_nfe_infosimples(chave_nfe, pkcs12_cert, pkcs12_pass):
 
     return resposta
 
-if estado == "aguardando_confirmacao_chave":
-    if texto_recebido in ['sim', 's']:
-        chave = conversas[numero]["chave_detectada"]
-        enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada. Consultando a nota...")
+def consultar_nfe_completa(chave_nfe):
+    try:
+        cert_criptografado = os.environ.get("CERTIFICADO_BASE64")
+        senha_criptografada = os.environ.get("CERTIFICADO_SENHA")
+        token = os.environ.get("INFOSIMPLES_TOKEN")
+
+        if not all([cert_criptografado, senha_criptografada, token]):
+            raise ValueError("Variáveis de ambiente faltando.")
+
+        url = "https://api.infosimples.com/api/v2/consultas/receita-federal/nfe"
+        payload = {
+            "nfe": chave_nfe,
+            "pkcs12_cert": cert_criptografado,
+            "pkcs12_pass": senha_criptografada,
+            "token": token,
+            "timeout": 300
+        }
+
+        response = requests.post(url, json=payload)
+        print("📦 Resposta bruta InfoSimples:", response.text)
 
         try:
-            resultado = consultar_nfe_completa(chave)
-            if not resultado:
-                raise ValueError("Resposta vazia da consulta.")
+            resultado = response.json()
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Erro ao interpretar resposta JSON: {e}")
 
-            if resultado.get("code") == 500 and "Erro interno" in resultado.get("code_message", ""):
-                enviar_mensagem(numero, "⚠️ *Erro interno na integração com InfoSimples.*\nFavor contatar o suporte.")
-                status_final = "erro depurado"
+        if not resultado:
+            raise ValueError("Resposta da API veio vazia.")
 
-            elif resultado.get("code") == 200:
-                dados_raw = resultado.get("data", {})
-                if isinstance(dados_raw, list):
-                    dados = dados_raw[0] if dados_raw else {}
-                elif isinstance(dados_raw, dict):
-                    dados = dados_raw
-                else:
-                    dados = {}
+        if resultado.get("code") == 200:
+            dados_raw = resultado.get("data", {})
 
-                emitente = dados.get("emitente", {})
-                emitente_nome = emitente.get("nome_fantasia") or emitente.get("nome") or "Não informado"
-                cnpj = emitente.get("cnpj", "Não informado")
-
-                resposta = (
-                    f"✅ *Nota consultada com sucesso!*\n\n"
-                    f"📄 *Emitente:* {emitente_nome}\n"
-                    f"🆔 *CNPJ:* {cnpj}\n"
-                    f"🧾 *Número:* {dados.get('numero_nf', '---')}  Série: {dados.get('serie', '---')}\n"
-                    f"📅 *Emissão:* {dados.get('data_emissao', '---')}\n"
-                    f"💰 *Valor total:* R$ {dados.get('valor_total', '---')}\n\n"
-                    f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url', '#')})\n"
-                    f"📁 [Baixar XML]({dados.get('xml_url', '#')})"
-                )
-                enviar_mensagem(numero, resposta)
-                status_final = "nota consultada com sucesso"
-
+            if isinstance(dados_raw, list):
+                dados = dados_raw[0] if dados_raw else {}
+            elif isinstance(dados_raw, dict):
+                dados = dados_raw
             else:
-                resposta = (
-                    f"❌ *Erro ao consultar a nota.*\n"
-                )
-                if resultado.get("errors"):
-                    resposta += "\n"
-                enviar_mensagem(numero, resposta)
-                status_final = "erro na consulta"
+                raise ValueError("Formato inesperado no campo 'data' da resposta.")
 
-        except Exception as e:
-            enviar_mensagem(numero, f"❌ Erro inesperado ao processar a nota.")
-            status_final = "erro inesperado"
+            print("✅ NF-e consultada com sucesso:")
+            print(f"➡️ Emitente: {dados.get('emitente')}")
+            print(f"➡️ Valor total: {dados.get('valor_total')}")
+            print(f"➡️ Número NF: {dados.get('numero_nf')}")
+            print(f"➡️ Série: {dados.get('serie')}")
+            print(f"➡️ Emissão: {dados.get('data_emissao')}")
+            print(f"➡️ PDF: {dados.get('danfe_pdf_url')}")
+            print(f"➡️ XML: {dados.get('xml_url')}")
 
-        finally:
-            conversas[numero]["estado"] = "finalizado"
-            conversas[numero].pop("chave_detectada", None)
-            
-        return jsonify(status=status_final)
+        else:
+            print("❌ Erro ao consultar a nota.")
+            print(f"🔧 Motivo: {resultado.get('code_message')}")
+            if resultado.get("errors"):
+                print("Detalhes:")
+                for erro in resultado["errors"]:
+                    print(f" - {erro}")
+
+        return resultado
+
+    except Exception as e:
+        print("❌ Erro inesperado ao consultar NF-e:", str(e))
+        return {
+            "code": 500,
+            "code_message": "Erro interno",
+            "errors": [str(e)]
+        }
+
 
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
@@ -851,15 +859,17 @@ def webhook():
             chave = conversas[numero]["chave_detectada"]
             enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada. Consultando a nota...")
 
+            status_final = "erro inesperado"  # valor padrão
+
             try:
                 resultado = consultar_nfe_completa(chave)
                 if not resultado:
-                    resultado = {"code": 500, "code_message": "Erro inesperado", "errors": ["Resposta vazia da consulta."]}
+                    raise ValueError("Resposta vazia da consulta.")
 
-                # Erro interno do próprio sistema
                 if resultado.get("code") == 500 and "Erro interno" in resultado.get("code_message", ""):
                     enviar_mensagem(numero, "⚠️ *Erro interno na integração com InfoSimples.*\nFavor contatar o suporte.")
-            
+                    status_final = "erro depurado"
+
                 elif resultado.get("code") == 200:
                     dados_raw = resultado.get("data", {})
                     if isinstance(dados_raw, list):
@@ -884,6 +894,7 @@ def webhook():
                         f"📁 [Baixar XML]({dados.get('xml_url', '#')})"
                     )
                     enviar_mensagem(numero, resposta)
+                    status_final = "nota consultada com sucesso"
 
                 else:
                     resposta = (
@@ -892,16 +903,19 @@ def webhook():
                     )
                     if resultado.get("errors"):
                         resposta += "\nDetalhes:\n" + "\n".join(f"- {e}" for e in resultado["errors"])
-
                     enviar_mensagem(numero, resposta)
+                    status_final = "erro na consulta"
 
             except Exception as e:
                 enviar_mensagem(numero, f"❌ Erro inesperado ao processar a nota:\n{str(e)}")
+                status_final = "erro inesperado"
 
             finally:
                 conversas[numero]["estado"] = "finalizado"
                 conversas[numero].pop("chave_detectada", None)
-                return jsonify(status="consulta finalizada")
+
+            return jsonify(status=status_final)  # <- aqui agora está com a indentação correta
+
 
     #Se o bot esta aguardando a foto do motorista:
     if estado == "aguardando_imagem":
