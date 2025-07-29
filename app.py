@@ -730,9 +730,12 @@ def consultar_nfe_infosimples(chave_nfe, pkcs12_cert, pkcs12_pass):
 
 def consultar_nfe_completa(chave_nfe):
     try:
-        cert_criptografado = os.environ["CERTIFICADO_BASE64"]
-        senha_criptografada = os.environ["CERTIFICADO_SENHA"]
-        token = os.environ["INFOSIMPLES_TOKEN"]
+        cert_criptografado = os.environ.get("CERTIFICADO_BASE64")
+        senha_criptografada = os.environ.get("CERTIFICADO_SENHA")
+        token = os.environ.get("INFOSIMPLES_TOKEN")
+
+        if not all([cert_criptografado, senha_criptografada, token]):
+            raise ValueError("Variáveis de ambiente faltando.")
 
         url = "https://api.infosimples.com/api/v2/consultas/receita-federal/nfe"
         payload = {
@@ -744,10 +747,12 @@ def consultar_nfe_completa(chave_nfe):
         }
 
         response = requests.post(url, json=payload)
+        print("📦 Resposta bruta InfoSimples:", response.text)
+
         try:
             resultado = response.json()
-        finally:
-            response.close()
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Erro ao interpretar resposta JSON: {e}")
 
         if not resultado:
             raise ValueError("Resposta da API veio vazia.")
@@ -755,7 +760,6 @@ def consultar_nfe_completa(chave_nfe):
         if resultado.get("code") == 200:
             dados_raw = resultado.get("data", {})
 
-            # Corrige para garantir que é um dicionário
             if isinstance(dados_raw, list):
                 dados = dados_raw[0] if dados_raw else {}
             elif isinstance(dados_raw, dict):
@@ -771,6 +775,7 @@ def consultar_nfe_completa(chave_nfe):
             print(f"➡️ Emissão: {dados.get('data_emissao')}")
             print(f"➡️ PDF: {dados.get('danfe_pdf_url')}")
             print(f"➡️ XML: {dados.get('xml_url')}")
+
         else:
             print("❌ Erro ao consultar a nota.")
             print(f"🔧 Motivo: {resultado.get('code_message')}")
@@ -865,10 +870,6 @@ def webhook():
 
                 enviar_mensagem(numero,
                     "⚠️ *Erro interno na integração com InfoSimples*\n\n"
-                    f"🔐 AES: `{aes_debug}`\n"
-                    f"🔑 Senha: `{senha_debug}`\n"
-                    f"📄 Certificado (base64 inicio): `{cert_debug}...`\n\n"
-                    "Verifique se a chave, senha e certificado são compatíveis com a criptografia cadastrada no painel InfoSimples."
                 )
                 conversas[numero]["estado"] = "finalizado"
                 return jsonify(status="erro depurado")
