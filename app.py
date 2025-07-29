@@ -753,9 +753,15 @@ def consultar_nfe_completa(chave_nfe):
             raise ValueError("Resposta da API veio vazia.")
 
         if resultado.get("code") == 200:
-            dados = resultado.get("data", {})
-            if isinstance(dados, list):
-                dados = dados[0] if dados else {}
+            dados_raw = resultado.get("data", {})
+
+            # Corrige para garantir que é um dicionário
+            if isinstance(dados_raw, list):
+                dados = dados_raw[0] if dados_raw else {}
+            elif isinstance(dados_raw, dict):
+                dados = dados_raw
+            else:
+                raise ValueError("Formato inesperado no campo 'data' da resposta.")
 
             print("✅ NF-e consultada com sucesso:")
             print(f"➡️ Emitente: {dados.get('emitente')}")
