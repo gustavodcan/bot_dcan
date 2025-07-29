@@ -876,15 +876,23 @@ def webhook():
 
             # Se não for erro interno, segue com resposta normal:
             if resultado.get("code") == 200:
-                dados = resultado.get("data", {})
+                dados_raw = resultado.get("data", {})
+
+                if isinstance(dados_raw, list):
+                    dados = dados_raw[0] if dados_raw else {}
+                elif isinstance(dados_raw, dict):
+                    dados = dados_raw
+                else:
+                    dados = {}
+
                 resposta = (
                     f"✅ *Nota consultada com sucesso!*\\n\\n"
-                    f"📄 *Emitente:* {dados.get('emitente')}\\n"
-                    f"🧾 *Número:* {dados.get('numero_nf')}  Série: {dados.get('serie')}\\n"
-                    f"📅 *Emissão:* {dados.get('data_emissao')}\\n"
-                    f"💰 *Valor total:* R$ {dados.get('valor_total')}\\n\\n"
-                    f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url')})\\n"
-                    f"📁 [Baixar XML]({dados.get('xml_url')})"
+                    f"📄 *Emitente:* {dados.get('emitente', 'Não informado')}\\n"
+                    f"🧾 *Número:* {dados.get('numero_nf', '---')}  Série: {dados.get('serie', '---')}\\n"
+                    f"📅 *Emissão:* {dados.get('data_emissao', '---')}\\n"
+                    f"💰 *Valor total:* R$ {dados.get('valor_total', '---')}\\n\\n"
+                    f"📎 [Visualizar DANFE]({dados.get('danfe_pdf_url', '#')})\\n"
+                    f"📁 [Baixar XML]({dados.get('xml_url', '#')})"
                 )
             else:
                 cert_debug = os.environ.get("CERTIFICADO_BASE64", "")[:80]
