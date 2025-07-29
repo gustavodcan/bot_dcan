@@ -885,9 +885,14 @@ def webhook():
                 else:
                     dados = {}
 
+                emitente = dados.get("emitente", {})
+                emitente_nome = emitente.get("nome_fantasia") or emitente.get("nome") or "Não informado"
+                cnpj = emitente.get("cnpj", "Não informado")
+
                 resposta = (
                     f"✅ *Nota consultada com sucesso!*\\n\\n"
-                    f"📄 *Emitente:* {dados.get('emitente', 'Não informado')}\\n"
+                    f"📄 *Emitente:* {emitente_nome}\\n"
+                    f"🆔 *CNPJ:* {cnpj}\\n"
                     f"🧾 *Número:* {dados.get('numero_nf', '---')}  Série: {dados.get('serie', '---')}\\n"
                     f"📅 *Emissão:* {dados.get('data_emissao', '---')}\\n"
                     f"💰 *Valor total:* R$ {dados.get('valor_total', '---')}\\n\\n"
