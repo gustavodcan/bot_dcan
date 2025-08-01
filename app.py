@@ -882,7 +882,7 @@ def webhook():
                     modalidade_numeros = ''.join(re.findall(r'\d+', transporte_modalidade))
 
                     volumes = dados.get("volumes", {})
-                    volumes_peso_bruto = nfe.get("peso_bruto") or "Não informado"
+                    volumes_peso_bruto = volumes.get("peso_bruto") or "Não informado"
 
                     resposta = (
                         f"✅ *Nota consultada com sucesso!*\n\n"
