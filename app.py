@@ -885,6 +885,35 @@ def webhook():
                     volumes = json.loads(volumes_str) if isinstance(volumes_str, str) else volumes_str
                     volumes_peso_bruto = volumes[0].get("peso_bruto") if volumes else "Não informado"
 
+                    # Simulação de como seu "dados" está vindo
+                    dados = {
+                        "volumes": '[{"quantidade":"19","especie":"TO","marca":"","numeracao":"","peso_liquido":"18.750,000","peso_bruto":"18.750,000"}]'
+                    }
+
+                    # Verifica o tipo real de volumes
+                    volumes_raw = dados.get("volumes")
+
+                    print("Tipo de volumes:", type(volumes_raw))
+                    print("Conteúdo de volumes:", volumes_raw)
+
+                    # Se for string, fazemos o parse
+                    if isinstance(volumes_raw, str):
+                        try:
+                            volumes = json.loads(volumes_raw)
+                        except Exception as e:
+                            print("Erro ao converter volumes com json.loads:", e)
+                            volumes = []
+                    else:
+                        volumes = volumes_raw
+
+                    # Tenta pegar o peso bruto
+                    if volumes and isinstance(volumes, list) and isinstance(volumes[0], dict):
+                        volumes_peso_bruto = volumes[0].get("peso_bruto", "Não informado")
+                    else:
+                        volumes_peso_bruto = "Não informado"
+
+                    print("Peso bruto:", volumes_peso_bruto)
+
                     resposta = (
                         f"✅ *Nota consultada com sucesso!*\n\n"
                         f"*Emitente:* {emitente_nome}\n"
