@@ -387,7 +387,7 @@ def extrair_dados_cliente_rio_das_pedras(img, texto):
             match_peso = re.search(r"(\d{1,3}(?:[.,]\d{3}){1,2})\s*kg", linha)
             if match_peso:
                 peso_raw = match_peso.group(1)
-                print(f"[⚖️] Peso bruto capturado: {peso_raw}")
+                print(f"[⚖️] Peso capturado: {peso_raw}")
                 try:
                     peso_limpo = peso_raw.replace(".", "").replace(",", "")
                     peso_liquido_val = str(int(peso_limpo))
@@ -882,37 +882,11 @@ def webhook():
                     modalidade_numeros = ''.join(re.findall(r'\d+', transporte_modalidade))
 
                     volumes_str = dados.get("volumes", "[]")
-                    volumes = json.loads(volumes_str) if isinstance(volumes_str, str) else volumes_str
-                    volumes_peso_bruto = volumes[0].get("peso_bruto") if volumes else "Não informado"
-
-                    # Simulação de como seu "dados" está vindo
-                    dados = {
-                        "volumes": '[{"quantidade":"19","especie":"TO","marca":"","numeracao":"","peso_liquido":"18.750,000","peso_bruto":"18.750,000"}]'
-                    }
-
-                    # Verifica o tipo real de volumes
-                    volumes_raw = dados.get("volumes")
-
-                    print("Tipo de volumes:", type(volumes_raw))
-                    print("Conteúdo de volumes:", volumes_raw)
-
-                    # Se for string, fazemos o parse
-                    if isinstance(volumes_raw, str):
-                        try:
-                            volumes = json.loads(volumes_raw)
-                        except Exception as e:
-                            print("Erro ao converter volumes com json.loads:", e)
-                            volumes = []
-                    else:
-                        volumes = volumes_raw
-
-                    # Tenta pegar o peso bruto
-                    if volumes and isinstance(volumes, list) and isinstance(volumes[0], dict):
-                        volumes_peso_bruto = volumes[0].get("peso_bruto", "Não informado")
-                    else:
-                        volumes_peso_bruto = "Não informado"
-
-                    print("Peso bruto:", volumes_peso_bruto)
+                    try:
+                        volumes = json.loads(volumes_str)
+                    except Exception as e:
+                        volumes = []
+                    volumes_peso_bruto = (volumes[0].get("peso_bruto", "Não informado") if volumes else "Não informado")
 
                     resposta = (
                         f"✅ *Nota consultada com sucesso!*\n\n"
