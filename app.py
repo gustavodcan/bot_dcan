@@ -881,6 +881,9 @@ def webhook():
                     transporte_modalidade = transporte.get("modalidade_frete") or "Não informado"
                     modalidade_numeros = ''.join(re.findall(r'\d+', transporte_modalidade))
 
+                    volumes = dados.get("volumes", {})
+                    volumes_peso_bruto = nfe.get("peso_bruto") or "Não informado"
+
                     resposta = (
                         f"✅ *Nota consultada com sucesso!*\n\n"
                         f"*Emitente:* {emitente_nome}\n"
@@ -890,6 +893,7 @@ def webhook():
                         f"*Número:* {nfe_numero}\n"
                         f"*Emissão:* {nfe_emissao}\n"
                         f"*Modalidade:* {modalidade_numeros}\n"
+                        f"*Peso Bruto:* {volumes_peso_bruto}\n"                        
                     )
                     enviar_mensagem(numero, resposta)
                     conversas[numero]["estado"] = "finalizado"
