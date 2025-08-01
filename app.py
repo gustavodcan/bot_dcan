@@ -881,13 +881,19 @@ def webhook():
                     transporte_modalidade = transporte.get("modalidade_frete") or "Não informado"
                     modalidade_numeros = ''.join(re.findall(r'\d+', transporte_modalidade))
 
-                    volumes_str = dados.get("volumes", "[]")
-                    try:
-                        volumes = json.loads(volumes_str)
-                    except Exception as e:
-                        volumes = []
-                    volumes_peso_bruto = (volumes[0].get("peso_bruto", "Não informado") if volumes else "Não informado")
-
+                    volumes_raw = dados.get("volumes")
+                    if isinstance(volumes_raw, str):
+                        try:
+                            volumes = json.loads(volumes_raw)
+                        except Exception as e:
+                            volumes = []
+                    else:
+                        volumes = volumes_raw
+                    if volumes and isinstance(volumes, list) and isinstance(volumes[0], dict):
+                        volumes_peso_bruto = volumes[0].get("peso_bruto", "Não informado")
+                    else:
+                        volumes_peso_bruto = "Não informado"
+                        
                     resposta = (
                         f"✅ *Nota consultada com sucesso!*\n\n"
                         f"*Emitente:* {emitente_nome}\n"
