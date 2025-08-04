@@ -1096,6 +1096,7 @@ def enviar_dados():
         telefone = dados.get("telefone")
 
         from integracoes.google_sheets import conectar_google_sheets
+        client = conectar_google_sheets()
         planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
         planilha.append_row([data or '', cliente or '', ticket or '', nota_fiscal or '', peso or '', destino or '', telefone or ''])
 
