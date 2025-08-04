@@ -882,9 +882,11 @@ def webhook():
                     modalidade_numeros = ''.join(re.findall(r'\d+', transporte_modalidade))
 
                     volumes = dados.get("volumes", [])
-                    primeiro_volume = volumes[0] if isinstance(volumes, list) and volumes else {}
-
-                    peso_bruto = primeiro_volume.get("peso_bruto") or "Não informado"
+                    if isinstance(volumes, list) and len(volumes) > 0 and isinstance(volumes[0], dict):
+                        primeiro_volume = volumes[0]
+                        peso_bruto = primeiro_volume.get("peso_bruto") or "Não informado"
+                    else:
+                        peso_bruto = "Não informado"
                         
                     resposta = (
                         f"✅ *Nota consultada com sucesso!*\n\n"
