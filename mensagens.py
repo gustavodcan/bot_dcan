@@ -1,9 +1,6 @@
 import os
 import requests
-
-INSTANCE_ID = os.getenv("INSTANCE_ID")
-API_TOKEN = os.getenv("API_TOKEN")
-CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
+from config import INSTANCE_ID, API_TOKEN, CLIENT_TOKEN
 
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
