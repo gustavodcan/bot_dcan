@@ -13,12 +13,8 @@ from Crypto.Util.Padding import pad
 app = Flask(__name__)
 conversas = {}
 
-from mensagens import (
-    enviar_mensagem,
-    enviar_botoes_sim_nao,
-    enviar_lista_setor,
-    enviar_opcoes_operacao
-)
+from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
+from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 
 # Salvar imagem no Azure após confirmação
 def salvar_imagem_azure(local_path, nome_destino):
