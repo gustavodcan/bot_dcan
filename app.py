@@ -881,21 +881,8 @@ def webhook():
                     transporte_modalidade = transporte.get("modalidade_frete") or "Não informado"
                     modalidade_numeros = ''.join(re.findall(r'\d+', transporte_modalidade))
 
-                    volumes_raw = dados.get("volumes")
-
-                    # Caso esteja como string e não como lista:
-                    if isinstance(volumes_raw, str):
-                        try:
-                            volumes = json.loads(volumes_raw)
-                        except Exception:
-                            volumes = []
-                    elif isinstance(volumes_raw, list):
-                        volumes = volumes_raw
-                    else:
-                        volumes = []
-
-                    # Agora extrai como antes:
-                    primeiro_volume = volumes[0] if volumes else {}
+                    volumes = transporte.get("volumes", [])
+                    primeiro_volume = volumes[0] if isinstance(volumes, list) and volumes else {}
                     peso_bruto = primeiro_volume.get("peso_bruto") or "Não informado"
 
                     resposta = (
