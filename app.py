@@ -881,30 +881,10 @@ def webhook():
                     transporte_modalidade = transporte.get("modalidade_frete") or "Não informado"
                     modalidade_numeros = ''.join(re.findall(r'\d+', transporte_modalidade))
 
-                    volumes_raw = dados.get("volumes", "[]")  # default: string de lista vazia
+                    volumes = dados.get("volumes", [])
+                    primeiro_volume = volumes[0] if isinstance(volumes, list) and volumes else {}
 
-                    # força conversão mesmo que venha bugado
-                    try:
-                        # tentativa 1: json.loads direto
-                        volumes = json.loads(volumes_raw)
-                    except Exception as e:
-                        print("Falha ao fazer json.loads direto:", e)
-
-                        # tentativa 2: tratamento de string bruta (substitui aspas ruins, etc.)
-                        try:
-                            # algumas APIs retornam com aspas simples, o que não é JSON válido
-                            volumes_fixed = volumes_raw.replace("'", '"')
-                            volumes = json.loads(volumes_fixed)
-                        except Exception as e:
-                            print("Falha ao tratar a string de volumes:", e)
-                            volumes = []
-
-                    # agora pega o peso_bruto
-                    try:
-                        volumes_peso_bruto = volumes[0].get("peso_bruto", "Não informado") if volumes else "Não informado"
-                    except Exception as e:
-                        print("Erro ao acessar o campo peso_bruto:", e)
-                        volumes_peso_bruto = "Não informado"
+                    peso_bruto = primeiro_volume.get("peso_bruto") or "Não informado"
                         
                     resposta = (
                         f"✅ *Nota consultada com sucesso!*\n\n"
@@ -915,7 +895,7 @@ def webhook():
                         f"*Número:* {nfe_numero}\n"
                         f"*Emissão:* {nfe_emissao}\n"
                         f"*Modalidade:* {modalidade_numeros}\n"
-                        f"*Peso Bruto:* {volumes_peso_bruto}\n" 
+                        f"*Peso Bruto:* {peso_bruto}\n" 
                     )
                     enviar_mensagem(numero, resposta)
                     conversas[numero]["estado"] = "finalizado"
