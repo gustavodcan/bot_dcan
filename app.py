@@ -72,21 +72,6 @@ def get_google_vision_client():
     credentials = service_account.Credentials.from_service_account_info(creds_dict)
     return vision.ImageAnnotatorClient(credentials=credentials)
 
-#Conexão do Planilha Google
-def conectar_google_sheets():
-    cred_path = "/etc/secrets/acc_servico"
-    with open(cred_path, 'r') as f:
-        cred_json_str = f.read()
-    cred_info = json.loads(cred_json_str)
-
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
-    creds = Credentials.from_service_account_info(cred_info, scopes=scopes)
-    client = gspread.authorize(creds)
-    return client
-
 #Ativa o uso do OCR
 def ler_texto_google_ocr(path_imagem):
     client = get_google_vision_client()
@@ -1110,7 +1095,7 @@ def enviar_dados():
         destino = destino.upper() if cliente else ''
         telefone = dados.get("telefone")
 
-        client = conectar_google_sheets()
+        from integracoes.google_sheets import conectar_google_sheets
         planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
         planilha.append_row([data or '', cliente or '', ticket or '', nota_fiscal or '', peso or '', destino or '', telefone or ''])
 
