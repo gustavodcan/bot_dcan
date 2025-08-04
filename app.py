@@ -871,7 +871,13 @@ def webhook():
                     
                     nfe = dados.get("nfe", {})
                     nfe_numero = nfe.get("numero") or "Não informado"
-                    nfe_emissao = nfe.get("data_emissao") or "Não informado"
+                    nfe_emissao_raw = nfe.get("data_emissao") or ""
+
+                    try:
+                        dt = datetime.strptime(nfe_emissao_raw[:19], "%d/%m/%Y %H:%M:%S")
+                        nfe_emissao = dt.strftime("%d/%m/%Y")
+                    except Exception:
+                        nfe_emissao = "Não informado"
                 
                     destinatario = dados.get("destinatario", {})
                     destinatario_nome = destinatario.get("nome") or destinatario.get("nome_fantasia") or "Não informado"
