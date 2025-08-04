@@ -13,10 +13,12 @@ from Crypto.Util.Padding import pad
 app = Flask(__name__)
 conversas = {}
 
-#Trazendo Variaveis do Render
-INSTANCE_ID = os.getenv("INSTANCE_ID")
-API_TOKEN = os.getenv("API_TOKEN")
-CLIENT_TOKEN = os.getenv("CLIENT_TOKEN")
+from mensagens import (
+    enviar_mensagem,
+    enviar_botoes_sim_nao,
+    enviar_lista_setor,
+    enviar_opcoes_operacao
+)
 
 # Salvar imagem no Azure após confirmação
 def salvar_imagem_azure(local_path, nome_destino):
@@ -178,38 +180,6 @@ def limpar_texto_ocr(texto):
     texto = re.sub(r"[^\w\s:/\.,-]", "", texto)
     texto = re.sub(r"\s{2,}", " ", texto)
     return texto
-
-#Envia texto simples para "Motorista"
-def enviar_mensagem(numero, texto):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
-    payload = {"phone": numero, "message": texto}
-    headers = {
-        "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
-    }
-    res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟢 Texto simples enviado] Status {res.status_code}: {res.text}")
-
-#Envia "Sim" e "Não" simples para "Motorista
-def enviar_botoes_sim_nao(numero, mensagem):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-button-list"
-    payload = {
-        "phone": numero,
-        "message": mensagem,
-        "buttonList": {
-            "buttons": [
-                {"id": "sim", "label": "Sim"},
-                {"id": "nao", "label": "Não"}
-            ]
-        }
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
-    }
-    res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
-
 
 #Extraí Ticket, Nota Fiscal e Peso do cliente Gerdau Pinda
 def extrair_dados_cliente_gerdaupinda(img, texto):
@@ -594,30 +564,6 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     dados["cliente"] = cliente_detectado
     return dados
 
-def enviar_lista_setor(numero, mensagem):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
-    payload = {
-        "phone": numero,
-        "message": mensagem,
-        "optionList": {
-            "title": "Setores DCAN",
-            "buttonLabel": "Escolha o setor",
-            "options": [
-                {"id": "comercial", "description": "(Cotações, Novos serviços e Parcerias)", "title": "Comercial"},
-                {"id": "faturamento", "description": "(Contratos, Conhecimentos e Comprovantes)", "title": "Faturamento"},
-                {"id": "financeiro",  "description": "(Pagamentos, Descontos e Dúvidas)", "title": "Financeiro"},
-                {"id": "recursos humanos", "description": "(Vagas, Documentação e Benefícios)", "title": "Recursos Humanos"},
-                {"id": "operacao", "description": "(Coletas, Entregas e Tickets)", "title": "Operação"},
-            ]
-        }
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
-    }
-    res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
-
 # Redireciona mensagem digitada para número do setor
 def encaminhar_para_setor(numero_usuario, setor, mensagem):
     mapa_setores = {
@@ -656,28 +602,7 @@ def tratar_descricao_setor(numero, mensagem_original):
     else:
         enviar_lista_setor(numero, "⚠️ Setor não identificado. Vamos começar novamente.")
         conversas[numero] = {"estado": "aguardando_setor"}
-
-    # Envia botões quando usuário escolhe Operação
-def enviar_opcoes_operacao(numero):
-    url = f"https://api.z-api.io/instances/{os.getenv('INSTANCE_ID')}/token/{os.getenv('API_TOKEN')}/send-button-list"
-    payload = {
-        "phone": numero,
-        "message": "Você está falando com o setor de Operações. O que deseja fazer?",
-        "buttonList": {
-            "buttons": [
-                {"id": "falar_programador", "label": "Falar com programador"},
-                {"id": "foto_nf", "label": "Enviar foto NF"},
-                {"id": "foto_ticket", "label": "Enviar foto ticket"}
-            ]
-        }
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "Client-Token": os.getenv("CLIENT_TOKEN")
-    }
-    res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟦 Botões operação enviados] Status {res.status_code}: {res.text}")
-
+        
 def aes_encrypt_urlsafe(texto, chave):
     """Criptografa o texto com AES-256 ECB e aplica formatação URL-safe exigida pela InfoSimples"""
     key = chave.encode('utf-8')
