@@ -29,7 +29,7 @@ def tratar_estado_aguardando_imagem(numero, data, conversas):
     img.save("ticket_pre_google.jpg")
     texto = ler_texto_google_ocr("ticket_pre_google.jpg")
 
-    from operacao.foto_nf.defs import limpar_texto_ocr, detectar_cliente_por_texto
+    from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_texto
     texto = limpar_texto_ocr(texto)
     conversas[numero] = conversas.get(numero, {})
     conversas[numero]["ocr_texto"] = texto
