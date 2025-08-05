@@ -20,6 +20,7 @@ from integracoes.azure import salvar_imagem_azure
 from integracoes.infosimples import consultar_nfe_completa
 from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
+from operacao.foto_ticket.estados import tratar_estado_aguardando_imagem
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
