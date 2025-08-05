@@ -15,6 +15,7 @@ conversas = {}
 
 from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
+from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
 
 # Salvar imagem no Azure após confirmação
 def salvar_imagem_azure(local_path, nome_destino):
@@ -62,28 +63,6 @@ def processar_confirmacao_final(numero):
 
     enviar_mensagem(numero, "✅ Dados confirmados, Salvando as informações! Obrigado!")
     conversas.pop(numero)
-
-#Conexão do OCR Google
-def get_google_vision_client():
-    cred_path = "/etc/secrets/GOOGLE_CREDS_JSON"
-    with open(cred_path, "r") as f:
-        creds_dict = json.load(f)
-
-    credentials = service_account.Credentials.from_service_account_info(creds_dict)
-    return vision.ImageAnnotatorClient(credentials=credentials)
-
-#Ativa o uso do OCR
-def ler_texto_google_ocr(path_imagem):
-    client = get_google_vision_client()
-
-    with open(path_imagem, "rb") as image_file:
-        content = image_file.read()
-
-    image = vision.Image(content=content)
-    response = client.text_detection(image=image)
-    texts = response.text_annotations
-
-    return texts[0].description if texts else ""
 
 def extrair_chave_acesso(texto):
     # Remove quebras de linha e normaliza texto
@@ -143,16 +122,7 @@ def detectar_cliente_por_texto(texto):
         return "arcelormittal"
     else:
         return "cliente_desconhecido"
-
-#Pequeno processamento de imagem *upscaling*
-def preprocessar_imagem(caminho):
-    imagem = Image.open(caminho)
-
-    largura, altura = imagem.size
-    imagem = imagem.resize((largura * 2, altura * 2), Image.LANCZOS)
-
-    return imagem
-
+        
 #Tratar texto OCR, deixar tudo em minisculo e caracteres
 def limpar_texto_ocr(texto):
     texto = texto.lower()
