@@ -22,6 +22,7 @@ from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from operacao.foto_ticket.estados import tratar_estado_aguardando_imagem
 from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao
+from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
@@ -345,59 +346,9 @@ def webhook():
             enviar_mensagem(numero, "📸 Por favor, envie uma imagem da nota fiscal.")
             return jsonify(status="aguardando imagem nf")
             
-    #Se o bot esta aguardando o numero da nota:
     if estado == "aguardando_nota_manual":
-        nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
-        if nota_digitada:
-            nota_val = nota_digitada.group(0)
-
-            #Recupera os dados atuais e o cliente
-            dados_atuais = conversas[numero].get("dados", {})
-            cliente = conversas[numero].get("cliente")
-            texto_ocr = conversas[numero].get("ocr_texto", "")
-
-            #Se os dados anteriores estão bugados, reexecuta extração só para Orizon
-            if cliente == "orizon":
-                novos_dados = extrair_dados_cliente_orizon(None, texto_ocr)
-                dados_atuais.update(novos_dados)  # atualiza ticket e peso_liquido
-
-            #Atualiza nota manual
-            dados_atuais["nota_fiscal"] = nota_val
-            conversas[numero]["dados"] = dados_atuais
-
-
-            #Checagem de campos obrigatórios
-            campos_obrigatorios = ["ticket", "peso_liquido", "nota_fiscal"]
-            dados_faltando = [campo for campo in campos_obrigatorios if not dados_atuais.get(campo) or "NÃO ENCONTRADO" in str(dados_atuais.get(campo)).upper()]
-
-            #Se estiver faltando qualquer dado essencial
-            if dados_faltando:
-                enviar_mensagem(
-                    numero,
-                    f"⚠️ Não consegui identificar todas informações\n"
-                    "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
-                )
-                conversas[numero]["estado"] = "aguardando_imagem"
-                conversas[numero].pop("dados", None)
-                try:
-                    os.remove("ticket.jpg")
-                except FileNotFoundError:
-                    pass
-                return jsonify(status="dados incompletos, aguardando nova imagem")
-
-            msg = (
-                f"📋 Recebi os dados:\n"
-                f"Cliente: {cliente.title()}\n"
-                f"Ticket: {dados_atuais.get('ticket', 'NÃO ENCONTRADO') or dados_atuais.get('brm_mes', 'NÃO ENCONTRADO')}\n"
-                f"Peso Líquido: {dados_atuais.get('peso_liquido', 'NÃO ENCONTRADO')}\n"
-                f"Nota Fiscal: {nota_val}\n\n"
-                f"Está correto?"
-            )
-            conversas[numero]["estado"] = "aguardando_confirmacao"
-            enviar_botoes_sim_nao(numero, msg)
-        else:
-            enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
-        return jsonify(status="nota fiscal recebida ou inválida")
+        resultado = tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas)
+        return jsonify(resultado)
 
     #Bot está aguardando Origem SAAE
     if estado == "aguardando_destino_saae":
