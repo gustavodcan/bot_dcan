@@ -17,22 +17,6 @@ from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_seto
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
 
-# Salvar imagem no Azure após confirmação
-def salvar_imagem_azure(local_path, nome_destino):
-    account_name = os.getenv("AZURE_FILE_ACCOUNT_NAME")
-    account_key = os.getenv("AZURE_FILE_ACCOUNT_KEY")
-    share_name = os.getenv("AZURE_FILE_SHARE_NAME")
-
-    file_client = ShareFileClient.from_connection_string(
-        conn_str=f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};EndpointSuffix=core.windows.net",
-        share_name=share_name,
-        file_path=nome_destino
-    )
-
-    with open(local_path, "rb") as data:
-        file_client.upload_file(data)
-    print(f"✅ Arquivo enviado como: {nome_destino}")
-
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
     dados = conversas[numero]["dados"]
