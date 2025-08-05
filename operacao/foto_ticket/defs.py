@@ -1,7 +1,6 @@
 from operacao.foto_ticket.cdr import extrair_dados_cliente_cdr
 from operacao.foto_ticket.arcelormittal import extrair_dados_cliente_arcelormittal
 from operacao.foto_ticket.gerdau import extrair_dados_cliente_gerdau
-from operacao.foto_ticket.gerdaupinda import extrair_dados_cliente_gerdaupinda
 from operacao.foto_ticket.mahle import extrair_dados_cliente_mahle
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from operacao.foto_ticket.rio_das_pedras import extrair_dados_cliente_rio_das_pedras
@@ -15,8 +14,6 @@ def extrair_dados_por_cliente(cliente, texto_ocr):
             return extrair_dados_cliente_arcelormittal(None, texto_ocr)
         case "gerdau":
             return extrair_dados_cliente_gerdau(None, texto_ocr)
-        case "gerdau pindamonhangaba":
-            return extrair_dados_cliente_gerdaupinda(None, texto_ocr)
         case "mahle":
             return extrair_dados_cliente_mahle(None, texto_ocr)
         case "orizon":
