@@ -1,3 +1,5 @@
+import re
+
 from operacao.foto_ticket.cdr import extrair_dados_cliente_cdr
 from operacao.foto_ticket.arcelormittal import extrair_dados_cliente_arcelormittal
 from operacao.foto_ticket.gerdau import extrair_dados_cliente_gerdau
