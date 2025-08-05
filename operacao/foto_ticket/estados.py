@@ -147,3 +147,55 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
     else:
         enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return {"status": "aguardando resposta válida"}
+
+def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
+    nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
+    if not nota_digitada:
+        enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
+        return {"status": "nota inválida"}
+
+    nota_val = nota_digitada.group(0)
+    dados_atuais = conversas[numero].get("dados", {})
+    cliente = conversas[numero].get("cliente")
+    texto_ocr = conversas[numero].get("ocr_texto", "")
+
+    # Reextrai se for Orizon
+    if cliente == "orizon":
+        from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
+        novos_dados = extrair_dados_cliente_orizon(None, texto_ocr)
+        dados_atuais.update(novos_dados)
+
+    dados_atuais["nota_fiscal"] = nota_val
+    conversas[numero]["dados"] = dados_atuais
+
+    campos_obrigatorios = ["ticket", "peso_liquido", "nota_fiscal"]
+    dados_faltando = [
+        campo for campo in campos_obrigatorios
+        if not dados_atuais.get(campo) or "NÃO ENCONTRADO" in str(dados_atuais.get(campo)).upper()
+    ]
+
+    if dados_faltando:
+        enviar_mensagem(
+            numero,
+            "⚠️ Não consegui identificar todas as informações.\n"
+            "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
+        )
+        conversas[numero]["estado"] = "aguardando_imagem"
+        conversas[numero].pop("dados", None)
+        try:
+            os.remove("ticket.jpg")
+        except FileNotFoundError:
+            pass
+        return {"status": "dados incompletos, aguardando nova imagem"}
+
+    msg = (
+        f"📋 Recebi os dados:\n"
+        f"Cliente: {cliente.title()}\n"
+        f"Ticket: {dados_atuais.get('ticket') or dados_atuais.get('brm_mes')}\n"
+        f"Peso Líquido: {dados_atuais.get('peso_liquido')}\n"
+        f"Nota Fiscal: {nota_val}\n\n"
+        f"Está correto?"
+    )
+    conversas[numero]["estado"] = "aguardando_confirmacao"
+    enviar_botoes_sim_nao(numero, msg)
+    return {"status": "aguardando confirmação"}
