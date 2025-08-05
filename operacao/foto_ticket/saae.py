@@ -74,5 +74,6 @@ def tratar_estado_aguardando_destino_saae(numero, texto_recebido, conversas):
         f"Origem: {destino_digitado}\n\n"
         f"Está correto?"
     )
+    conversas[numero]["estado"] = "aguardando_confirmacao"
     enviar_botoes_sim_nao(numero, msg)
     return {"status": "aguardando confirmação"}
