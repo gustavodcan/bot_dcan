@@ -2,7 +2,7 @@ import os
 import re
 import requests
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao
-from operacao.foto_nf.defs import limpar_texto_ocr, detectar_cliente_por_texto
+from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_texto
 from operacao.foto_ticket.defs import extrair_dados_por_cliente
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from integracoes.azure import salvar_imagem_azure
