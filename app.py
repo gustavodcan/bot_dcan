@@ -17,6 +17,7 @@ from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_seto
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
 from integracoes.azure import salvar_imagem_azure
+from integracoes.infosimples import consultar_nfe_completa
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
@@ -538,112 +539,7 @@ def tratar_descricao_setor(numero, mensagem_original):
     else:
         enviar_lista_setor(numero, "⚠️ Setor não identificado. Vamos começar novamente.")
         conversas[numero] = {"estado": "aguardando_setor"}
-        
-def aes_encrypt_urlsafe(texto, chave):
-    """Criptografa o texto com AES-256 ECB e aplica formatação URL-safe exigida pela InfoSimples"""
-    key = chave.encode('utf-8')
-    key = key.ljust(32, b'\0')[:32]  # Garante 32 bytes para AES-256
-    cipher = AES.new(key, AES.MODE_ECB)
-    texto_padded = pad(texto.encode('utf-8'), AES.block_size)
-    encrypted = cipher.encrypt(texto_padded)
-    b64 = base64.b64encode(encrypted).decode()
-    return b64.replace('+', '-').replace('/', '_').rstrip('=')
 
-def salvar_certificado_temporario():
-    cert_b64 = os.environ["CERTIFICADO_BASE64"]
-    cert_bytes = base64.b64decode(cert_b64)
-    
-    caminho_cert = "/tmp/certificado_temp.pfx"
-    with open(caminho_cert, "wb") as f:
-        f.write(cert_bytes)
-
-    return caminho_cert
-
-def gerar_criptografia_infosimples(caminho_cert):
-    senha_certificado = os.environ["CERTIFICADO_SENHA"]
-    chave_aes = os.environ["CHAVE_AES"]
-    cert_b64 = os.environ["CERTIFICADO_BASE64"]
-
-    pkcs12_cert = aes_encrypt_urlsafe(cert_b64, chave_aes)
-    pkcs12_pass = aes_encrypt_urlsafe(senha_certificado, chave_aes)
-
-    return pkcs12_cert, pkcs12_pass
-
-def consultar_nfe_infosimples(chave_nfe, pkcs12_cert, pkcs12_pass):
-    token = os.environ["INFOSIMPLES_TOKEN"]
-    url = "https://api.infosimples.com/api/v2/consultas/receita-federal/nfe"
-
-    payload = {
-        "nfe": chave_nfe,
-        "pkcs12_cert": pkcs12_cert,
-        "pkcs12_pass": pkcs12_pass,
-        "token": token,
-        "timeout": 300
-    }
-
-    response = requests.post(url, json=payload)
-    try:
-        resposta = response.json()
-    finally:
-        response.close()
-
-    return resposta
-
-def consultar_nfe_completa(chave_nfe):
-    try:
-        cert_criptografado = os.environ.get("CERTIFICADO_BASE64")
-        senha_criptografada = os.environ.get("CERTIFICADO_SENHA")
-        token = os.environ.get("INFOSIMPLES_TOKEN")
-
-        if not all([cert_criptografado, senha_criptografada, token]):
-            raise ValueError("Variáveis de ambiente faltando.")
-
-        url = "https://api.infosimples.com/api/v2/consultas/receita-federal/nfe"
-        payload = {
-            "nfe": chave_nfe,
-            "pkcs12_cert": cert_criptografado,
-            "pkcs12_pass": senha_criptografada,
-            "token": token,
-            "timeout": 300
-        }
-
-        response = requests.post(url, json=payload)
-        print("📦 Resposta bruta InfoSimples:", response.text)
-
-        try:
-            resultado = response.json()
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Erro ao interpretar resposta JSON: {e}")
-
-        if not resultado:
-            raise ValueError("Resposta da API veio vazia.")
-
-        if resultado.get("code") == 200:
-            dados_raw = resultado.get("data", {})
-
-            if isinstance(dados_raw, list):
-                dados = dados_raw[0] if dados_raw else {}
-            elif isinstance(dados_raw, dict):
-                dados = dados_raw
-            else:
-                raise ValueError("Formato inesperado no campo 'data' da resposta.")
-        else:
-            print("❌ Erro ao consultar a nota.")
-            print(f"🔧 Motivo: {resultado.get('code_message')}")
-            if resultado.get("errors"):
-                print("Detalhes:")
-                for erro in resultado["errors"]:
-                    print(f" - {erro}")
-                    
-        return resultado
-        
-    except Exception as e:
-        print("❌ Erro inesperado ao consultar NF-e:", str(e))
-        return {
-            "code": 500,
-            "code_message": "Erro interno",
-            "errors": [str(e)]
-        }
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
 def webhook():
