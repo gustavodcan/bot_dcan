@@ -104,7 +104,7 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
 
         payload = {
             "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "cliente": conversas[numero].get("cliente"),
+            "cliente": conversas[numero].get("cliente", "").upper(),
             "ticket": dados_confirmados.get("ticket"),
             "nota_fiscal": dados_confirmados.get("nota_fiscal"),
             "peso": dados_confirmados.get("peso_liquido"),
