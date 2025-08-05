@@ -29,3 +29,37 @@ def extrair_dados_cliente_gerdaupinda(img, texto):
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO",
         "nota_fiscal": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO"
     }
+
+def extrair_dados_cliente_gerdau(img, texto):
+    print("[GERDAU] Extraindo dados...")
+    print("📜 Texto para extração:")
+    print(texto)
+
+    # Ticket: exatamente 8 dígitos
+    ticket_match = re.search(r"\b(\d{8})\b", texto)
+    ticket_val = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
+
+    # Nota fiscal: número antes do primeiro hífen
+    matches_nota = re.findall(r"\b(\d{3,10})-\d{1,3}\b", texto)
+    if matches_nota:
+        nota_fiscal_val = matches_nota[0]
+
+    # Peso líquido: procura por 'xx,xxx to' sem horário na linha
+    peso_liquido_val = "NÃO ENCONTRADO"
+    linhas = texto.splitlines()
+    for linha in linhas:
+        match = re.search(r"\b(\d{2,3}[.,]\d{3})\s+to\b", linha)
+        if match and not re.search(r"\d{2}:\d{2}:\d{2}", linha):
+            peso_liquido_val = match.group(1).replace(",", ".")
+            break
+
+    print("🎯 Dados extraídos:")
+    print(f"Ticket: {ticket_val}")
+    print(f"Nota Fiscal: {nota_fiscal_val}")
+    print(f"Peso Líquido: {peso_liquido_val}")
+
+    return {
+        "ticket": ticket_val,
+        "nota_fiscal": nota_fiscal_val,
+        "peso_liquido": peso_liquido_val
+    }
