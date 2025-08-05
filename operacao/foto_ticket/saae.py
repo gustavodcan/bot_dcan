@@ -1,6 +1,5 @@
 import re, os
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao
-from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 
 def extrair_dados_cliente_saae(img, texto):
     print("📜 [SAAE] Texto detectado:")
