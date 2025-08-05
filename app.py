@@ -21,6 +21,7 @@ from integracoes.infosimples import consultar_nfe_completa
 from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from operacao.foto_ticket.estados import tratar_estado_aguardando_imagem
+from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
@@ -451,35 +452,10 @@ def webhook():
         enviar_botoes_sim_nao(numero, msg)
         return jsonify(status="destino recebido e aguardando confirmação")
 
-    #Bot aguardando confirmação "Sim" e "Não" dos dados extraídos
     if estado == "aguardando_confirmacao":
-        if texto_recebido in ['sim', 's']:
-            dados_confirmados = conversas[numero]["dados"]
-        
-            #Preparar dados para envio ao Sheets
-            payload = {
-                "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "cliente": conversas[numero].get("cliente"),
-                "ticket": dados_confirmados.get("ticket"),
-                "nota_fiscal": dados_confirmados.get("nota_fiscal"),
-                "peso": dados_confirmados.get("peso_liquido"),
-                "destino": dados_confirmados.get("destino", "N/A"),
-                "telefone": numero
-            }
-            #Chamando def para salvar e mandar agradecimento
-            processar_confirmacao_final(numero)
-        elif texto_recebido in ['não', 'nao', 'n']:
-            enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
-            conversas[numero]["estado"] = "aguardando_imagem"
-            conversas[numero].pop("cliente", None)
-            conversas[numero].pop("dados", None)
-        else:
-            enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
-        return jsonify(status="confirmação final")
+        resultado = tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas)
+        return jsonify(resultado)
 
-    return jsonify(status="nenhuma ação tomada")
-
-#Bloco de dados à serem enviados ao Sheets
 @app.route('/enviar_dados', methods=['POST'])
 def enviar_dados():
     try:
