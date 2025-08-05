@@ -28,3 +28,33 @@ def extrair_dados_por_cliente(cliente, texto_ocr):
                 "outros_docs": "CLIENTE NÃO SUPORTADO",
                 "peso_liquido": "CLIENTE NÃO SUPORTADO"
             }
+
+def detectar_cliente_por_texto(texto):
+    texto = texto.lower()
+
+    if "ticket de pesagem recebimento" in texto:
+        return "rio das pedras"
+    elif "mahle" in texto:
+        return "mahle"
+    elif "br-ml-pindamonhangaba" in texto:
+        return "gerdau pindamonhangaba"
+    elif "orizon" in texto:
+        return "orizon"
+    elif "cdr pedreira" in texto or "cor pedreira" in texto:
+        return "cdr"
+    elif "serviço autônomo" in texto or "servico autonomo" in texto:
+        return "saae"
+    elif "gerdau" in texto:
+        return "gerdau"
+    elif "arcelormittal" in texto or "arcelor" in texto or "am iracemapolis" in texto or "brm" in texto:
+        return "arcelormittal"
+    else:
+        return "cliente_desconhecido"
+
+def limpar_texto_ocr(texto):
+    texto = texto.lower()
+    texto = texto.replace("liq", "líquido")
+    texto = texto.replace("outros docs", "outros_docs")
+    texto = re.sub(r"[^\w\s:/\.,-]", "", texto)
+    texto = re.sub(r"\s{2,}", " ", texto)
+    return texto
