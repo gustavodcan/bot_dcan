@@ -23,6 +23,7 @@ from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from operacao.foto_ticket.estados import tratar_estado_aguardando_imagem
 from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao
 from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual
+from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
@@ -350,63 +351,10 @@ def webhook():
         resultado = tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
-    #Bot está aguardando Origem SAAE
     if estado == "aguardando_destino_saae":
-        destino_digitado = texto_recebido.strip().title()
-
-        if len(destino_digitado) < 2:
-            enviar_mensagem(numero, "❌ Por favor, informe um destino válido.")
-            return jsonify(status="destino inválido")
-
-        #Armazena o destino
-        conversas[numero]["destino"] = destino_digitado
-
-        #Continua a extração com base na imagem anterior
-        try:
-            dados = extrair_dados_cliente_saae(None, conversas[numero].get("ocr_texto", ""))
-        except Exception as e:
-            enviar_mensagem(numero, f"❌ Erro ao extrair os dados do ticket.\nTente novamente.\nErro: {e}")
-            conversas[numero]["estado"] = "aguardando_imagem"
-            return jsonify(status="erro extração saae")
-
-        dados["destino"] = destino_digitado
-        conversas[numero]["dados"] = dados
-        conversas[numero]["estado"] = "aguardando_confirmacao"
-
-        #Checagem de campos obrigatórios
-        campos_obrigatorios = ["ticket", "peso_liquido", "destino"]
-        dados_faltando = [campo for campo in campos_obrigatorios if not dados.get(campo) or "NÃO ENCONTRADO" in str(dados.get(campo)).upper()]
-
-         #Se estiver faltando qualquer dado essencial
-        if dados_faltando:
-            enviar_mensagem(
-                numero,
-                f"⚠️ Não consegui identificar as seguintes informações: {', '.join(dados_faltando)}.\n"
-                "Por favor, tire uma nova foto do ticket com mais nitidez e envie novamente."
-              )
-            conversas[numero]["estado"] = "aguardando_imagem"
-            conversas[numero].pop("dados", None)
-            try:
-                os.remove("ticket.jpg")
-            except FileNotFoundError:
-                pass
-            return jsonify(status="dados incompletos, aguardando nova imagem")
-
-        msg = (
-            f"📋 Recebi os dados:\n"
-            f"Cliente: SAAE\n"
-            f"Ticket: {dados.get('ticket')}\n"
-            f"Peso Líquido: {dados.get('peso_liquido')}\n"
-            f"Origem: {destino_digitado}\n\n"
-            f"Está correto?"
-        )
-        enviar_botoes_sim_nao(numero, msg)
-        return jsonify(status="destino recebido e aguardando confirmação")
-
-    if estado == "aguardando_confirmacao":
-        resultado = tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas)
+        resultado = tratar_estado_aguardando_destino_saae(numero, texto_recebido, conversas)
         return jsonify(resultado)
-
+        
 @app.route('/enviar_dados', methods=['POST'])
 def enviar_dados():
     try:
