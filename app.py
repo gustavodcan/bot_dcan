@@ -354,6 +354,10 @@ def webhook():
     if estado == "aguardando_destino_saae":
         resultado = tratar_estado_aguardando_destino_saae(numero, texto_recebido, conversas)
         return jsonify(resultado)
+
+    if estado == "aguardando_confirmacao":
+        resultado = tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas)
+        return jsonify(resultado)
         
 @app.route('/enviar_dados', methods=['POST'])
 def enviar_dados():
