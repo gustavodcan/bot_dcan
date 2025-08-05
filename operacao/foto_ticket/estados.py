@@ -1,6 +1,6 @@
-import os
-import re
-import requests
+import os, re, requests
+from datetime import datetime
+from integracoes.google_sheets import conectar_google_sheets
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao
 from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_texto
 from operacao.foto_ticket.defs import extrair_dados_por_cliente
@@ -98,3 +98,52 @@ def tratar_estado_aguardando_imagem(numero, data, conversas):
     enviar_botoes_sim_nao(numero, msg)
     return {"status": "aguardando confirmação"}
 
+def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
+    if texto_recebido in ['sim', 's']:
+        dados_confirmados = conversas[numero]["dados"]
+
+        payload = {
+            "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "cliente": conversas[numero].get("cliente"),
+            "ticket": dados_confirmados.get("ticket"),
+            "nota_fiscal": dados_confirmados.get("nota_fiscal"),
+            "peso": dados_confirmados.get("peso_liquido"),
+            "destino": dados_confirmados.get("destino", "N/A"),
+            "telefone": numero
+        }
+
+        try:
+            client = conectar_google_sheets()
+            planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
+            planilha.append_row([
+                payload["data"], payload["cliente"], payload["ticket"],
+                payload["nota_fiscal"], payload["peso"], payload["destino"],
+                payload["telefone"]
+            ])
+        except Exception as e:
+            print(f"❌ Erro ao salvar na planilha: {e}")
+            enviar_mensagem(numero, "❌ Erro ao salvar os dados. Contate o suporte.")
+            conversas[numero]["estado"] = "finalizado"
+            return {"status": "erro ao salvar"}
+
+        try:
+            nome_imagem = f"{payload['cliente']}/{payload['cliente']}_{payload['nota_fiscal']}.jpg"
+            salvar_imagem_azure("ticket.jpg", nome_imagem)
+            os.remove("ticket.jpg")
+        except Exception as e:
+            print(f"⚠️ Erro ao salvar ou remover imagem: {e}")
+
+        enviar_mensagem(numero, "✅ Dados confirmados, Salvando as informações! Obrigado!")
+        conversas.pop(numero)
+        return {"status": "finalizado"}
+
+    elif texto_recebido in ['não', 'nao', 'n']:
+        enviar_mensagem(numero, "🔁 OK! Por favor, envie a foto do ticket novamente.")
+        conversas[numero]["estado"] = "aguardando_imagem"
+        conversas[numero].pop("cliente", None)
+        conversas[numero].pop("dados", None)
+        return {"status": "aguardando nova imagem"}
+
+    else:
+        enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
+        return {"status": "aguardando resposta válida"}
