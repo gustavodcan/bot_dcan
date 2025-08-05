@@ -18,6 +18,7 @@ from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_
 from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
 from integracoes.azure import salvar_imagem_azure
 from integracoes.infosimples import consultar_nfe_completa
+from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
