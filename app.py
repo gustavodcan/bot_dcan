@@ -16,6 +16,7 @@ conversas = {}
 from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
+from integracoes.azure import salvar_imagem_azure
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
