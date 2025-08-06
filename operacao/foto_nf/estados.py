@@ -123,4 +123,4 @@ def tratar_estado_aguardando_confirmacao_chave(numero, texto_recebido, conversas
     finally:
         conversas[numero].pop("chave_detectada", None)
         conversas.pop(numero, None)
-
+    return jsonify(status="finalizado")
