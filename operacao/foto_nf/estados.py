@@ -1,10 +1,12 @@
-import os, re, requests
+import os, re, requests, logging
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
 from datetime import datetime
 from integracoes.infosimples import consultar_nfe_completa
+
+logger = logging.getLogger(__name__)
 
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     if "image" not in data or not data["image"].get("mimeType", "").startswith("image/"):
