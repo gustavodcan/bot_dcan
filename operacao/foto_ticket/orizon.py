@@ -3,8 +3,8 @@ import re, logging
 logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_orizon(img, texto):
-    print("📜 [ORIZON] Texto detectado:")
-    print(texto)
+    logger.debug("📜 [ORIZON] Texto detectado:")
+    logger.debug(texto)
 
     ticket_val = "NÃO ENCONTRADO"
     peso_liquido_val = "NÃO ENCONTRADO"
@@ -18,7 +18,7 @@ def extrair_dados_cliente_orizon(img, texto):
     )
     if match_peso:
         peso_liquido_val = match_peso.group(1)
-        print(f"Peso líquido encontrado: {peso_liquido_val}")
+        logger.debug(f"Peso líquido encontrado: {peso_liquido_val}")
 
     # --- Ticket (padrão tipo TB0000108249 ou variações) ---
     match_ticket = re.search(
@@ -27,11 +27,11 @@ def extrair_dados_cliente_orizon(img, texto):
     )
     if match_ticket:
         ticket_val = match_ticket.group(0).upper()
-        print(f"Operação (ticket) encontrada: {ticket_val}")
+        logger.debug(f"Operação (ticket) encontrada: {ticket_val}")
 
-    print("🎯 Dados extraídos:")
-    print(f"Ticket: {ticket_val}")
-    print(f"Peso Líquido: {peso_liquido_val}")
+    logger.debug("🎯 Dados extraídos:")
+    logger.debug(f"Ticket: {ticket_val}")
+    logger.debug(f"Peso Líquido: {peso_liquido_val}")
 
     return {
         "ticket": ticket_val,
