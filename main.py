@@ -90,7 +90,7 @@ def webhook():
         return jsonify(status="resposta motorista")
 
     if estado.startswith("aguardando_descricao_"):
-        tratar_descricao_setor(numero,  mensagem_original.strip())
+        tratar_descricao_setor(numero, mensagem_original.strip(), conversas)
 
     if estado == "aguardando_confirmacao_chave":
         resultado = tratar_estado_aguardando_confirmacao_chave(numero, texto_recebido, conversas)
