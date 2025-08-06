@@ -1,4 +1,7 @@
+import logging
 from mensagens import enviar_mensagem
+
+logger = logging.getLogger(__name__)
 
 # Redireciona mensagem digitada para número do setor
 def encaminhar_para_setor(numero_usuario, setor, mensagem):
