@@ -1,6 +1,6 @@
 import os, re, requests
 from datetime import datetime
-from integracoes.google_sheets import conectar_google_sheets
+from integracoes.google_sheets import conectar_google_sheets, salvar_linha_google_sheets
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao
 from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_texto
 from operacao.foto_ticket.defs import extrair_dados_por_cliente
@@ -199,3 +199,32 @@ def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
     conversas[numero]["estado"] = "aguardando_confirmacao"
     enviar_botoes_sim_nao(numero, msg)
     return {"status": "aguardando confirmação"}
+
+def processar_confirmacao_final(numero):
+    dados = conversas[numero]["dados"]
+
+    payload = {
+        "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "cliente": conversas[numero].get("cliente", "").upper(),
+        "ticket": dados.get("ticket"),
+        "nota_fiscal": dados.get("nota_fiscal"),
+        "peso": dados.get("peso_liquido"),
+        "destino": dados.get("destino", "N/A"),
+        "telefone": numero
+    }
+    # Envia os dados para a rota existente /enviar_dados
+    try:
+        requests.post("http://localhost:10000/enviar_dados", json=payload)
+    except Exception as e:
+        print(f"Erro ao enviar dados para /enviar_dados: {e}")
+
+    nome_imagem = f"{payload['cliente']}/{payload['cliente']}_{payload['nota_fiscal']}.jpg"
+    salvar_imagem_azure("ticket.jpg", nome_imagem)
+
+    try:
+        os.remove("ticket.jpg")
+    except FileNotFoundError:
+        pass
+
+    enviar_mensagem(numero, "✅ Dados confirmados, Salvando as informações! Obrigado!")
+    conversas.pop(numero)
