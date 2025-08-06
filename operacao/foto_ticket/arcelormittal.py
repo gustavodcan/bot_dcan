@@ -1,15 +1,9 @@
 import re, logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
-)
-
 logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_arcelormittal(img, texto):
     logger.debug("📜 Texto recebido para extração:")
-    logger.debug({texto})
+    logger.debug(texto)
 
     nf_match = re.search(r"fiscal[:\-]?\s*([\d]+)", texto, re.IGNORECASE)
     # Se não encontrar usando "fiscal", tenta buscar padrão tipo "10847/1"
