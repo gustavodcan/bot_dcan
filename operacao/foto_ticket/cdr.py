@@ -1,4 +1,5 @@
-import re
+import re, logging
+logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_cdr(img, texto):
     print("📜 [CDR] Texto detectado:")
