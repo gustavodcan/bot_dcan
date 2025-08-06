@@ -1,4 +1,4 @@
-import os, re, requests
+import os, re, requests, logging
 from datetime import datetime
 from integracoes.google_sheets import conectar_google_sheets
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao
@@ -6,6 +6,8 @@ from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_tex
 from operacao.foto_ticket.defs import extrair_dados_por_cliente
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from integracoes.azure import salvar_imagem_azure
+
+logger = logging.getLogger(__name__)
 
 def tratar_estado_aguardando_imagem(numero, data, conversas):
     if "image" not in data or not data["image"].get("mimeType", "").startswith("image/"):
