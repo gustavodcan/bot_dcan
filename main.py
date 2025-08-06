@@ -12,6 +12,7 @@ from google.oauth2.service_account import Credentials
 #Importação de de Defs e Estados
 from integracoes.azure import salvar_imagem_azure
 from integracoes.infosimples import consultar_nfe_completa
+from operacao.foto_ticket.defs import extrair_dados_da_imagem
 from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf
@@ -75,47 +76,7 @@ def extrair_chave_confirmar(numero):
         conversas[numero]["estado"] = "aguardando_imagem_nf"
 
 #Uso do OCR, conversação da imagem para o texto
-def extrair_dados_da_imagem(caminho_imagem, numero):
-    conversas[numero] = conversas.get(numero, {})
     
-    img = preprocessar_imagem(caminho_imagem)
-    img.save("preprocessado.jpg")
-    with open("preprocessado.jpg", "rb") as f:
-        imagem_bytes = f.read()
-
-    try:
-        img.save("ticket_pre_google.jpg")
-        texto = ler_texto_google_ocr("ticket_pre_google.jpg")
-
-    except Exception as e:
-        print(f"❌ Erro no OCR Google: {e}")
-        return {"erro": "Falha no OCR"}
-
-    texto = limpar_texto_ocr(texto)
-    conversas[numero]["ocr_texto"] = texto
-
-    cliente_detectado = detectar_cliente_por_texto(texto)
-    print(f"[🕵️] Cliente detectado automaticamente: {cliente_detectado}")
-
-    #Detecta qual o cliente lido/extraido
-    conversas[numero]["cliente"] = cliente_detectado
-
-    if cliente_detectado == "cliente_desconhecido":
-        enviar_mensagem(numero, "❌ Não consegui identificar o cliente a partir da imagem. Por favor, envie novamente com mais clareza ou entre em contato com seu programador.")
-        return {"erro": "cliente não identificado"}
-
-    # ⚠️ Fluxo especial pro SAAE
-    if cliente_detectado == "saae":
-        conversas[numero]["estado"] = "aguardando_destino_saae"
-        enviar_mensagem(numero, "🛣️ Cliente SAAE detectado!\nPor favor, informe a *origem da carga*\n(ex: ETA Vitória).")
-        return {"status": "aguardando destino saae"}
-
-    from operacao.foto_ticket.defs import extrair_dados_por_cliente
-    
-    #Adiciona o cliente no dicionário
-    dados = extrair_dados_por_cliente(cliente_detectado, texto)
-    return dados
-
 # Redireciona mensagem digitada para número do setor
 def encaminhar_para_setor(numero_usuario, setor, mensagem):
     mapa_setores = {
