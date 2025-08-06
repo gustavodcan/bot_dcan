@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: bot-dcan
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn main:app --bind 0.0.0.0:10000
-    plan: free
