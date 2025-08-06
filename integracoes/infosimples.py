@@ -1,10 +1,9 @@
-import os
-import base64
-import requests
-import json
+import os, base64, requests, json, logging
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from config import CERTIFICADO_BASE64, CERTIFICADO_SENHA, CHAVE_AES, INFOSIMPLES_TOKEN
+
+logger = logging.getLogger(__name__)
 
 def aes_encrypt_urlsafe(texto, chave):
     key = chave.encode('utf-8')
