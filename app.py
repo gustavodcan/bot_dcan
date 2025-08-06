@@ -1,31 +1,31 @@
 #Importação de Bibliotecas
+from datetime import datetime
+from Crypto.Cipher import AES
+from google.cloud import vision
+from Crypto.Util.Padding import pad
+from google.oauth2 import service_account
 from flask import Flask, request, jsonify
 import requests, re, os, json, gspread, base64
 from PIL import Image, ImageEnhance, ImageFilter
-from google.oauth2 import service_account
-from google.cloud import vision
-from google.oauth2.service_account import Credentials
-from datetime import datetime
 from azure.storage.fileshare import ShareFileClient
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
-
-app = Flask(__name__)
-conversas = {}
-
-from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
-from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
-from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
+from google.oauth2.service_account import Credentials
+#Importação de de Defs e Estados
 from integracoes.azure import salvar_imagem_azure
 from integracoes.infosimples import consultar_nfe_completa
 from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
+from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf
 from operacao.foto_ticket.estados import tratar_estado_aguardando_imagem
+from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae
 from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao
 from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual
-from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae
-from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf
 from operacao.foto_nf.estados import tratar_estado_aguardando_confirmacao_chave
+from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
+from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
+from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
+
+app = Flask(__name__)
+conversas = {}
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
@@ -40,7 +40,6 @@ def processar_confirmacao_final(numero):
         "destino": dados.get("destino", "N/A"),
         "telefone": numero
     }
-
     # Envia os dados para a rota existente /enviar_dados
     try:
         requests.post("http://localhost:10000/enviar_dados", json=payload)
