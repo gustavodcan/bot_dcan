@@ -1,6 +1,5 @@
 import re
 import os
-from operacao.foto_ticket.defs import extrair_dados_por_cliente
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from mensagens import enviar_mensagem
 from operacao.foto_ticket.cdr import extrair_dados_cliente_cdr
