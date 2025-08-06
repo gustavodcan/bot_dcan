@@ -1,4 +1,6 @@
-import re
+import re, logging
+
+logger = logging.getLogger(__name__)
 
 def extrair_chave_acesso(texto):
     # Remove quebras de linha e normaliza texto
