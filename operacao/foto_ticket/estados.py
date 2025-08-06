@@ -1,6 +1,6 @@
 import os, re, requests
 from datetime import datetime
-from integracoes.google_sheets import conectar_google_sheets, salvar_linha_google_sheets
+from integracoes.google_sheets import conectar_google_sheets
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao
 from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_texto
 from operacao.foto_ticket.defs import extrair_dados_por_cliente
