@@ -1,4 +1,6 @@
-import re
+import re, logging
+
+logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_rio_das_pedras(img, texto):
     print("📜 [RIO DAS PEDRAS] Texto detectado:")
