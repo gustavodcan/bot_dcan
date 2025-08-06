@@ -19,4 +19,4 @@ def salvar_imagem_azure(local_path, nome_destino):
     with open(local_path, "rb") as data:
         file_client.upload_file(data)
 
-    print(f"✅ Arquivo enviado como: {nome_destino}")
+    logger.debug(f"✅ Arquivo enviado como: {nome_destino}")
