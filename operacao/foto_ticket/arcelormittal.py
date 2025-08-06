@@ -1,8 +1,15 @@
-import re
+import re, logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_arcelormittal(img, texto):
-    print("📜 Texto recebido para extração:")
-    print(texto)
+    logger.debug("📜 Texto recebido para extração:")
+    logger.debug({texto})
 
     nf_match = re.search(r"fiscal[:\-]?\s*([\d]+)", texto, re.IGNORECASE)
     # Se não encontrar usando "fiscal", tenta buscar padrão tipo "10847/1"
@@ -18,7 +25,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
 
     # Peso líquido: captura todos os números que aparecem sozinhos em uma linha
     numeros = re.findall(r"^\s*(\d{4,6})\s*$", texto, re.MULTILINE)
-    print(f"Números isolados encontrados: {numeros}")
+    logger.debug(f"Números isolados encontrados: {numeros}")
 
     peso_liquido = "NÃO ENCONTRADO"
 
@@ -35,16 +42,16 @@ def extrair_dados_cliente_arcelormittal(img, texto):
                 valor_pb = int(linhas_pb[-1])
                 peso_liquido = str(valor_pb - ultimo_numero)
             else:
-                print("[❌] Valor entre 'pb' e 'kg' não encontrado.")
+                logger.debug("[❌] Valor entre 'pb' e 'kg' não encontrado.")
                 peso_liquido = "NÃO ENCONTRADO"
         except Exception as e:
-            print(f"[❌] Erro ao calcular peso líquido: {e}")
+            logger.debug(f"[❌] Erro ao calcular peso líquido: {e}")
             peso_liquido = "NÃO ENCONTRADO"
 
-    print("🎯 Dados extraídos:")
-    print(f"Nota Fiscal: {nota_val}")
-    print(f"BRM MES: {brm_val}")
-    print(f"Peso Líquido: {peso_liquido}")
+    logger.debug("🎯 Dados extraídos:")
+    logger.debug(f"Nota Fiscal: {nota_val}")
+    logger.debug(f"BRM MES: {brm_val}")
+    logger.debug(f"Peso Líquido: {peso_liquido}")
 
     return {
         "nota_fiscal": nota_val,
