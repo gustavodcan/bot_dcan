@@ -3,12 +3,5 @@ services:
     name: bot-dcan
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    startCommand: python main.py
     plan: free
-    envVars:
-      - key: INSTANCE_ID
-        value: 3E3D8C0C9BE600AC4540AE53A3A095E1
-      - key: API_TOKEN
-        value: 4A0FB9DEB3EAE10AD18C2A54
-      - key: CLIENT_TOKEN
-        value: F62c249f47aeb4701a1f1899d59793ee1S
