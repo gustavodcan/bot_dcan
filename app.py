@@ -24,6 +24,8 @@ from operacao.foto_ticket.estados import tratar_estado_aguardando_imagem
 from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao
 from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual
 from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae
+from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf
+
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
@@ -320,32 +322,8 @@ def webhook():
         return jsonify(resultado)
 
     if estado == "aguardando_imagem_nf":
-        if "image" in data and data["image"].get("mimeType", "").startswith("image/"):
-            url_img = data["image"]["imageUrl"]
-            try:
-                img_res = requests.get(url_img)
-                if img_res.status_code == 200:
-                    with open("nota.jpg", "wb") as f:
-                        f.write(img_res.content)
-                else:
-                    enviar_mensagem(numero, "❌ Erro ao baixar a imagem da nota. Tente novamente.")
-                    return jsonify(status="erro ao baixar")
-            except Exception:
-                enviar_mensagem(numero, "❌ Erro ao baixar a imagem da nota. Tente novamente.")
-                return jsonify(status="erro ao baixar")
-
-            # OCR da nota + tentativa de extração da chave
-            img = preprocessar_imagem("nota.jpg")
-            img.save("nota_pre_google.jpg")
-            texto = ler_texto_google_ocr("nota_pre_google.jpg")
-            texto = limpar_texto_ocr(texto)
-            conversas[numero]["ocr_texto"] = texto
-
-            extrair_chave_confirmar(numero)
-            return jsonify(status="chave extraída e aguardando confirmação")
-        else:
-            enviar_mensagem(numero, "📸 Por favor, envie uma imagem da nota fiscal.")
-            return jsonify(status="aguardando imagem nf")
+        resultado = tratar_estado_aguardando_imagem_nf(numero, data, conversas)
+        return jsonify(resultado)
             
     if estado == "aguardando_nota_manual":
         resultado = tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas)
