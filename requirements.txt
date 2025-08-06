@@ -1,10 +1,8 @@
 Flask
 pillow
-pytesseract
 requests
 google-cloud-vision
 google-auth
-azure-storage-file-share
 gspread
 oauth2client
 azure-storage-file-share
