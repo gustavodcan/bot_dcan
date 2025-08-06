@@ -1,4 +1,4 @@
-import logging
+import logging, os
 from mensagens import enviar_mensagem
 from config import mapa_setores
 
