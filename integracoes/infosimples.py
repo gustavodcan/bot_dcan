@@ -57,7 +57,7 @@ def consultar_nfe_completa(chave_nfe):
         }
 
         response = requests.post(url, json=payload)
-        logger.debug("📦 Resposta bruta InfoSimples:", response.text)
+        logger.debug(f"📦 Resposta bruta InfoSimples: {response.text}")
 
         resultado = response.json()
         if not resultado:
