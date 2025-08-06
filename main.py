@@ -23,6 +23,7 @@ from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao
 from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual
 from operacao.foto_nf.estados import tratar_estado_aguardando_confirmacao_chave
 from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
+from operacao.falar_programador.contato import encaminhar_para_setor, tratar_descricao_setor
 from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 
@@ -45,47 +46,6 @@ def extrair_chave_confirmar(numero):
     else:
         enviar_mensagem(numero, "❌ Não consegui identificar a chave de acesso na nota. Por favor, envie novamente.")
         conversas[numero]["estado"] = "aguardando_imagem_nf"
-
-#Uso do OCR, conversação da imagem para o texto
-    
-# Redireciona mensagem digitada para número do setor
-def encaminhar_para_setor(numero_usuario, setor, mensagem):
-    mapa_setores = {
-        "comercial": "5515997008800",
-        "faturamento": "5515997008800",
-        "financeiro": "5515997008800",
-        "recursos humanos": "5515997008800"
-    }
-    numero_destino = mapa_setores.get(setor)
-    if not numero_destino:
-        print(f"Setor '{setor}' não encontrado.")
-        return
-
-    texto = f"📥 Atendimento automático\nPor favor, não responda.\n\n O telefone: {numero_usuario} solicitou contato do setor {setor.title()} através da seguinte mensagem:\n\n{mensagem}"
-
-    url = f"https://api.z-api.io/instances/{os.getenv('INSTANCE_ID')}/token/{os.getenv('API_TOKEN')}/send-text"
-    payload = {
-        "phone": numero_destino,
-        "message": texto
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "Client-Token": os.getenv("CLIENT_TOKEN")
-    }
-    res = requests.post(url, json=payload, headers=headers)
-    print(f"[📨 Encaminhado para {setor}] Status {res.status_code}: {res.text}")
-
-# Trata descrições fornecidas para setores não-operacionais
-def tratar_descricao_setor(numero, mensagem_original):
-    setor = conversas[numero].get("setor")
-    if setor:
-        encaminhar_para_setor(numero_usuario=numero, setor=setor, mensagem=mensagem_original)
-        enviar_mensagem(numero, f"📨 Sua mensagem foi encaminhada ao setor {setor.title()}. Em breve alguém entrará em contato.")
-        conversas[numero]["estado"] = "finalizado"
-        conversas.pop(numero, None)
-    else:
-        enviar_lista_setor(numero, "⚠️ Setor não identificado. Vamos começar novamente.")
-        conversas[numero] = {"estado": "aguardando_setor"}
 
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
