@@ -4,8 +4,8 @@ from mensagens import enviar_mensagem, enviar_botoes_sim_nao
 logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_saae(img, texto):
-    print("📜 [SAAE] Texto detectado:")
-    print(texto)
+    logger.debug("📜 [SAAE] Texto detectado:")
+    logger.debug(texto)
 
     ticket_match = re.search(r"(?:ticket|cket)[\s:]*([0-9/]{5,})", texto)
     ticket_val = ticket_match.group(1).replace("/", "") if ticket_match else "NÃO ENCONTRADO"
@@ -18,10 +18,10 @@ def extrair_dados_cliente_saae(img, texto):
     )
 
     # 🧠 Log de debug pro Render ou local
-    print("🎯 Dados extraídos:")
-    print(f"Ticket: {ticket_val}")
-    print(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'Não encontrado'}")
-    print(f"Peso Líquido: {peso_liquido.group(1) if peso_liquido else 'Não encontrado'}")
+    logger.debug("🎯 Dados extraídos:")
+    logger.debug(f"Ticket: {ticket_val}")
+    logger.debug(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'Não encontrado'}")
+    logger.debug(f"Peso Líquido: {peso_liquido.group(1) if peso_liquido else 'Não encontrado'}")
 
     return {
         "ticket": ticket_val,
