@@ -1,17 +1,13 @@
 import logging
 from mensagens import enviar_mensagem
+from config import mapa_setores
 
 logger = logging.getLogger(__name__)
 
 # Redireciona mensagem digitada para número do setor
 def encaminhar_para_setor(numero_usuario, setor, mensagem):
-    mapa_setores = {
-        "comercial": "5515997008800",
-        "faturamento": "5515997008800",
-        "financeiro": "5515997008800",
-        "recursos humanos": "5515997008800"
-    }
     numero_destino = mapa_setores.get(setor)
+
     if not numero_destino:
         logger.debug(f"Setor '{setor}' não encontrado.")
         return
