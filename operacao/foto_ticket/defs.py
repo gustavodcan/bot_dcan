@@ -78,14 +78,14 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
         texto = ler_texto_google_ocr("ticket_pre_google.jpg")
 
     except Exception as e:
-        print(f"❌ Erro no OCR Google: {e}")
+        logger.debug(f"❌ Erro no OCR Google: {e}")
         return {"erro": "Falha no OCR"}
 
     texto = limpar_texto_ocr(texto)
     conversas[numero]["ocr_texto"] = texto
 
     cliente_detectado = detectar_cliente_por_texto(texto)
-    print(f"[🕵️] Cliente detectado automaticamente: {cliente_detectado}")
+    logger.debug(f"[🕵️] Cliente detectado automaticamente: {cliente_detectado}")
 
     #Detecta qual o cliente lido/extraido
     conversas[numero]["cliente"] = cliente_detectado
