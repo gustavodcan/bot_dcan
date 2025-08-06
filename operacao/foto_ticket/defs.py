@@ -1,5 +1,4 @@
-import re
-import os
+import re, os, logging
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from mensagens import enviar_mensagem
 from operacao.foto_ticket.cdr import extrair_dados_cliente_cdr
@@ -9,6 +8,8 @@ from operacao.foto_ticket.mahle import extrair_dados_cliente_mahle
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from operacao.foto_ticket.rio_das_pedras import extrair_dados_cliente_rio_das_pedras
 from operacao.foto_ticket.saae import extrair_dados_cliente_saae
+
+logger = logging.getLogger(__name__)
 
 def extrair_dados_por_cliente(cliente, texto_ocr):
     match cliente:
