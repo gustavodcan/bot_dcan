@@ -25,7 +25,7 @@ from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao
 from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual
 from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae
 from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf
-
+from operacao.foto_nf.estados import tratar_estado_aguardando_confirmacao_chave
 
 # Processamento final após confirmação
 def processar_confirmacao_final(numero):
@@ -214,90 +214,10 @@ def webhook():
     if estado.startswith("aguardando_descricao_"):
         tratar_descricao_setor(numero,  mensagem_original.strip())
 
-    #Confirmando chave
     if estado == "aguardando_confirmacao_chave":
-        if texto_recebido in ['sim', 's']:
-            chave = conversas[numero]["chave_detectada"]
-            enviar_mensagem(numero, "✅ Obrigado! A chave foi confirmada. Consultando a nota...")
-
-            try:
-                resultado = consultar_nfe_completa(chave)
-                if not resultado:
-                    raise ValueError("Resposta vazia da consulta.")
-
-                if resultado.get("code") == 500 and "Erro interno" in resultado.get("code_message", ""):
-                    enviar_mensagem(numero, "⚠️ *Erro interno na integração com InfoSimples.*\nFavor contatar o suporte.")
-                    conversas[numero]["estado"] = "finalizado"
-
-                elif resultado.get("code") == 200:
-                    dados_raw = resultado.get("data", {})
-                    if isinstance(dados_raw, list):
-                        dados = dados_raw[0] if dados_raw else {}
-                    elif isinstance(dados_raw, dict):
-                        dados = dados_raw
-                    else:
-                        dados = {}
-
-                    emitente = dados.get("emitente", {})
-                    emitente_nome = emitente.get("nome") or emitente.get("nome_fantasia") or "Não informado"
-                    emitente_cnpj = emitente.get("cnpj") or "Não informado"
-                    
-                    nfe = dados.get("nfe", {})
-                    nfe_numero = nfe.get("numero") or "Não informado"
-                    nfe_emissao_raw = nfe.get("data_emissao") or ""
-
-                    try:
-                        dt = datetime.strptime(nfe_emissao_raw[:19], "%d/%m/%Y %H:%M:%S")
-                        nfe_emissao = dt.strftime("%d/%m/%Y")
-                    except Exception:
-                        nfe_emissao = "Não informado"
-                
-                    destinatario = dados.get("destinatario", {})
-                    destinatario_nome = destinatario.get("nome") or destinatario.get("nome_fantasia") or "Não informado"
-                    destinatario_cnpj = destinatario.get("cnpj") or "Não informado"
-                    
-                    transporte = dados.get("transporte", {})
-                    transporte_modalidade = transporte.get("modalidade_frete") or "Não informado"
-                    modalidade_numeros = ''.join(re.findall(r'\d+', transporte_modalidade))
-
-                    volumes = transporte.get("volumes", [])
-                    primeiro_volume = volumes[0] if isinstance(volumes, list) and volumes else {}
-                    peso_bruto = primeiro_volume.get("peso_bruto") or "Não informado"
-
-                    resposta = (
-                        f"✅ *Nota consultada com sucesso!*\n\n"
-                        f"*Emitente:* {emitente_nome}\n"
-                        f"*Emitente CNPJ:* {emitente_cnpj}\n"
-                        f"*Destinatário:* {destinatario_nome}\n"
-                        f"*Destinatário CNPJ:* {destinatario_cnpj}\n"
-                        f"*Número:* {nfe_numero}\n"
-                        f"*Emissão:* {nfe_emissao}\n"
-                        f"*Modalidade:* {modalidade_numeros}\n"
-                        f"*Peso Bruto:* {peso_bruto}\n" 
-                    )
-                    enviar_mensagem(numero, resposta)
-                    conversas[numero]["estado"] = "finalizado"
-
-                else:
-                    resposta = (
-                        f"❌ *Erro ao consultar a nota.*\n"
-                        f"🔧 Motivo: {resultado.get('code_message') or 'Erro desconhecido.'}\n"
-                    )
-                    if resultado.get("errors"):
-                        resposta += "\nDetalhes:\n" + "\n".join(f"- {e}" for e in resultado["errors"])
-                    enviar_mensagem(numero, resposta)
-                    conversas[numero]["estado"] = "finalizado"
-
-            except Exception as e:
-                enviar_mensagem(numero, f"❌ Erro inesperado ao processar a nota:\n{str(e)}")
-                conversas[numero]["estado"] = "finalizado"
-
-            finally:
-                conversas[numero].pop("chave_detectada", None)
-                conversas.pop(numero, None)
-
-            return jsonify(status="finalizado")
-
+        resultado = tratar_estado_aguardando_confirmacao_chave(numero, texto_recebido, conversas)
+        return jsonify(resultado)
+        
     if estado == "aguardando_imagem":
         resultado = tratar_estado_aguardando_imagem(numero, data, conversas)
         return jsonify(resultado)
