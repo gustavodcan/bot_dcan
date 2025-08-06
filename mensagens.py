@@ -11,7 +11,7 @@ def enviar_mensagem(numero, texto):
         "Client-Token": CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟢 Texto simples enviado] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟢 Texto simples enviado] Status {res.status_code}: {res.text}")
 
 def enviar_botoes_sim_nao(numero, mensagem):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-button-list"
@@ -30,7 +30,7 @@ def enviar_botoes_sim_nao(numero, mensagem):
         "Client-Token": CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
 
 def enviar_lista_setor(numero, mensagem):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
@@ -54,7 +54,7 @@ def enviar_lista_setor(numero, mensagem):
         "Client-Token": CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
 
 def enviar_opcoes_operacao(numero):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-button-list"
@@ -74,4 +74,4 @@ def enviar_opcoes_operacao(numero):
         "Client-Token": CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    print(f"[🟦 Botões operação enviados] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟦 Botões operação enviados] Status {res.status_code}: {res.text}")
