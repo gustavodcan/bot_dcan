@@ -13,7 +13,7 @@ def encaminhar_para_setor(numero_usuario, setor, mensagem):
     }
     numero_destino = mapa_setores.get(setor)
     if not numero_destino:
-        print(f"Setor '{setor}' não encontrado.")
+        logger.debug(f"Setor '{setor}' não encontrado.")
         return
 
     texto = f"📥 Atendimento automático\nPor favor, não responda.\n\n O telefone: {numero_usuario} solicitou contato do setor {setor.title()} através da seguinte mensagem:\n\n{mensagem}"
@@ -28,7 +28,7 @@ def encaminhar_para_setor(numero_usuario, setor, mensagem):
         "Client-Token": os.getenv("CLIENT_TOKEN")
     }
     res = requests.post(url, json=payload, headers=headers)
-    print(f"[📨 Encaminhado para {setor}] Status {res.status_code}: {res.text}")
+    logger.debug(f"[📨 Encaminhado para {setor}] Status {res.status_code}: {res.text}")
 
 # Trata descrições fornecidas para setores não-operacionais
 def tratar_descricao_setor(numero, mensagem_original):
