@@ -1,10 +1,8 @@
-import os
+import os, logging
 from azure.storage.fileshare import ShareFileClient
-from config import (
-    AZURE_FILE_ACCOUNT_NAME,
-    AZURE_FILE_ACCOUNT_KEY,
-    AZURE_FILE_SHARE_NAME
-)
+from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME)
+
+logger = logging.getLogger(__name__)
 
 def salvar_imagem_azure(local_path, nome_destino):
     file_client = ShareFileClient.from_connection_string(
@@ -22,4 +20,3 @@ def salvar_imagem_azure(local_path, nome_destino):
         file_client.upload_file(data)
 
     print(f"✅ Arquivo enviado como: {nome_destino}")
-
