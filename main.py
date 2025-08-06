@@ -15,6 +15,7 @@ from integracoes.infosimples import consultar_nfe_completa
 from operacao.foto_ticket.defs import extrair_dados_da_imagem
 from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
+from operacao.foto_ticket.estados import processar_confirmacao_final
 from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf
 from operacao.foto_ticket.estados import tratar_estado_aguardando_imagem
 from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae
@@ -27,36 +28,6 @@ from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_
 
 app = Flask(__name__)
 conversas = {}
-
-# Processamento final após confirmação
-def processar_confirmacao_final(numero):
-    dados = conversas[numero]["dados"]
-
-    payload = {
-        "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "cliente": conversas[numero].get("cliente", "").upper(),
-        "ticket": dados.get("ticket"),
-        "nota_fiscal": dados.get("nota_fiscal"),
-        "peso": dados.get("peso_liquido"),
-        "destino": dados.get("destino", "N/A"),
-        "telefone": numero
-    }
-    # Envia os dados para a rota existente /enviar_dados
-    try:
-        requests.post("http://localhost:10000/enviar_dados", json=payload)
-    except Exception as e:
-        print(f"Erro ao enviar dados para /enviar_dados: {e}")
-
-    nome_imagem = f"{payload['cliente']}/{payload['cliente']}_{payload['nota_fiscal']}.jpg"
-    salvar_imagem_azure("ticket.jpg", nome_imagem)
-
-    try:
-        os.remove("ticket.jpg")
-    except FileNotFoundError:
-        pass
-
-    enviar_mensagem(numero, "✅ Dados confirmados, Salvando as informações! Obrigado!")
-    conversas.pop(numero)
 
 def extrair_chave_confirmar(numero):
     texto = conversas[numero].get("ocr_texto", "")
