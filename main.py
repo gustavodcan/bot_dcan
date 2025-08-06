@@ -30,23 +30,6 @@ from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_
 app = Flask(__name__)
 conversas = {}
 
-def extrair_chave_confirmar(numero):
-    texto = conversas[numero].get("ocr_texto", "")
-    chave = extrair_chave_acesso(texto)
-
-    if chave:
-        conversas[numero]["chave_detectada"] = chave
-        conversas[numero]["estado"] = "aguardando_confirmacao_chave"
-        mensagem = (
-            f"🔎 Encontrei a seguinte *chave de acesso* na nota:\n\n"
-            f"{chave}\n\n"
-            f"✅ Por favor, *confirme se está correta* antes de continuar."
-        )
-        enviar_botoes_sim_nao(numero, mensagem)
-    else:
-        enviar_mensagem(numero, "❌ Não consegui identificar a chave de acesso na nota. Por favor, envie novamente.")
-        conversas[numero]["estado"] = "aguardando_imagem_nf"
-
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
 def webhook():
