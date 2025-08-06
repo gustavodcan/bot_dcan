@@ -1,5 +1,7 @@
-import re, os
+import re, os, logging
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao
+
+logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_saae(img, texto):
     print("📜 [SAAE] Texto detectado:")
