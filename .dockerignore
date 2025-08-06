@@ -1,5 +1,42 @@
-__pycache__
+# Bytecode e cache Python
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# Arquivos temporários de sistema
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# Ambientes virtuais (caso crie localmente)
+venv/
+.env/
 .env
+*.env
+
+# Configs editor/IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Build e dist
+build/
+dist/
+*.egg-info/
+
+# Arquivos específicos do projeto
+outputs/
+debug/
+
+# Segurança
+credentials*.json
+token*.json
+secrets*.json
+*.bak
+
+# Git
+.git/
+.gitignore
