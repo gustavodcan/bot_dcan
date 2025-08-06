@@ -17,6 +17,6 @@ def extrair_chave_acesso(texto):
     return None  # Se nenhuma chave válida encontrada
 
     if chave:
-        print(f"🔑 Chave de acesso encontrada: {chave}")
+        logger.debug(f"🔑 Chave de acesso encontrada: {chave}")
     else:
-        print("❌ Chave de acesso não encontrada.")
+        logger.debug("❌ Chave de acesso não encontrada.")
