@@ -57,7 +57,7 @@ def consultar_nfe_completa(chave_nfe):
         }
 
         response = requests.post(url, json=payload)
-        print("📦 Resposta bruta InfoSimples:", response.text)
+        logger.debug("📦 Resposta bruta InfoSimples:", response.text)
 
         resultado = response.json()
         if not resultado:
@@ -66,7 +66,7 @@ def consultar_nfe_completa(chave_nfe):
         return resultado
 
     except Exception as e:
-        print("❌ Erro inesperado ao consultar NF-e:", str(e))
+        logger.debug("❌ Erro inesperado ao consultar NF-e:", str(e))
         return {
             "code": 500,
             "code_message": "Erro interno",
