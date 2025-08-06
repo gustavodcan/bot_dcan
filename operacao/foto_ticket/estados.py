@@ -123,7 +123,7 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
                 payload["telefone"]
             ])
         except Exception as e:
-            print(f"❌ Erro ao salvar na planilha: {e}")
+            logger.debug(f"❌ Erro ao salvar na planilha: {e}")
             enviar_mensagem(numero, "❌ Erro ao salvar os dados. Contate o suporte.")
             conversas[numero]["estado"] = "finalizado"
             return {"status": "erro ao salvar"}
@@ -133,7 +133,7 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
             salvar_imagem_azure("ticket.jpg", nome_imagem)
             os.remove("ticket.jpg")
         except Exception as e:
-            print(f"⚠️ Erro ao salvar ou remover imagem: {e}")
+            logger.debug(f"⚠️ Erro ao salvar ou remover imagem: {e}")
 
         enviar_mensagem(numero, "✅ Dados confirmados, Salvando as informações! Obrigado!")
         conversas.pop(numero)
@@ -218,7 +218,7 @@ def processar_confirmacao_final(numero):
     try:
         requests.post("http://localhost:10000/enviar_dados", json=payload)
     except Exception as e:
-        print(f"Erro ao enviar dados para /enviar_dados: {e}")
+        logger.debug(f"Erro ao enviar dados para /enviar_dados: {e}")
 
     nome_imagem = f"{payload['cliente']}/{payload['cliente']}_{payload['nota_fiscal']}.jpg"
     salvar_imagem_azure("ticket.jpg", nome_imagem)
