@@ -22,6 +22,15 @@ from operacao.foto_nf.estados import tratar_estado_aguardando_confirmacao_chave,
 from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao, tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 conversas = {}
 
@@ -30,8 +39,8 @@ conversas = {}
 def webhook():
     global conversas
     data = request.json
-    print("🛰️ Webhook recebido:")
-    print(data)
+    logger.debug("🛰️ Webhook recebido:")
+    logger.debug(data)
 
     tipo = data.get("type")
     numero = data.get("phone") or data.get("from")
@@ -128,7 +137,7 @@ def enviar_dados():
 
         return jsonify({"status": "sucesso", "msg": "Dados enviados para Google Sheets!"})
     except Exception as e:
-        print(f"🚨 Erro detectado: {e}")
+        logger.debug(f"🚨 Erro detectado: {e}")
         return jsonify({"status": "erro", "msg": str(e)}), 500
 
 if __name__ == '__main__':
