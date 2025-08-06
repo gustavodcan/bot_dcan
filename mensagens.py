@@ -1,6 +1,7 @@
-import os
-import requests
+import os, requests, logging
 from config import INSTANCE_ID, API_TOKEN, CLIENT_TOKEN
+
+logger = logging.getLogger(__name__)
 
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
