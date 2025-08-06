@@ -16,3 +16,10 @@ INFOSIMPLES_TOKEN = os.getenv("INFOSIMPLES_TOKEN")
 CERTIFICADO_BASE64 = os.getenv("CERTIFICADO_BASE64")
 CERTIFICADO_SENHA = os.getenv("CERTIFICADO_SENHA")
 CHAVE_AES = os.getenv("CHAVE_AES")
+
+mapa_setores = {
+    "comercial": os.getenv("SETOR_COMERCIAL", "DEFAULT_COMERCIAL"),
+    "faturamento": os.getenv("SETOR_FATURAMENTO", "DEFAULT_FATURAMENTO"),
+    "financeiro": os.getenv("SETOR_FINANCEIRO", "DEFAULT_FINANCEIRO"),
+    "recursos humanos": os.getenv("SETOR_RH", "DEFAULT_RH")
+}
