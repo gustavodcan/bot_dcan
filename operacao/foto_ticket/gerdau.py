@@ -3,8 +3,8 @@ import re, logging
 logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_gerdaupinda(img, texto):
-    print("📜 [Gerdau Pinda] Texto detectado:")
-    print(texto)
+    logger.debug("📜 [Gerdau Pinda] Texto detectado:")
+    logger.debug(texto)
 
     # 🎯 Ticket - captura número com ou sem barra e remove a barra depois
     ticket_match = re.search(r"(?:processo)[\s:]*([0-9/]{5,})", texto)
@@ -20,10 +20,10 @@ def extrair_dados_cliente_gerdaupinda(img, texto):
     )
 
     # 🧠 Log de debug pro Render ou local
-    print("🎯 Dados extraídos:")
-    print(f"Ticket: {ticket_val}")
-    print(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'Não encontrado'}")
-    print(f"Peso Líquido: {peso_liquido.group(1) if peso_liquido else 'Não encontrado'}")
+    logger.debug("🎯 Dados extraídos:")
+    logger.debug(f"Ticket: {ticket_val}")
+    logger.debug(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'Não encontrado'}")
+    logger.debug(f"Peso Líquido: {peso_liquido.group(1) if peso_liquido else 'Não encontrado'}")
 
     return {
         "ticket": ticket_val,
@@ -33,9 +33,9 @@ def extrair_dados_cliente_gerdaupinda(img, texto):
     }
 
 def extrair_dados_cliente_gerdau(img, texto):
-    print("[GERDAU] Extraindo dados...")
-    print("📜 Texto para extração:")
-    print(texto)
+    logger.debug("[GERDAU] Extraindo dados...")
+    logger.debug("📜 Texto para extração:")
+    logger.debug(texto)
 
     # Ticket: exatamente 8 dígitos
     ticket_match = re.search(r"\b(\d{8})\b", texto)
@@ -55,10 +55,10 @@ def extrair_dados_cliente_gerdau(img, texto):
             peso_liquido_val = match.group(1).replace(",", ".")
             break
 
-    print("🎯 Dados extraídos:")
-    print(f"Ticket: {ticket_val}")
-    print(f"Nota Fiscal: {nota_fiscal_val}")
-    print(f"Peso Líquido: {peso_liquido_val}")
+    logger.debug("🎯 Dados extraídos:")
+    logger.debug(f"Ticket: {ticket_val}")
+    logger.debug(f"Nota Fiscal: {nota_fiscal_val}")
+    logger.debug(f"Peso Líquido: {peso_liquido_val}")
 
     return {
         "ticket": ticket_val,
