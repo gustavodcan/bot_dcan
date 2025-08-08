@@ -47,7 +47,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         return {"status": "chave não encontrada"}
 
     # consulta direta na InfoSimples (sem confirmar chave antes)
-    enviar_mensagem(numero, "🔎 Beleza! Localizando as informações dessa nota, um instante…")
+    enviar_mensagem(numero, "🔎 Localizando as informações da nota, um instante…")
     try:
         resultado = consultar_nfe_completa(chave)
     except Exception:
@@ -139,7 +139,7 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
 
     # se respondeu SIM: finaliza
     if texto_recebido.lower() in ["sim", "s"]:
-        enviar_mensagem(numero, "✅ Perfeito! Dados confirmados. Obrigado! 🙌")
+        enviar_mensagem(numero, "✅ Perfeito! Dados confirmados. Obrigado!")
         conversas.pop(numero, None)
         try:
             os.remove("nota.jpg")
