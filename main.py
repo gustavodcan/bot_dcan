@@ -91,9 +91,9 @@ def webhook():
     if estado.startswith("aguardando_descricao_"):
         tratar_descricao_setor(numero, mensagem_original.strip(), conversas)
 
-    if estado == "aguardando_confirmacao_chave":
-        resultado = tratar_estado_aguardando_confirmacao_chave(numero, texto_recebido, conversas)
-        return jsonify(resultado)
+#    if estado == "aguardando_confirmacao_chave":
+#        resultado = tratar_estado_aguardando_confirmacao_chave(numero, texto_recebido, conversas)
+#        return jsonify(resultado)
         
     if estado == "aguardando_imagem":
         resultado = tratar_estado_aguardando_imagem(numero, data, conversas)
@@ -102,6 +102,10 @@ def webhook():
     if estado == "aguardando_imagem_nf":
         resultado = tratar_estado_aguardando_imagem_nf(numero, data, conversas)
         return jsonify(resultado)
+
+    if estado == "aguardando_confirmacao_dados_nf":
+    resultado = tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas)
+    return jsonify(resultado)
             
     if estado == "aguardando_nota_manual":
         resultado = tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas)
