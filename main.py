@@ -104,8 +104,8 @@ def webhook():
         return jsonify(resultado)
 
     if estado == "aguardando_confirmacao_dados_nf":
-    resultado = tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas)
-    return jsonify(resultado)
+        resultado = tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas)
+        return jsonify(resultado)
             
     if estado == "aguardando_nota_manual":
         resultado = tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas)
