@@ -127,7 +127,7 @@ def enviar_dados():
         nota_fiscal = dados.get("nota_fiscal")
         peso = dados.get("peso")
         destino = dados.get("destino")
-        destino = destino.upper() if cliente else ''
+        destino = destino.upper() if destino else ''
         telefone = dados.get("telefone")
 
         from integracoes.google_sheets import conectar_google_sheets
