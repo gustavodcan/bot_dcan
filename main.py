@@ -75,7 +75,6 @@ def webhook():
             enviar_lista_setor(numero, "❌ Opção inválida. Por favor, escolha uma opção da lista.")
         return jsonify(status="resposta motorista")
 
-    #Se o bot esta aguardando "sim" ou "não" do motorista:
     if estado == "aguardando_opcao_operacao":
         if texto_recebido in ['foto_ticket']:
             enviar_mensagem(numero, "✅ Perfeito! Por favor, envie a foto do ticket.")
