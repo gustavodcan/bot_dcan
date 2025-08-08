@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     # valida imagem
     if "image" not in data or not data["image"].get("mimeType", "").startswith("image/"):
-        enviar_mensagem(numero, "📸 Por favor, envie uma *imagem* da nota fiscal.")
+        enviar_mensagem(numero, "📸 Envie uma *imagem* da nota fiscal.")
         return {"status": "aguardando imagem nf"}
 
     # baixa imagem
@@ -139,7 +139,7 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
 
     # se respondeu SIM: finaliza
     if texto_recebido.lower() in ["sim", "s"]:
-        enviar_mensagem(numero, "✅ Perfeito! Dados confirmados. Obrigado!")
+        enviar_mensagem(numero, "✅ Dados confirmados. Obrigado!")
         conversas.pop(numero, None)
         try:
             os.remove("nota.jpg")
