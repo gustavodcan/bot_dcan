@@ -140,7 +140,7 @@ def webhook():
         return jsonify(resultado)
 
     if estado == "aguardando_confirmacao":
-        resultado = processar_confirmacao_final(numero)
+        resultado = processar_confirmacao_final(numero, conversas)
         return jsonify(resultado)
         
 # @app.route("/enviar_dados", methods=["POST"])
