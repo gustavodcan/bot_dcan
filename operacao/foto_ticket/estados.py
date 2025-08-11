@@ -203,8 +203,11 @@ def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
     enviar_botoes_sim_nao(numero, msg)
     return {"status": "aguardando confirmação"}
 
-def processar_confirmacao_final(numero):
-    logger.info("[TICKET] processar_confirmacao_final (VIAGEM ONLY) iniciado para %s", numero)
+def processar_confirmacao_final(numero, _texto_recebido=None, conversas=None):
+    if conversas is None or numero not in conversas or "dados" not in conversas[numero]:
+        logger.warning(f"[TICKET] Conversa/estado inválido para {numero}")
+        return {"status": "erro", "msg": "Conversa inválida para confirmação"}
+
     dados = conversas[numero]["dados"]
 
     cliente = (conversas[numero].get("cliente") or "").upper()
