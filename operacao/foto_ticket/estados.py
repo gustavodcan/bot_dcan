@@ -1,11 +1,12 @@
 import os, re, requests, logging
 from datetime import datetime
-from integracoes.google_sheets import conectar_google_sheets
+from integracoes.google_sheets import conectar_google_sheets, atualizar_viagem_ticket
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao
 from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_texto
 from operacao.foto_ticket.defs import extrair_dados_por_cliente
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from integracoes.azure import salvar_imagem_azure
+from viagens import VIAGEM_POR_TELEFONE
 
 logger = logging.getLogger(__name__)
 
@@ -205,28 +206,53 @@ def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
 def processar_confirmacao_final(numero):
     dados = conversas[numero]["dados"]
 
-    payload = {
-        "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "cliente": conversas[numero].get("cliente", "").upper(),
-        "ticket": dados.get("ticket"),
-        "nota_fiscal": dados.get("nota_fiscal"),
-        "peso": dados.get("peso_liquido"),
-        "destino": dados.get("destino", "N/A"),
-        "telefone": numero
-    }
-    # Envia os dados para a rota existente /enviar_dados
+    cliente = (conversas[numero].get("cliente") or "").upper()
+    numero_viagem = VIAGEM_POR_TELEFONE.get(numero)
+
+    if not numero_viagem:
+        enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho.")
+        logger.warning(f"[VIAGENS] Telefone {numero} sem viagem associada.")
+        conversas.pop(numero, None)
+        try:
+            os.remove("ticket.jpg")
+        except FileNotFoundError:
+            pass
+        return {"status": "sem viagem"}
+
+    ticket = dados.get("ticket") or dados.get("brm_mes") or ""
+    peso   = dados.get("peso_liquido") or ""
+    origem = dados.get("destino") or dados.get("origem") or ""
+    nota   = dados.get("nota_fiscal") or ""
+
+    # 1) Atualiza a linha da viagem na planilha (colunas de Ticket)
     try:
-        requests.post("http://localhost:10000/enviar_dados", json=payload)
-    except Exception as e:
-        logger.debug(f"Erro ao enviar dados para /enviar_dados: {e}")
+        atualizar_viagem_ticket(
+            numero_viagem=numero_viagem,
+            telefone=numero,
+            ticket=ticket,
+            peso=peso,
+            origem=origem
+        )
+        logger.info(f"[TICKET] Viagem {numero_viagem} atualizada no Sheets (ticket/peso/origem).")
+    except Exception:
+        logger.error("[TICKET] Falha ao atualizar planilha da viagem", exc_info=True)
 
-    nome_imagem = f"{payload['cliente']}/{payload['cliente']}_{payload['nota_fiscal']}.jpg"
-    salvar_imagem_azure("ticket.jpg", nome_imagem)
+    # 2) Upload no Azure, indexando por viagem
+    try:
+        safe_viagem = re.sub(r"[^\w\-]", "_", numero_viagem)
+        safe_ticket = re.sub(r"[^\w\-]", "_", ticket) or "SEM_TICKET"
+        caminho = f"VIAGENS/{safe_viagem}/TICKET_{safe_ticket}.jpg"
+        salvar_imagem_azure("ticket.jpg", caminho)
+        logger.info(f"[TICKET] Upload Azure ok em {caminho}")
+    except Exception:
+        logger.error("[TICKET] Falha no upload para Azure", exc_info=True)
 
+    # 3) Limpeza e finalização
     try:
         os.remove("ticket.jpg")
     except FileNotFoundError:
         pass
 
-    enviar_mensagem(numero, "✅ Dados confirmados, Salvando as informações! Obrigado!")
-    conversas.pop(numero)
+    enviar_mensagem(numero, f"✅ Dados confirmados. Ticket indexado na *viagem {numero_viagem}*. Obrigado!")
+    conversas.pop(numero, None)
+    return {"status": "finalizado"}
