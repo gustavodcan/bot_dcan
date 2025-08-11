@@ -23,6 +23,7 @@ from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao, t
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf, tratar_estado_confirmacao_dados_nf
 import logging
+from viagens import VIAGENS, NOTIFICAR_VIAGENS_ON_START
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -33,6 +34,27 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 conversas = {}
+
+def notificar_viagens_on_start():
+    if not NOTIFICAR_VIAGENS_ON_START:
+        logger.info("[VIAGENS] Notificação no start desativada por ENV.")
+        return
+    for v in VIAGENS:
+        try:
+            msg = (
+                f"Olá, *{v['motorista']}*! 👋\n\n"
+                f"Você será responsável pela *viagem (coleta)* nº *{v['numero_viagem']}*, "
+                f"na *rota* *{v['rota']}*.\n\n"
+                "As *próximas fotos* de *nota fiscal* e *ticket* que você enviar "
+                "serão indexadas nessa viagem.\n\n"
+                "🚛 Bom trabalho!"
+            )
+            enviar_mensagem(v["telefone_motorista"], msg)
+        except Exception:
+            logger.error(f"[VIAGENS] Falha ao notificar {v}", exc_info=True)
+
+# chame isso uma vez no boot do processo
+notificar_viagens_on_start()
 
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
