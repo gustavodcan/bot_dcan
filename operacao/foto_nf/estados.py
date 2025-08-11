@@ -9,6 +9,8 @@ from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
 from integracoes.infosimples import consultar_nfe_completa
+from viagens import VIAGEM_POR_TELEFONE
+from integracoes.google_sheets import atualizar_viagem_nf
 
 logger = logging.getLogger(__name__)
 
@@ -139,13 +141,23 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
 
     # se respondeu SIM: finaliza
     if texto_recebido.lower() in ["sim", "s"]:
-        enviar_mensagem(numero, "✅ Dados confirmados. Obrigado!")
+        dados = conversas[numero].get("nf_consulta", {})
+        numero_viagem = VIAGEM_POR_TELEFONE.get(numero)  # pega a viagem associada a esse telefone
+
+        if numero_viagem:
+            try:
+                atualizar_viagem_nf(
+                    numero_viagem=numero_viagem,
+                    telefone=numero,
+                    chave_acesso=dados.get("chave") or "",
+                    nota_fiscal=dados.get("numero") or ""
+                )
+            except Exception:
+                logger.error("[NF] Falha ao atualizar planilha da viagem", exc_info=True)
+
+        enviar_mensagem(numero, "✅ Perfeito! Dados confirmados. Obrigado! 🙌")
         conversas.pop(numero, None)
-        try:
-            os.remove("nota.jpg")
-            os.remove("nota_pre_google.jpg")
-        except Exception:
-            pass
+        # ... (limpeza de arquivos)
         return {"status": "finalizado"}
 
     # resposta inválida
