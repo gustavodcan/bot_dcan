@@ -204,6 +204,7 @@ def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
     return {"status": "aguardando confirmação"}
 
 def processar_confirmacao_final(numero):
+    logger.info("[TICKET] processar_confirmacao_final (VIAGEM ONLY) iniciado para %s", numero)
     dados = conversas[numero]["dados"]
 
     cliente = (conversas[numero].get("cliente") or "").upper()
