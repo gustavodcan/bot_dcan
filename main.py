@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 conversas = {}
 
+logger.info("BOOT Bot DCAN — versão 0.15")
+
 def notificar_viagens_on_start():
     if not NOTIFICAR_VIAGENS_ON_START:
         logger.info("[VIAGENS] Notificação no start desativada por ENV.")
@@ -138,10 +140,11 @@ def webhook():
         return jsonify(resultado)
 
     if estado == "aguardando_confirmacao":
-        resultado = tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas)
+        resultado = processar_confirmacao_final(numero, texto_recebido, conversas)
         return jsonify(resultado)
         
-@app.route('/enviar_dados', methods=['POST'])
+# @app.route("/enviar_dados", methods=["POST"])
+@app.route("/enviar_dados_legacy", methods=["POST"])
 def enviar_dados():
     try:
         dados = request.json  # espera receber JSON no corpo da requisição
