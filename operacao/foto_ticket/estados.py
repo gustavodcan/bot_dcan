@@ -225,7 +225,7 @@ def processar_confirmacao_final(numero, _texto_recebido=None, conversas=None):
 
     ticket = dados.get("ticket") or dados.get("brm_mes") or ""
     peso   = dados.get("peso_liquido") or ""
-    origem = dados.get("destino") or dados.get("origem") or ""
+    origem = dados.get("destino") or dados.get("origem") or "N/A"
     nota   = dados.get("nota_fiscal") or ""
 
     # 1) Atualiza a linha da viagem na planilha (colunas de Ticket)
