@@ -3,18 +3,16 @@ import re, logging
 logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_gerdaupinda(img, texto):
-    logger.debug("📜 [Gerdau Pinda] Texto detectado:")
+    logger.debug("[GERDAU] Extraindo dados...")
+    logger.debug("📜 Texto para extração:")
     logger.debug(texto)
+    
+    ticket_match_pinda = re.search(r"(?:processo)[\s:]*([0-9/]{5,})", texto)
+    ticket_val_pinda = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
 
-    # 🎯 Ticket - captura número com ou sem barra e remove a barra depois
-    ticket_match = re.search(r"(?:processo)[\s:]*([0-9/]{5,})", texto)
-    ticket_val = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
-
-    # 📄 Outros Docs - aceita ponto antes dos dois pontos, hífen, espaços, etc
-    outros_docs = re.search(r"docto[:：]?\s*nf\s*[-–—]?\s*(\d{4,8})", texto, re.IGNORECASE)
-
-    # ⚖️ Peso Líquido - aceita erros de OCR tipo 'liquiduido', ':' repetido, etc
-    peso_liquido = re.search(
+    outros_docs_pinda = re.search(r"docto[:：]?\s*nf\s*[-–—]?\s*(\d{4,8})", texto, re.IGNORECASE)
+    
+    peso_liquido_pinda = re.search(
         r"(?i)[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*\n?([0-9]{4,6})",
         texto
     )
