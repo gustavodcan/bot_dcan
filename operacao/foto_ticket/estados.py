@@ -214,7 +214,7 @@ def processar_confirmacao_final(numero, _texto_recebido=None, conversas=None):
     numero_viagem = VIAGEM_POR_TELEFONE.get(numero)
 
     if not numero_viagem:
-        enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho.")
+        enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com seu programador.")
         logger.warning(f"[VIAGENS] Telefone {numero} sem viagem associada.")
         conversas.pop(numero, None)
         try:
