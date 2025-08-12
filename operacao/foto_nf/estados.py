@@ -20,6 +20,15 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         enviar_mensagem(numero, "📸 Envie uma *imagem* da nota fiscal.")
         return {"status": "aguardando imagem nf"}
 
+    numero_viagem = VIAGEM_POR_TELEFONE.get(numero)
+    if not numero_viagem:
+        enviar_mensagem(
+            numero,
+            "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com seu programador."
+        )
+        conversas.pop(numero, None)
+        return {"status": "sem viagem (nf bloqueada)"}
+    
     # baixa imagem
     url_img = data["image"]["imageUrl"]
     try:
