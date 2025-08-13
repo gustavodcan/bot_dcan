@@ -9,10 +9,76 @@ from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
 from integracoes.infosimples import consultar_nfe_completa
-from viagens import VIAGEM_POR_TELEFONE
+from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa
 from integracoes.google_sheets import atualizar_viagem_nf
 
 logger = logging.getLogger(__name__)
+
+def iniciar_fluxo_nf(numero, conversas):
+    viagens = get_viagens_por_telefone(numero)
+
+    if not viagens:
+        enviar_mensagem(
+            numero,
+            "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho."
+        )
+        conversas.pop(numero, None)
+        return {"status": "sem viagem"}
+
+    if len(viagens) == 1:
+        v = viagens[0]
+        conversas.setdefault(numero, {})["numero_viagem_selecionado"] = v["numero_viagem"]
+        set_viagem_ativa(numero, v["numero_viagem"])
+        enviar_mensagem(
+            numero,
+            f"🧭 Viagem selecionada: *{v['numero_viagem']}* — {v['placa']} · {v['rota']}\n\n"
+            "Agora, envie a *imagem da nota fiscal*."
+        )
+        conversas[numero]["estado"] = "aguardando_imagem_nf"
+        return {"status": "aguardando imagem nf"}
+
+    conversas.setdefault(numero, {})["opcoes_viagem_nf"] = viagens
+    conversas[numero]["estado"] = "selecionando_viagem_nf"
+    enviar_lista_viagens(numero, viagens)
+    return {"status": "aguardando escolha viagem nf"}
+
+def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
+    viagens = conversas.get(numero, {}).get("opcoes_viagem_nf", [])
+    if not viagens:
+        enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com seu programador.")
+        conversas.pop(numero, None)
+        return {"status": "sem opções"}
+
+    row_id = (mensagem_original or "").strip()
+    # Esperado: 'VIAGEM|<numero_viagem>'
+    if not row_id.startswith("VIAGEM|"):
+        enviar_mensagem(numero, "❓ Toque em uma das opções da lista para selecionar a viagem.")
+        # reenvia a lista
+        from mensagens import enviar_lista_viagens
+        enviar_lista_viagens(numero, viagens)
+        return {"status": "aguardando seleção (list)"}
+
+    numero_viagem = row_id.split("|", 1)[1]
+
+    selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
+    if not selecionada:
+        enviar_mensagem(numero, "❌ Opção inválida. Tente novamente.")
+        from mensagens import enviar_lista_viagens
+        enviar_lista_viagens(numero, viagens)
+        return {"status": "seleção inválida (list)"}
+
+    conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
+    set_viagem_ativa(numero, selecionada["numero_viagem"])
+    conversas[numero].pop("opcoes_viagem_nf", None)
+
+    enviar_mensagem(
+        numero,
+        f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['placa']} · {selecionada['rota']}\n\n"
+        "Agora, envie a *imagem da nota fiscal*."
+    )
+    conversas[numero]["estado"] = "aguardando_imagem_nf"
+    return {"status": "viagem selecionada"}
+
 
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     # valida imagem
