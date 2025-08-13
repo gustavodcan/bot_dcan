@@ -231,11 +231,17 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
 
     #SIM: grava no Sheets + Azure e finaliza
     if resposta in ("sim", "s"):
+
+        numero_viagem = (
+            conversas.get(numero, {}).get("numero_viagem_selecionado")
+            or get_viagem_ativa(numero)
+        )
+        
         cliente = (conversas[numero].get("cliente") or "").upper()
         numero_viagem = VIAGEM_POR_TELEFONE.get(numero)
         ticket = dados.get("ticket") or dados.get("brm_mes") or ""
         peso   = dados.get("peso_liquido") or ""
-        origem = dados.get("destino") or dados.get("origem") or ""
+        origem = dados.get("destino") or dados.get("origem") or "N/A"
 
         if not numero_viagem:
             enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho.")
