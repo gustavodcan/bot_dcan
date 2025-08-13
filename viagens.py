@@ -5,8 +5,7 @@ NOTIFICAR_VIAGENS_ON_START = os.getenv("NOTIFICAR_VIAGENS_ON_START", "1") == "1"
 
 # Base de viagens
 VIAGENS = [
-    {"numero_viagem": "1003", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé"},
-    {"numero_viagem": "1004", "telefone_motorista": "5515997008800", "motorista": "Gustavo Oliveira", "rota": "Piracicaba x Iracemápolis"},
+    {"numero_viagem": "1005", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé"},
 ]
 
 # Mapa rápido: telefone -> número da viagem
