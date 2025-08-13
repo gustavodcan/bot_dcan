@@ -255,7 +255,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
                 telefone=numero,
                 ticket=ticket,
                 peso=peso,
-                origem=origem or ""
+                origem=origem or "N/A"
             )
             logger.info("[TICKET] Sheets ok (viagem %s).", numero_viagem)
         except Exception:
