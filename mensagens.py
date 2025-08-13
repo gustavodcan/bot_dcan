@@ -3,7 +3,7 @@ from config import INSTANCE_ID, API_TOKEN, CLIENT_TOKEN
 
 logger = logging.getLogger(__name__)
 
-def enviar_lista_viagens(numero, viagens):
+def enviar_lista_viagens(numero, viagens, mensagem):
     if not INSTANCE_ID or not API_TOKEN or not CLIENT_TOKEN:
         logger.error("[Z-API] Variáveis de ambiente faltando: INSTANCE_ID/API_TOKEN/CLIENT_TOKEN.")
         return False
