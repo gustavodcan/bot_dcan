@@ -4,16 +4,18 @@ from config import INSTANCE_ID, API_TOKEN, CLIENT_TOKEN
 logger = logging.getLogger(__name__)
 
 def enviar_lista_viagens(numero, viagens):
-    
+    if not INSTANCE_ID or not API_TOKEN or not CLIENT_TOKEN:
+        logger.error("[Z-API] Variáveis de ambiente faltando: INSTANCE_ID/API_TOKEN/CLIENT_TOKEN.")
+        return False
+
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
-    options = []
-    for v in viagens:
-        options.append({
-            "rowId": f"VIAGEM|{v['numero_viagem']}",
-            "title": str(v["numero_viagem"]),
-            "description": f"{v['placa']} · {v['rota']}"
-        })
-        
+
+    options = [{
+        "rowId": f"VIAGEM|{v['numero_viagem']}",
+        "title": str(v["numero_viagem"]),
+        "description": f"{v['placa']} · {v['rota']}"
+    } for v in viagens]
+
     payload = {
         "phone": numero,
         "message": "Escolha a coleta (viagem):",
@@ -21,17 +23,21 @@ def enviar_lista_viagens(numero, viagens):
         "title": "Suas coletas",
         "options": options
     }
-    
+
+    headers = {
+        "Content-Type": "application/json",
+        "Client-Token": CLIENT_TOKEN
+    }
+
     try:
-        r = requests.post(url, json=payload, timeout=15)
-        if r.status_code != 200:
-            logger.error("[Z-API] Falha ao enviar lista. Status: %s | Corpo: %s",
-                         r.status_code, r.text)
+        res = requests.post(url, json=payload, headers=headers, timeout=15)
+        logger.debug(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
+        if res.status_code != 200:
+            logger.error("[Z-API] Falha ao enviar lista: %s", res.text)
             return False
-        logger.debug("[Z-API] List enviada para %s", numero)
         return True
     except Exception:
-        logger.error("[Z-API] Erro inesperado ao enviar lista", exc_info=True)
+        logger.error("[Z-API] Erro ao enviar lista interativa", exc_info=True)
         return False
 
 def enviar_mensagem(numero, texto):
