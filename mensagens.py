@@ -3,6 +3,32 @@ from config import INSTANCE_ID, API_TOKEN, CLIENT_TOKEN
 
 logger = logging.getLogger(__name__)
 
+def enviar_lista_viagens(numero, viagens):
+    
+    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
+    options = []
+    for v in viagens:
+        options.append({
+            "rowId": f"VIAGEM|{v['numero_viagem']}",
+            "title": str(v["numero_viagem"]),
+            "description": f"{v['placa']} · {v['rota']}"
+        })
+        
+    payload = {
+        "phone": numero,
+        "message": "Escolha a coleta (viagem):",
+        "buttonText": "Selecionar",
+        "title": "Suas coletas",
+        "options": options
+    }
+    
+    try:
+        r = requests.post(url, json=payload, timeout=15)
+        r.raise_for_status()
+        logger.debug("[Z-API] send-option-list enviado p/ %s (%d opções)", numero, len(options))
+    except Exception:
+        logger.error("[Z-API] Falha ao enviar send-option-list", exc_info=True)
+
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
     payload = {"phone": numero, "message": texto}
