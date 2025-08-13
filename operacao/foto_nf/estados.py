@@ -39,7 +39,7 @@ def iniciar_fluxo_nf(numero, conversas):
 
     conversas.setdefault(numero, {})["opcoes_viagem_nf"] = viagens
     conversas[numero]["estado"] = "selecionando_viagem_nf"
-    enviar_lista_viagens(numero, viagens, mensagem)
+    enviar_lista_viagens(numero, viagens, "Escolha a coleta (viagem):")
     return {"status": "aguardando escolha viagem nf"}
 
 def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
