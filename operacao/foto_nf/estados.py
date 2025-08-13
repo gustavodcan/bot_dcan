@@ -39,8 +39,8 @@ def iniciar_fluxo_nf(numero, conversas):
 
     conversas.setdefault(numero, {})["opcoes_viagem_nf"] = viagens
     conversas[numero]["estado"] = "selecionando_viagem_nf"
-    logger.warning("Viagem da lista:", mensagem_original)
     enviar_lista_viagens(numero, viagens, "❌ Seleção inválida, por favor selecione novamente!")
+    logger.warning("Viagem da lista:", mensagem_original)
     return {"status": "aguardando escolha viagem nf"}
 
 def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
