@@ -51,7 +51,6 @@ def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
         return {"status": "sem opções"}
 
     row_id = (mensagem_original).strip()
-    # Esperado: 'VIAGEM|<numero_viagem>'
     if not row_id:
         logger.warning("Viagem da lista:", mensagem_original)
         enviar_lista_viagens(numero, viagens, "❓ Toque em uma das opções da lista para selecionar a viagem.")
@@ -59,11 +58,12 @@ def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
 
     numero_viagem = row_id
 
-    selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
-    if not selecionada:
-        logger.warning("Viagem da lista:", mensagem_original)
-        enviar_lista_viagens(numero, viagens, "Opção inválida. Tente novamente.")
-        return {"status": "seleção inválida (list)"}
+#    selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
+    selecionada = row_id
+#    if not selecionada:
+#        logger.warning("Viagem da lista:", mensagem_original)
+#        enviar_lista_viagens(numero, viagens, "Opção inválida. Tente novamente.")
+#        return {"status": "seleção inválida (list)"}
 
     conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
     set_viagem_ativa(numero, selecionada["numero_viagem"])
