@@ -23,6 +23,7 @@ def enviar_lista_viagens(numero, viagens):
             "title": "Suas coletas",
             "buttonLabel": "Selecionar",
             "options": options
+        }
     }
 
     headers = {
