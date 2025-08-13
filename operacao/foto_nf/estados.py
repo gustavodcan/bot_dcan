@@ -49,13 +49,13 @@ def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
         conversas.pop(numero, None)
         return {"status": "sem opções"}
 
-    row_id = (mensagem_original or "").strip()
+    row_id = (mensagem_original).strip()
     # Esperado: 'VIAGEM|<numero_viagem>'
-    if not row_id.startswith("VIAGEM|"):
+    if not row_id:
         enviar_lista_viagens(numero, viagens, "❓ Toque em uma das opções da lista para selecionar a viagem.")
         return {"status": "aguardando seleção (list)"}
 
-    numero_viagem = row_id.split("|", 1)[1]
+    numero_viagem = row_id
 
     selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
     if not selecionada:
