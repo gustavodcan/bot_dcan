@@ -21,7 +21,7 @@ from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_seto
 #from operacao.foto_nf.estados import tratar_estado_aguardando_confirmacao_chave, tratar_estado_aguardando_imagem_nf
 from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao, tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
-from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf, tratar_estado_confirmacao_dados_nf
+from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf, tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf
 import logging
 from viagens import VIAGENS, NOTIFICAR_VIAGENS_ON_START
 
@@ -104,20 +104,20 @@ def webhook():
             enviar_mensagem(numero, "✅ Perfeito! Por favor, envie a foto do ticket.")
             conversas[numero]["estado"] = "aguardando_imagem"
         elif texto_recebido in ['foto_nf']:
-            enviar_mensagem(numero, "📸 Por favor, envie a *foto da nota fiscal* agora.")
-            conversas[numero]["estado"] = "aguardando_imagem_nf"
+            resultado = iniciar_fluxo_nf(numero, conversas)
+            return jsonify(resultado)
         else:
             enviar_mensagem(numero, "🔧 Entrar em contato com o programador ainda está em desenvolvimento. Em breve estará disponível!")
             conversas[numero]["estado"] = "finalizado"
             conversas.pop(numero, None)
         return jsonify(status="resposta motorista")
 
+    if estado == "selecionando_viagem_nf":
+        resultado = tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas)
+        return jsonify(resultado)
+
     if estado.startswith("aguardando_descricao_"):
         tratar_descricao_setor(numero, mensagem_original.strip(), conversas)
-
-#    if estado == "aguardando_confirmacao_chave":
-#        resultado = tratar_estado_aguardando_confirmacao_chave(numero, texto_recebido, conversas)
-#        return jsonify(resultado)
         
     if estado == "aguardando_imagem":
         resultado = tratar_estado_aguardando_imagem(numero, data, conversas)
