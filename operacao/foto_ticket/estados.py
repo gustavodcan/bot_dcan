@@ -203,60 +203,84 @@ def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
     enviar_botoes_sim_nao(numero, msg)
     return {"status": "aguardando confirmação"}
 
-def processar_confirmacao_final(numero, _texto_recebido=None, conversas=None):
-    if conversas is None or numero not in conversas or "dados" not in conversas[numero]:
-        logger.warning(f"[TICKET] Conversa/estado inválido para {numero}")
-        return {"status": "erro", "msg": "Conversa inválida para confirmação"}
+def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
+    if conversas is None or numero not in conversas:
+        logger.warning("[TICKET] Conversa ausente para %s", numero)
+        return {"status": "erro", "msg": "Conversa ausente"}
 
-    dados = conversas[numero]["dados"]
+    dados = conversas[numero].get("dados", {})
+    if not dados:
+        enviar_mensagem(numero, "❌ Não encontrei os dados do ticket. Envie a *foto do ticket* novamente.")
+        conversas[numero]["estado"] = "aguardando_imagem"
+        return {"status": "sem dados"}
 
-    cliente = (conversas[numero].get("cliente") or "").upper()
-    numero_viagem = VIAGEM_POR_TELEFONE.get(numero)
+    resposta = (texto_recebido or "").strip().lower()
 
-    if not numero_viagem:
-        enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com seu programador.")
-        logger.warning(f"[VIAGENS] Telefone {numero} sem viagem associada.")
-        conversas.pop(numero, None)
+    #NÃO: pede reenvio da imagem e não salva nada
+    if resposta in ("nao", "não", "n"):
         try:
             os.remove("ticket.jpg")
         except FileNotFoundError:
             pass
-        return {"status": "sem viagem"}
 
-    ticket = dados.get("ticket") or dados.get("brm_mes") or ""
-    peso   = dados.get("peso_liquido") or ""
-    origem = dados.get("destino") or dados.get("origem") or "N/A"
-    nota   = dados.get("nota_fiscal") or ""
+        # limpa os dados atuais e volta pro estado de imagem
+        conversas[numero].pop("dados", None)
+        conversas[numero]["estado"] = "aguardando_imagem"
+        enviar_mensagem(numero, "🔁 Beleza! Por favor, envie a *foto do ticket* novamente.")
+        return {"status": "reenvio_solicitado"}
 
-    # 1) Atualiza a linha da viagem na planilha (colunas de Ticket)
-    try:
-        atualizar_viagem_ticket(
-            numero_viagem=numero_viagem,
-            telefone=numero,
-            ticket=ticket,
-            peso=peso,
-            origem=origem
-        )
-        logger.info(f"[TICKET] Viagem {numero_viagem} atualizada no Sheets (ticket/peso/origem).")
-    except Exception:
-        logger.error("[TICKET] Falha ao atualizar planilha da viagem", exc_info=True)
+    #SIM: grava no Sheets + Azure e finaliza
+    if resposta in ("sim", "s"):
+        cliente = (conversas[numero].get("cliente") or "").upper()
+        numero_viagem = VIAGEM_POR_TELEFONE.get(numero)
+        ticket = dados.get("ticket") or dados.get("brm_mes") or ""
+        peso   = dados.get("peso_liquido") or ""
+        origem = dados.get("destino") or dados.get("origem") or ""
 
-    # 2) Upload no Azure, indexando por viagem
-    try:
-        safe_viagem = re.sub(r"[^\w\-]", "_", numero_viagem)
-        safe_ticket = re.sub(r"[^\w\-]", "_", ticket) or "SEM_TICKET"
-        caminho = f"VIAGENS/{safe_viagem}/TICKET_{safe_ticket}.jpg"
-        salvar_imagem_azure("ticket.jpg", caminho)
-        logger.info(f"[TICKET] Upload Azure ok em {caminho}")
-    except Exception:
-        logger.error("[TICKET] Falha no upload para Azure", exc_info=True)
+        if not numero_viagem:
+            enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho.")
+            logger.warning("[VIAGENS] Telefone %s sem viagem associada.", numero)
+            # encerra a conversa para não ficar preso num estado inválido
+            conversas.pop(numero, None)
+            try:
+                os.remove("ticket.jpg")
+            except FileNotFoundError:
+                pass
+            return {"status": "sem_viagem"}
 
-    # 3) Limpeza e finalização
-    try:
-        os.remove("ticket.jpg")
-    except FileNotFoundError:
-        pass
+        # 1) Atualiza a linha da viagem (colunas do ticket)
+        try:
+            atualizar_viagem_ticket(
+                numero_viagem=numero_viagem,
+                telefone=numero,
+                ticket=ticket,
+                peso=peso,
+                origem=origem or ""
+            )
+            logger.info("[TICKET] Sheets ok (viagem %s).", numero_viagem)
+        except Exception:
+            logger.error("[TICKET] Falha ao atualizar planilha da viagem.", exc_info=True)
 
-    enviar_mensagem(numero, f"✅ Dados confirmados. Ticket indexado na *viagem {numero_viagem}*. Obrigado!")
-    conversas.pop(numero, None)
-    return {"status": "finalizado"}
+        # 2) Upload no Azure (indexado por viagem)
+        try:
+            safe_viagem = re.sub(r"[^\w\-]", "_", numero_viagem) or "SEM_VIAGEM"
+            safe_ticket = re.sub(r"[^\w\-]", "_", ticket) or "SEM_TICKET"
+            caminho = f"VIAGENS/{safe_viagem}/TICKET_{safe_ticket}.jpg"
+            salvar_imagem_azure("ticket.jpg", caminho)
+            logger.info("[TICKET] Upload Azure ok em %s", caminho)
+        except Exception:
+            logger.error("[TICKET] Falha no upload para Azure.", exc_info=True)
+
+        # 3) Limpa e finaliza
+        try:
+            os.remove("ticket.jpg")
+        except FileNotFoundError:
+            pass
+
+        enviar_mensagem(numero, f"✅ Dados confirmados. Ticket indexado na *viagem {numero_viagem}*. Obrigado!")
+        conversas.pop(numero, None)
+        return {"status": "finalizado"}
+
+    #Resposta inválida: reenvia os botões
+    enviar_botoes_sim_nao(numero, "❓ Por favor, confirme os dados do ticket: *Sim* ou *Não*?")
+    return {"status": "aguardando_resposta_valida"}
