@@ -13,9 +13,13 @@ VIAGENS = [
 # Mapa rápido: telefone -> número da viagem
 VIAGEM_POR_TELEFONE = {v["telefone_motorista"]: v["numero_viagem"] for v in VIAGENS}
 
-def get_viagem_por_telefone(telefone: str):
-    """Retorna dict da viagem pelo telefone (ou None)."""
-    for v in VIAGENS:
-        if v["telefone_motorista"] == telefone:
-            return v
-    return None
+def get_viagens_por_telefone(telefone: str):
+    return [v for v in VIAGENS if v.get("telefone_motorista") == telefone]
+
+VIAGEM_ATIVA_POR_TELEFONE = {}
+
+def set_viagem_ativa(telefone: str, numero_viagem: str):
+    VIAGEM_ATIVA_POR_TELEFONE[telefone] = numero_viagem
+
+def get_viagem_ativa(telefone: str):
+    return VIAGEM_ATIVA_POR_TELEFONE.get(telefone)
