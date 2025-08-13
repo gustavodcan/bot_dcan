@@ -52,19 +52,14 @@ def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
     row_id = (mensagem_original or "").strip()
     # Esperado: 'VIAGEM|<numero_viagem>'
     if not row_id.startswith("VIAGEM|"):
-        enviar_mensagem(numero, "❓ Toque em uma das opções da lista para selecionar a viagem.")
-        # reenvia a lista
-        from mensagens import enviar_lista_viagens
-        enviar_lista_viagens(numero, viagens)
+        enviar_lista_viagens(numero, viagens, "❓ Toque em uma das opções da lista para selecionar a viagem.")
         return {"status": "aguardando seleção (list)"}
 
     numero_viagem = row_id.split("|", 1)[1]
 
     selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
     if not selecionada:
-        enviar_mensagem(numero, "❌ Opção inválida. Tente novamente.")
-        from mensagens import enviar_lista_viagens
-        enviar_lista_viagens(numero, viagens)
+        enviar_lista_viagens(numero, viagens, "❌ Opção inválida. Tente novamente.")
         return {"status": "seleção inválida (list)"}
 
     conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
