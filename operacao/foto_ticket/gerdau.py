@@ -2,64 +2,56 @@ import re, logging
 
 logger = logging.getLogger(__name__)
 
-def extrair_dados_cliente_gerdaupinda(img, texto):
-    logger.debug("[GERDAU] Extraindo dados...")
-    logger.debug("📜 Texto para extração:")
-    logger.debug(texto)
-    
-    ticket_match_pinda = re.search(r"(?:processo)[\s:]*([0-9/]{5,})", texto)
-    ticket_val_pinda = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
+NAO_ENCONTRADO = "NÃO ENCONTRADO"
 
-    outros_docs_pinda = re.search(r"docto[:：]?\s*nf\s*[-–—]?\s*(\d{4,8})", texto, re.IGNORECASE)
-    
-    peso_liquido_pinda = re.search(
-        r"(?i)[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*\n?([0-9]{4,6})",
-        texto
-    )
+def _encontrado(v: str) -> bool:
+    return bool(v) and v != NAO_ENCONTRADO
 
-    # 🧠 Log de debug pro Render ou local
-    logger.debug("🎯 Dados extraídos:")
-    logger.debug(f"Ticket: {ticket_val}")
-    logger.debug(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'Não encontrado'}")
-    logger.debug(f"Peso Líquido: {peso_liquido.group(1) if peso_liquido else 'Não encontrado'}")
-
-    return {
-        "ticket": ticket_val,
-        "outros_docs": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO",
-        "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO",
-        "nota_fiscal": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO"
-    }
-
-def extrair_dados_cliente_gerdau(img, texto):
+def extrair_dados_cliente_gerdau(img, texto: str):
     logger.debug("[GERDAU] Extraindo dados...")
     logger.debug("📜 Texto para extração:")
     logger.debug(texto)
 
-    # Ticket: exatamente 8 dígitos
-    ticket_match = re.search(r"\b(\d{8})\b", texto)
-    ticket_val = ticket_match.group(1) if ticket_match else "NÃO ENCONTRADO"
+    # Gerdau Geral: ticket com 8 dígitos isolados
+    m_ticket_geral = re.search(r"\b(\d{8})\b", texto)
+    ticket_val = m_ticket_geral.group(1) if m_ticket_geral else NAO_ENCONTRADO
 
-    # Nota fiscal: número antes do primeiro hífen
+    # Gerdau Pinda: “processo: 74928/1” (5+ dígitos com possível “/”)
+    m_ticket_pinda = re.search(r"(?i)\bprocesso\b[\s:]*([0-9/]{5,})", texto)
+    ticket_val_pinda = m_ticket_pinda.group(1) if m_ticket_pinda else NAO_ENCONTRADO
+
+    ticket_final = ticket_val if _encontrado(ticket_val) else ticket_val_pinda
+
+    # Gerdau Geral: padrão "12345-1" → pega o número antes do hífen
     matches_nota = re.findall(r"\b(\d{3,10})-\d{1,3}\b", texto)
-    if matches_nota:
-        nota_fiscal_val = matches_nota[0]
+    nota_fiscal_geral = matches_nota[0] if matches_nota else NAO_ENCONTRADO
 
-    # Peso líquido: procura por 'xx,xxx to' sem horário na linha
-    peso_liquido_val = "NÃO ENCONTRADO"
-    linhas = texto.splitlines()
-    for linha in linhas:
-        match = re.search(r"\b(\d{2,3}[.,]\d{3})\s+to\b", linha)
-        if match and not re.search(r"\d{2}:\d{2}:\d{2}", linha):
-            peso_liquido_val = match.group(1).replace(",", ".")
+    # Gerdau Pinda: "docto: nf 123456"
+    m_outros_docs_pinda = re.search(r"(?i)docto[:：]?\s*nf\s*[-–—]?\s*(\d{4,10})", texto)
+    nota_fiscal_pinda = m_outros_docs_pinda.group(1) if m_outros_docs_pinda else NAO_ENCONTRADO
+
+    nota_fiscal_final = (nota_fiscal_geral if _encontrado(nota_fiscal_geral) else nota_fiscal_pinda)
+
+    # Gerdau Geral : linha com "xx,xxx to" ou "xx.xxx to" e sem horário
+    peso_liquido_geral = NAO_ENCONTRADO
+    for linha in texto.splitlines():
+        m = re.search(r"\b(\d{2,3}[.,]\d{3})\s+to\b", linha, flags=re.IGNORECASE)
+        if m and not re.search(r"\d{2}:\d{2}:\d{2}", linha):
+            peso_liquido_geral = m.group(1).replace(",", ".")
             break
 
-    logger.debug("🎯 Dados extraídos:")
-    logger.debug(f"Ticket: {ticket_val}")
-    logger.debug(f"Nota Fiscal: {nota_fiscal_val}")
-    logger.debug(f"Peso Líquido: {peso_liquido_val}")
+    # Gerdau Pinda: variações de "líquido" com 4–6 dígitos
+    m_peso_pinda = re.search(r"(?i)[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*\n?\s*([0-9]{4,6})",texto,)
+    peso_liquido_pinda = m_peso_pinda.group(1) if m_peso_pinda else NAO_ENCONTRADO
+    peso_liquido_final = (peso_liquido_geral if _encontrado(peso_liquido_geral) else peso_liquido_pinda)
+
+    logger.debug("🎯 Dados extraídos (unificado):")
+    logger.debug(f"Ticket (geral): {ticket_val} | Ticket (pinda): {ticket_val_pinda} | Final: {ticket_final}")
+    logger.debug(f"NF (geral): {nota_fiscal_geral} | NF (pinda): {nota_fiscal_pinda} | Final: {nota_fiscal_final}")
+    logger.debug(f"Peso (geral): {peso_liquido_geral} | Peso (pinda): {peso_liquido_pinda} | Final: {peso_liquido_final}")
 
     return {
-        "ticket": ticket_val,
-        "nota_fiscal": nota_fiscal_val,
-        "peso_liquido": peso_liquido_val
+        "ticket": ticket_final,
+        "nota_fiscal": nota_fiscal_final,
+        "peso_liquido": peso_liquido_final
     }
