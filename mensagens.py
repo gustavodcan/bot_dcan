@@ -19,9 +19,10 @@ def enviar_lista_viagens(numero, viagens):
     payload = {
         "phone": numero,
         "message": "Escolha a coleta (viagem):",
-        "buttonText": "Selecionar",
-        "title": "Suas coletas",
-        "options": options
+        "optionList": {
+            "title": "Suas coletas",
+            "buttonLabel": "Selecionar",
+            "options": options
     }
 
     headers = {
