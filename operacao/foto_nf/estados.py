@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 import requests
-from mensagens import enviar_mensagem, enviar_botoes_sim_nao
+from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
