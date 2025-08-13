@@ -14,7 +14,7 @@ from integracoes.google_sheets import atualizar_viagem_nf
 
 logger = logging.getLogger(__name__)
 
-def iniciar_fluxo_nf(numero, conversas):
+def iniciar_fluxo_nf(numero, conversas, mensagem_original=None):
     viagens = get_viagens_por_telefone(numero)
 
     if not viagens:
