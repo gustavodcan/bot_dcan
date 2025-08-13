@@ -24,10 +24,15 @@ def enviar_lista_viagens(numero, viagens):
     
     try:
         r = requests.post(url, json=payload, timeout=15)
-        r.raise_for_status()
-        logger.debug("[Z-API] send-option-list enviado p/ %s (%d opções)", numero, len(options))
+        if r.status_code != 200:
+            logger.error("[Z-API] Falha ao enviar lista. Status: %s | Corpo: %s",
+                         r.status_code, r.text)
+            return False
+        logger.debug("[Z-API] List enviada para %s", numero)
+        return True
     except Exception:
-        logger.error("[Z-API] Falha ao enviar send-option-list", exc_info=True)
+        logger.error("[Z-API] Erro inesperado ao enviar lista", exc_info=True)
+        return False
 
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
