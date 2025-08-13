@@ -39,7 +39,7 @@ def iniciar_fluxo_nf(numero, conversas):
 
     conversas.setdefault(numero, {})["opcoes_viagem_nf"] = viagens
     conversas[numero]["estado"] = "selecionando_viagem_nf"
-    logger.warning("Viagem da lista:", enviar_lista_viagens)
+    logger.warning("Viagem da lista:", mensagem_original)
     enviar_lista_viagens(numero, viagens, "❌ Seleção inválida, por favor selecione novamente!")
     return {"status": "aguardando escolha viagem nf"}
 
@@ -53,7 +53,7 @@ def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
     row_id = (mensagem_original).strip()
     # Esperado: 'VIAGEM|<numero_viagem>'
     if not row_id:
-        logger.warning("Viagem da lista:", enviar_lista_viagens)
+        logger.warning("Viagem da lista:", mensagem_original)
         enviar_lista_viagens(numero, viagens, "❓ Toque em uma das opções da lista para selecionar a viagem.")
         return {"status": "aguardando seleção (list)"}
 
@@ -61,7 +61,7 @@ def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
 
     selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
     if not selecionada:
-        logger.warning("Viagem da lista:", enviar_lista_viagens)
+        logger.warning("Viagem da lista:", mensagem_original)
         enviar_lista_viagens(numero, viagens, "Opção inválida. Tente novamente.")
         return {"status": "seleção inválida (list)"}
 
