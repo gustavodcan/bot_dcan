@@ -86,7 +86,11 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         enviar_mensagem(numero, "📸 Envie uma *imagem* da nota fiscal.")
         return {"status": "aguardando imagem nf"}
 
-    numero_viagem = VIAGEM_POR_TELEFONE.get(numero)
+    numero_viagem = (
+        conversas.get(numero, {}).get("numero_viagem_selecionado")
+        or get_viagem_ativa(numero)
+    )
+    
     if not numero_viagem:
         enviar_mensagem(
             numero,
@@ -216,19 +220,20 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
 
     # se respondeu SIM: finaliza
     if texto_recebido.lower() in ["sim", "s"]:
-        dados = conversas[numero].get("nf_consulta", {})
-        numero_viagem = VIAGEM_POR_TELEFONE.get(numero)  # pega a viagem associada a esse telefone
+        numero_viagem = (
+            conversas.get(numero, {}).get("numero_viagem_selecionado")
+            or get_viagem_ativa(numero)
+        )
 
         if numero_viagem:
-            try:
-                atualizar_viagem_nf(
-                    numero_viagem=numero_viagem,
-                    telefone=numero,
-                    chave_acesso=dados.get("chave") or "",
-                    nota_fiscal=dados.get("numero") or ""
-                )
-            except Exception:
-                logger.error("[NF] Falha ao atualizar planilha da viagem", exc_info=True)
+            atualizar_viagem_nf(
+                numero_viagem=numero_viagem,
+                telefone=numero,
+                chave_acesso=dados.get("chave") or "",
+                nota_fiscal=dados.get("numero") or ""
+            )
+        else:
+            logger.warning("[NF] Sem viagem selecionada/ativa na confirmação de NF para %s", numero)
 
         enviar_mensagem(numero, "✅ Perfeito! Dados confirmados. Obrigado! 🙌")
         conversas.pop(numero, None)
