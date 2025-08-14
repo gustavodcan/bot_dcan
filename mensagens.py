@@ -34,6 +34,7 @@ def enviar_lista_viagens(numero, viagens, mensagem):
     try:
         res = requests.post(url, json=payload, headers=headers, timeout=15)
         logger.debug(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
+        logger.debug(f"[DEBUG] Lista enviada para {numero}: {options}")
         if res.status_code != 200:
             logger.error("[Z-API] Falha ao enviar lista: %s", res.text)
             return False
