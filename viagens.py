@@ -5,10 +5,10 @@ NOTIFICAR_VIAGENS_ON_START = os.getenv("NOTIFICAR_VIAGENS_ON_START", "1") == "1"
 
 # Base de viagens
 VIAGENS = [
-    {"numero_viagem": "1006","placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé", "remetente": "SUPERLAMINAÇÃO"},
-    {"numero_viagem": "1007","placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé", "remetente": "SUPERLAMINAÇÃO"},
-    {"numero_viagem": "1008","placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé", "remetente": "SUPERLAMINAÇÃO"},
-    {"numero_viagem": "1009","placa": "ALL4N99", "telefone_motorista": "5511969098799", "motorista": "Allo Allan Fallando", "rota": "Valorant x CS2", "remetente": "SUPERLAMINAÇÃO"},
+    {"numero_viagem": "1006", "data": "14/08/2025", "placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé", "remetente": "SUPERLAMINAÇÃO"},
+    {"numero_viagem": "1008", "data": "14/08/2025", "placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé", "remetente": "SUPERLAMINAÇÃO"},
+    {"numero_viagem": "1010", "data": "14/08/2025", "placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé", "remetente": "SUPERLAMINAÇÃO"},
+    {"numero_viagem": "1009", "data": "14/08/2025", "placa": "ALL4N99", "telefone_motorista": "5511969098799", "motorista": "Allo Allan Fallando", "rota": "Valorant x CS2", "remetente": "SUPERLAMINAÇÃO"},
 ]
 
 # Mapa rápido: telefone -> número da viagem
