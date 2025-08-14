@@ -28,7 +28,7 @@ def iniciar_fluxo_ticket(numero, conversas):
         set_viagem_ativa(numero, v["numero_viagem"])
         enviar_mensagem(
             numero,
-            f"🧭 Viagem selecionada: *{v['numero_viagem']}* — {v['placa']} · {v['rota']}\n\n"
+            f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['data']} — {selecionada['placa']} · {selecionada['rota']}\n\n"
             "Agora, envie a *imagem do ticket*."
         )
         conversas[numero]["estado"] = "aguardando_imagem"
@@ -77,7 +77,7 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
 
     enviar_mensagem(
         numero,
-        f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['placa']} · {selecionada['rota']}\n\n"
+        f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['data']} — {selecionada['placa']} · {selecionada['rota']}\n\n"
         "Agora, envie a *imagem do ticket*."
     )
     conversas[numero]["estado"] = "aguardando_imagem"
