@@ -232,6 +232,12 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
     #SIM: grava no Sheets + Azure e finaliza
     if resposta in ("sim", "s"):
 
+        # Salva as opções e estado para seleção de ticket
+        conversas[numero]["opcoes_viagem_ticket"] = viagens
+        conversas[numero]["estado"] = "selecionando_viagem_ticket"
+        enviar_lista_viagens(numero, viagens, "Escolha a viagem para indexar este ticket:")
+        return {"status": "aguardando escolha viagem ticket"}
+
         # Pega a viagem da seleção atual ou da ativa
         numero_viagem = (
             conversas.get(numero, {}).get("numero_viagem_selecionado")
@@ -249,12 +255,6 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
                 except FileNotFoundError:
                     pass
                 return {"status": "sem_viagem"}
-
-            # Salva as opções e estado para seleção de ticket
-            conversas[numero]["opcoes_viagem_ticket"] = viagens
-            conversas[numero]["estado"] = "selecionando_viagem_ticket"
-            enviar_lista_viagens(numero, viagens, "Escolha a viagem para indexar este ticket:")
-            return {"status": "aguardando escolha viagem ticket"}
 
         cliente = (conversas[numero].get("cliente") or "").upper()
         ticket  = dados.get("ticket") or dados.get("brm_mes") or ""
