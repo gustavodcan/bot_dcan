@@ -114,6 +114,7 @@ def webhook():
 
     if estado == "selecionando_viagem_nf":
         numero_viagem = data.get("listResponseMessage", {}).get("selectedRowId", "")
+        logger.debug(f"[DEBUG] Valor recebido do rowId: {repr(numero_viagem)} para o número {numero}")
         resultado = tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas)
         return jsonify(resultado)
 
