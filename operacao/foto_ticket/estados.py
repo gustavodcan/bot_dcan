@@ -231,7 +231,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
 
     #SIM: grava no Sheets + Azure e finaliza
     if resposta in ("sim", "s"):
-
+        viagens = get_viagens_por_telefone(numero)
         # Salva as opções e estado para seleção de ticket
         conversas[numero]["opcoes_viagem_ticket"] = viagens
         conversas[numero]["estado"] = "selecionando_viagem_ticket"
