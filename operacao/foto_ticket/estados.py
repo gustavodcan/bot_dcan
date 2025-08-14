@@ -31,7 +31,7 @@ def iniciar_fluxo_ticket(numero, conversas):
             f"🧭 Viagem selecionada: *{v['numero_viagem']}* — {v['placa']} · {v['rota']}\n\n"
             "Agora, envie a *imagem do ticket*."
         )
-        conversas[numero]["estado"] = "aguardando_imagem_ticket"
+        conversas[numero]["estado"] = "aguardando_imagem"
     else:
         # Mais de uma viagem → envia lista interativa
         conversas[numero]["opcoes_viagem_ticket"] = viagens
