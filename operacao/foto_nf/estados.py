@@ -43,18 +43,38 @@ def iniciar_fluxo_nf(numero, conversas):
     return {"status": "aguardando escolha viagem nf"}
 
 
-def tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas):
+def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     viagens = conversas.get(numero, {}).get("opcoes_viagem_nf", [])
     if not viagens:
-        enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com seu programador.")
+        enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com o despacho.")
         conversas.pop(numero, None)
         return {"status": "sem opções"}
 
+    logger.debug(f"[DEBUG] selectedRowId recebido: {repr(row_id_recebido)}")
+
+    # Caso venha como "option0", "option1", etc.
+    if row_id_recebido.startswith("option"):
+        try:
+            indice = int(row_id_recebido.replace("option", ""))
+            if 0 <= indice < len(viagens):
+                numero_viagem = viagens[indice]["numero_viagem"]
+                logger.debug(f"[DEBUG] Viagem selecionada pelo índice: {numero_viagem}")
+            else:
+                enviar_mensagem(numero, "❌ Opção inválida. Selecione novamente.")
+                return {"status": "seleção inválida"}
+        except ValueError:
+            enviar_mensagem(numero, "❌ Erro ao interpretar opção.")
+            return {"status": "erro"}
+    else:
+        # Caso já venha direto como numero_viagem
+        numero_viagem = row_id_recebido
+
+    # Procura a viagem selecionada
     selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
 
     if not selecionada:
-        enviar_lista_viagens(numero, viagens, "Opção inválida. Tente novamente.")
-        return {"status": "seleção inválida (list)"}
+        enviar_mensagem(numero, "❌ Opção inválida. Tente novamente.")
+        return {"status": "seleção inválida"}
 
     conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
     set_viagem_ativa(numero, selecionada["numero_viagem"])
