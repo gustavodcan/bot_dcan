@@ -11,6 +11,34 @@ from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 
 logger = logging.getLogger(__name__)
 
+def iniciar_fluxo_ticket(numero, conversas):
+    viagens = get_viagens_por_telefone(numero)
+
+    if not viagens:
+        enviar_mensagem(
+            numero,
+            "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho."
+        )
+        conversas.pop(numero, None)
+        return {"status": "sem viagem"}
+
+    if len(viagens) == 1:
+        # Só tem uma viagem, já define e pede a foto
+        v = viagens[0]
+        conversas.setdefault(numero, {})["numero_viagem_selecionado"] = v["numero_viagem"]
+        set_viagem_ativa(numero, v["numero_viagem"])
+        enviar_mensagem(
+            numero,
+            f"🧭 Viagem selecionada: *{v['numero_viagem']}* — {v['placa']} · {v['rota']}\n\n"
+            "Agora, envie a *imagem do ticket*."
+        )
+        conversas[numero]["estado"] = "aguardando_imagem_ticket"
+    else:
+        # Mais de uma viagem → envia lista interativa
+        conversas[numero]["opcoes_viagem_ticket"] = viagens
+        conversas[numero]["estado"] = "selecionando_viagem_ticket"
+        enviar_lista_viagens(numero, viagens, "Escolha a viagem para enviar este ticket:")
+
 def extrair_dados_por_cliente(cliente, texto_ocr):
     match cliente:
         case "cdr":
