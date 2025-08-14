@@ -138,6 +138,10 @@ def webhook():
         resultado = tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
+    if estado == "selecionando_viagem_ticket":
+        resultado = tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas)
+        return jsonify(resultado)
+
     if estado == "aguardando_destino_saae":
         resultado = tratar_estado_aguardando_destino_saae(numero, texto_recebido, conversas)
         return jsonify(resultado)
