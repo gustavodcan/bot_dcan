@@ -45,7 +45,7 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
         conversas.pop(numero, None)
         return {"status": "sem opções"}
 
-    logger.debug(f"[DEBUG] selectedRowId recebido: {repr(row_id_recebido)}")
+    logger.debug(f"[DEBUG] selectedRowId recebido: {repr(mensagem_original)}")
 
     # Caso venha como "option0", "option1", etc.
     if row_id_recebido.startswith("option"):
