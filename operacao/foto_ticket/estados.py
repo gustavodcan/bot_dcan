@@ -232,27 +232,26 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
     #SIM: grava no Sheets + Azure e finaliza
     if resposta in ("sim", "s"):
 
+        # Pega a viagem da seleção atual ou da ativa
         numero_viagem = (
             conversas.get(numero, {}).get("numero_viagem_selecionado")
             or get_viagem_ativa(numero)
         )
-        
-        cliente = (conversas[numero].get("cliente") or "").upper()
-        numero_viagem = VIAGEM_POR_TELEFONE.get(numero)
-        ticket = dados.get("ticket") or dados.get("brm_mes") or ""
-        peso   = dados.get("peso_liquido") or ""
-        origem = dados.get("destino") or dados.get("origem") or "N/A"
 
         if not numero_viagem:
             enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho.")
             logger.warning("[VIAGENS] Telefone %s sem viagem associada.", numero)
-            # encerra a conversa para não ficar preso num estado inválido
             conversas.pop(numero, None)
             try:
                 os.remove("ticket.jpg")
             except FileNotFoundError:
                 pass
             return {"status": "sem_viagem"}
+
+        cliente = (conversas[numero].get("cliente") or "").upper()
+        ticket  = dados.get("ticket") or dados.get("brm_mes") or ""
+        peso    = dados.get("peso_liquido") or ""
+        origem  = dados.get("destino") or dados.get("origem") or "N/A"
 
         # 1) Atualiza a linha da viagem (colunas do ticket)
         try:
