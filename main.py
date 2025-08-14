@@ -115,9 +115,11 @@ def webhook():
     if estado == "selecionando_viagem_nf":
         numero_viagem = data.get("listResponseMessage", {}).get("selectedRowId", "")
         resultado = tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas)
+        return jsonify(resultado)
 
     if estado.startswith("aguardando_descricao_"):
         tratar_descricao_setor(numero, mensagem_original.strip(), conversas)
+        return jsonify(resultado)
         
     if estado == "aguardando_imagem":
         resultado = tratar_estado_aguardando_imagem(numero, data, conversas)
@@ -142,6 +144,8 @@ def webhook():
     if estado == "aguardando_confirmacao":
         resultado = processar_confirmacao_final(numero, texto_recebido, conversas)
         return jsonify(resultado)
+
+    return jsonify({"status": "sem estado válido"})
         
 # @app.route("/enviar_dados", methods=["POST"])
 @app.route("/enviar_dados_legacy", methods=["POST"])
