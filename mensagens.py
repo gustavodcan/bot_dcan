@@ -11,7 +11,7 @@ def enviar_lista_viagens(numero, viagens, mensagem):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
 
     options = [{
-        "rowId": f"VIAGEM|{v['numero_viagem']}",
+        "rowId": str(v["numero_viagem"]), 
         "title": str(v["numero_viagem"]),
         "description": f"{v['placa']} · {v['rota']}"
     } for v in viagens]
