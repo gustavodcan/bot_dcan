@@ -14,7 +14,7 @@ from integracoes.google_sheets import atualizar_viagem_nf
 
 logger = logging.getLogger(__name__)
 
-def iniciar_fluxo_nf(numero, conversas, mensagem_original=None):
+def iniciar_fluxo_nf(numero, conversas):
     viagens = get_viagens_por_telefone(numero)
 
     if not viagens:
@@ -39,31 +39,22 @@ def iniciar_fluxo_nf(numero, conversas, mensagem_original=None):
 
     conversas.setdefault(numero, {})["opcoes_viagem_nf"] = viagens
     conversas[numero]["estado"] = "selecionando_viagem_nf"
-    enviar_lista_viagens(numero, viagens, "❌ Seleção inválida, por favor selecione novamente!")
-    logger.warning("Viagem da lista:", mensagem_original)
+    enviar_lista_viagens(numero, viagens)
     return {"status": "aguardando escolha viagem nf"}
 
-def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
+
+def tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas):
     viagens = conversas.get(numero, {}).get("opcoes_viagem_nf", [])
     if not viagens:
         enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com seu programador.")
         conversas.pop(numero, None)
         return {"status": "sem opções"}
 
-    row_id = (mensagem_original).strip()
-    if not row_id:
-        logger.warning("Viagem da lista:", mensagem_original)
-        enviar_lista_viagens(numero, viagens, "❓ Toque em uma das opções da lista para selecionar a viagem.")
-        return {"status": "aguardando seleção (list)"}
+    selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
 
-    numero_viagem = row_id
-
-#    selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
-    selecionada = row_id
-#    if not selecionada:
-#        logger.warning("Viagem da lista:", mensagem_original)
-#        enviar_lista_viagens(numero, viagens, "Opção inválida. Tente novamente.")
-#        return {"status": "seleção inválida (list)"}
+    if not selecionada:
+        enviar_lista_viagens(numero, viagens, "Opção inválida. Tente novamente.")
+        return {"status": "seleção inválida (list)"}
 
     conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
     set_viagem_ativa(numero, selecionada["numero_viagem"])
@@ -76,7 +67,6 @@ def tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas):
     )
     conversas[numero]["estado"] = "aguardando_imagem_nf"
     return {"status": "viagem selecionada"}
-
 
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     # valida imagem
