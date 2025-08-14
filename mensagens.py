@@ -1,6 +1,5 @@
 import os, requests, logging
 from config import INSTANCE_ID, API_TOKEN, CLIENT_TOKEN
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -11,16 +10,13 @@ def enviar_lista_viagens(numero, viagens, mensagem):
 
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
 
-    # Monta opções
     options = [{
         "rowId": str(v["numero_viagem"]), 
         "title": str(v["numero_viagem"]),
         "description": f"{v['placa']} - {v['data']} · {v['rota']}"
     } for v in viagens]
 
-    # Gera um título único invisível pro WhatsApp (usa timestamp)
-    timestamp_tag = datetime.now().strftime("%Y%m%d%H%M%S")
-    lista_title = f"Suas coletas • {timestamp_tag}"  # o ponto separador é estético
+    lista_title = f"Suas coletas ativas:"
 
     payload = {
         "phone": numero,
