@@ -8,6 +8,7 @@ VIAGENS = [
     {"numero_viagem": "1006","placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé", "remetente": "SUPERLAMINAÇÃO"},
     {"numero_viagem": "1007","placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé", "remetente": "SUPERLAMINAÇÃO"},
     {"numero_viagem": "1008","placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "Pindamonhangaba x Tremembé", "remetente": "SUPERLAMINAÇÃO"},
+    {"numero_viagem": "1009","placa": "ALL4N99", "telefone_motorista": "5511969098799", "motorista": "Allo Allan Fallando", "rota": "Valorant x CS2", "remetente": "SUPERLAMINAÇÃO"},
 ]
 
 # Mapa rápido: telefone -> número da viagem
