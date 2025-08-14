@@ -104,7 +104,7 @@ def webhook():
             enviar_mensagem(numero, "✅ Perfeito! Por favor, envie a foto do ticket.")
             conversas[numero]["estado"] = "aguardando_imagem"
         elif texto_recebido in ['foto_nf']:
-            resultado = iniciar_fluxo_nf(numero, conversas, mensagem_original)
+            resultado = iniciar_fluxo_nf(numero, conversas)
             return jsonify(resultado)
         else:
             enviar_mensagem(numero, "🔧 Entrar em contato com o programador ainda está em desenvolvimento. Em breve estará disponível!")
