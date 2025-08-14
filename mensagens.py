@@ -1,5 +1,6 @@
 import os, requests, logging
 from config import INSTANCE_ID, API_TOKEN, CLIENT_TOKEN
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -10,17 +11,22 @@ def enviar_lista_viagens(numero, viagens, mensagem):
 
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
 
+    # Monta opções
     options = [{
         "rowId": str(v["numero_viagem"]), 
         "title": str(v["numero_viagem"]),
         "description": f"{v['placa']} · {v['rota']}"
     } for v in viagens]
 
+    # Gera um título único invisível pro WhatsApp (usa timestamp)
+    timestamp_tag = datetime.now().strftime("%Y%m%d%H%M%S")
+    lista_title = f"Suas coletas • {timestamp_tag}"  # o ponto separador é estético
+
     payload = {
         "phone": numero,
-        "message": "Escolha a coleta (viagem):",
+        "message": mensagem or "Escolha a coleta (viagem):",
         "optionList": {
-            "title": "Suas coletas",
+            "title": lista_title,
             "buttonLabel": "Selecionar",
             "options": options
         }
@@ -31,10 +37,11 @@ def enviar_lista_viagens(numero, viagens, mensagem):
         "Client-Token": CLIENT_TOKEN
     }
 
+    logger.debug(f"[DEBUG] Lista enviada para {numero}: {options}")
+
     try:
         res = requests.post(url, json=payload, headers=headers, timeout=15)
         logger.debug(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
-        logger.debug(f"[DEBUG] Lista enviada para {numero}: {options}")
         if res.status_code != 200:
             logger.error("[Z-API] Falha ao enviar lista: %s", res.text)
             return False
@@ -42,7 +49,7 @@ def enviar_lista_viagens(numero, viagens, mensagem):
     except Exception:
         logger.error("[Z-API] Erro ao enviar lista interativa", exc_info=True)
         return False
-
+        
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
     payload = {"phone": numero, "message": texto}
