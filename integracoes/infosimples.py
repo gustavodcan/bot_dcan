@@ -80,7 +80,7 @@ def consultar_nfe_completa(chave_nfe: str) -> dict:
             "timeout": 300,  
         }
 
-        resp = _session.post(_BASE_URL, json=payload, timeout=(5, 20))
+        resp = _session.post(_BASE_URL, json=payload, timeout=(10, 60))
         resp.raise_for_status()
 
         data = resp.json()
