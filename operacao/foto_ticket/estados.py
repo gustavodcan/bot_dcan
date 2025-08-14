@@ -239,14 +239,22 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         )
 
         if not numero_viagem:
-            enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho.")
-            logger.warning("[VIAGENS] Telefone %s sem viagem associada.", numero)
-            conversas.pop(numero, None)
-            try:
-                os.remove("ticket.jpg")
-            except FileNotFoundError:
-                pass
-            return {"status": "sem_viagem"}
+            viagens = get_viagens_por_telefone(numero)
+            if not viagens:
+                enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho.")
+                logger.warning("[VIAGENS] Telefone %s sem viagem associada.", numero)
+                conversas.pop(numero, None)
+                try:
+                    os.remove("ticket.jpg")
+                except FileNotFoundError:
+                    pass
+                return {"status": "sem_viagem"}
+
+            # Salva as opções e estado para seleção de ticket
+            conversas[numero]["opcoes_viagem_ticket"] = viagens
+            conversas[numero]["estado"] = "selecionando_viagem_ticket"
+            enviar_lista_viagens(numero, viagens, "Escolha a viagem para indexar este ticket:")
+            return {"status": "aguardando escolha viagem ticket"}
 
         cliente = (conversas[numero].get("cliente") or "").upper()
         ticket  = dados.get("ticket") or dados.get("brm_mes") or ""
