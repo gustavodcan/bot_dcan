@@ -19,7 +19,7 @@ from operacao.falar_programador.contato import encaminhar_para_setor, tratar_des
 from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae, extrair_dados_cliente_saae
 from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
 #from operacao.foto_nf.estados import tratar_estado_aguardando_confirmacao_chave, tratar_estado_aguardando_imagem_nf
-from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao, tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final
+from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao, tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf, tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf
 import logging
@@ -101,33 +101,8 @@ def webhook():
 
     if estado == "aguardando_opcao_operacao":
         if texto_recebido in ['foto_ticket']:
-            viagens = get_viagens_por_telefone(numero)
-
-            if not viagens:
-                enviar_mensagem(
-                    numero,
-                    "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho."
-                )
-                conversas.pop(numero, None)
-                return {"status": "sem viagem"}
-
-            if len(viagens) == 1:
-                # Só tem uma viagem, já define e pede a foto
-                v = viagens[0]
-                conversas.setdefault(numero, {})["numero_viagem_selecionado"] = v["numero_viagem"]
-                set_viagem_ativa(numero, v["numero_viagem"])
-                enviar_mensagem(
-                    numero,
-                    f"🧭 Viagem selecionada: *{v['numero_viagem']}* — {v['placa']} · {v['rota']}\n\n"
-                    "Agora, envie a *imagem do ticket*."
-                )
-                conversas[numero]["estado"] = "aguardando_imagem_ticket"
-            else:
-                # Mais de uma viagem → envia lista interativa
-                conversas[numero]["opcoes_viagem_ticket"] = viagens
-                conversas[numero]["estado"] = "selecionando_viagem_ticket"
-                enviar_lista_viagens(numero, viagens, "Escolha a viagem para enviar este ticket:")
-                
+            resultado = iniciar_fluxo_ticket(numero, conversas)
+            return jsonify(resultado)    
         elif texto_recebido in ['foto_nf']:
             resultado = iniciar_fluxo_nf(numero, conversas)
             return jsonify(resultado)
