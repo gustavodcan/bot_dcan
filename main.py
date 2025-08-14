@@ -113,8 +113,8 @@ def webhook():
         return jsonify(status="resposta motorista")
 
     if estado == "selecionando_viagem_nf":
-        resultado = tratar_estado_selecionando_viagem_nf(numero, mensagem_original, conversas)
-        return jsonify(resultado)
+        numero_viagem = data.get("listResponseMessage", {}).get("selectedRowId", "")
+        resultado = tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas)
 
     if estado.startswith("aguardando_descricao_"):
         tratar_descricao_setor(numero, mensagem_original.strip(), conversas)
