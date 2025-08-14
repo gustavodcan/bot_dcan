@@ -307,9 +307,6 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         viagens = get_viagens_por_telefone(numero)
         # Salva as opções e estado para seleção de ticket
         conversas[numero]["opcoes_viagem_ticket"] = viagens
-        conversas[numero]["estado"] = "selecionando_viagem_ticket"
-        enviar_lista_viagens(numero, viagens, "Escolha a viagem para indexar este ticket:")
-        return {"status": "aguardando escolha viagem ticket"}
 
         # Pega a viagem da seleção atual ou da ativa
         numero_viagem = (
