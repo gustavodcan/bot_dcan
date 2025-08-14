@@ -45,20 +45,34 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
         conversas.pop(numero, None)
         return {"status": "sem opções"}
 
-    row_id = (mensagem_original or "").strip()
-    logger.debug(f"[TICKET] RowId selecionado: {row_id}")
+    logger.debug(f"[DEBUG] selectedRowId recebido: {repr(row_id_recebido)}")
 
-    if not row_id:
-        enviar_lista_viagens(numero, viagens, "❓ Toque em uma das opções da lista para selecionar a viagem.")
-        return {"status": "aguardando seleção ticket"}
+    # Caso venha como "option0", "option1", etc.
+    if row_id_recebido.startswith("option"):
+        try:
+            indice = int(row_id_recebido.replace("option", ""))
+            if 0 <= indice < len(viagens):
+                numero_viagem = viagens[indice]["numero_viagem"]
+                logger.debug(f"[DEBUG] Viagem selecionada pelo índice: {numero_viagem}")
+            else:
+                enviar_mensagem(numero, "❌ Opção inválida. Selecione novamente.")
+                return {"status": "seleção inválida"}
+        except ValueError:
+            enviar_mensagem(numero, "❌ Erro ao interpretar opção.")
+            return {"status": "erro"}
+    else:
+        # Caso já venha direto como numero_viagem
+        numero_viagem = row_id_recebido
 
-    selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(row_id)), None)
+    # Procura a viagem selecionada
+    selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
+
     if not selecionada:
-        enviar_lista_viagens(numero, viagens, "Opção inválida. Tente novamente.")
-        return {"status": "seleção inválida ticket"}
+        enviar_mensagem(numero, "❌ Opção inválida. Tente novamente.")
+        return {"status": "seleção inválida"}
 
-    # Salva viagem escolhida
     conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
+    set_viagem_ativa(numero, selecionada["numero_viagem"])
     conversas[numero].pop("opcoes_viagem_ticket", None)
 
     enviar_mensagem(
@@ -66,9 +80,8 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
         f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['placa']} · {selecionada['rota']}\n\n"
         "Agora, envie a *imagem do ticket*."
     )
-    conversas[numero]["estado"] = "aguardando_imagem_ticket"
-    return {"status": "viagem ticket selecionada"}
-
+    conversas[numero]["estado"] = "aguardando_imagem"
+    return {"status": "viagem selecionada"}
 
 def tratar_estado_aguardando_imagem(numero, data, conversas):
     if "image" not in data or not data["image"].get("mimeType", "").startswith("image/"):
