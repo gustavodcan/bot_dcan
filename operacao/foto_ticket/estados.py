@@ -10,6 +10,38 @@ from viagens import VIAGEM_POR_TELEFONE, get_viagens_por_telefone
 
 logger = logging.getLogger(__name__)
 
+def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas):
+    viagens = conversas.get(numero, {}).get("opcoes_viagem_ticket", [])
+    if not viagens:
+        enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com o despacho.")
+        conversas.pop(numero, None)
+        return {"status": "sem opções"}
+
+    row_id = (mensagem_original or "").strip()
+    logger.debug(f"[TICKET] RowId selecionado: {row_id}")
+
+    if not row_id:
+        enviar_lista_viagens(numero, viagens, "❓ Toque em uma das opções da lista para selecionar a viagem.")
+        return {"status": "aguardando seleção ticket"}
+
+    selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(row_id)), None)
+    if not selecionada:
+        enviar_lista_viagens(numero, viagens, "Opção inválida. Tente novamente.")
+        return {"status": "seleção inválida ticket"}
+
+    # Salva viagem escolhida
+    conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
+    conversas[numero].pop("opcoes_viagem_ticket", None)
+
+    enviar_mensagem(
+        numero,
+        f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['placa']} · {selecionada['rota']}\n\n"
+        "Agora, envie a *imagem do ticket*."
+    )
+    conversas[numero]["estado"] = "aguardando_imagem_ticket"
+    return {"status": "viagem ticket selecionada"}
+
+
 def tratar_estado_aguardando_imagem(numero, data, conversas):
     if "image" not in data or not data["image"].get("mimeType", "").startswith("image/"):
         enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
