@@ -48,9 +48,9 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
     logger.debug(f"[DEBUG] selectedRowId recebido: {repr(mensagem_original)}")
 
     # Caso venha como "option0", "option1", etc.
-    if row_id_recebido.startswith("option"):
+    if mensagem_original.startswith("option"):
         try:
-            indice = int(row_id_recebido.replace("option", ""))
+            indice = int(mensagem_original.replace("option", ""))
             if 0 <= indice < len(viagens):
                 numero_viagem = viagens[indice]["numero_viagem"]
                 logger.debug(f"[DEBUG] Viagem selecionada pelo índice: {numero_viagem}")
@@ -62,7 +62,7 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
             return {"status": "erro"}
     else:
         # Caso já venha direto como numero_viagem
-        numero_viagem = row_id_recebido
+        numero_viagem = mensagem_original
 
     # Procura a viagem selecionada
     selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
