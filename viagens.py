@@ -48,10 +48,10 @@ def carregar_viagens_ativas():
 viagens = carregar_viagens_ativas()
 
 # Mapa rápido: telefone -> número da viagem
-VIAGEM_POR_TELEFONE = {v["telefone_motorista"]: v["numero_viagem"] for v in VIAGENS}
+VIAGEM_POR_TELEFONE = {v["telefone_motorista"]: v["numero_viagem"] for v in viagens}
 
 def get_viagens_por_telefone(telefone: str):
-    return [v for v in VIAGENS if v.get("telefone_motorista") == telefone]
+    return [v for v in viagens if v.get("telefone_motorista") == telefone]
 
 VIAGEM_ATIVA_POR_TELEFONE = {}
 
