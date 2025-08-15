@@ -1,39 +1,50 @@
 import os
-import gspread
 from google.oauth2.service_account import Credentials
+import gspread
 
 # Liga/desliga aviso automático ao subir (Render)
 NOTIFICAR_VIAGENS_ON_START = os.getenv("NOTIFICAR_VIAGENS_ON_START", "1") == "1"
 
-# Configuração Google Sheets
-SPREADSHEET_NAME = "tickets_dcan"
-SCOPES = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+# Nome da planilha e aba
+SHEET_NAME = "tickets_dcan"
+WORKSHEET_NAME = "tickets_dcan"
 
-# Autenticação
-creds = Credentials.from_service_account_file("credenciais.json", scopes=SCOPES)
-gc = gspread.authorize(creds)
+def conectar_google_sheets():
+    cred_json_str = os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON")
+    if not cred_json_str:
+        raise RuntimeError("Variável de ambiente GOOGLE_SHEETS_CREDENTIALS_JSON não encontrada.")
+    
+    import json
+    cred_info = json.loads(cred_json_str)
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    creds = Credentials.from_service_account_info(cred_info, scopes=scopes)
+    client = gspread.authorize(creds)
+    return client
 
 def carregar_viagens_ativas():
-    """Lê a planilha e retorna apenas viagens com Status == 'OK'."""
-    sh = gc.open(SPREADSHEET_NAME)
-    worksheet = sh.sheet1
-    dados = worksheet.get_all_records()
+    """Busca na planilha todas as viagens com status 'ok'."""
+    client = conectar_google_sheets()
+    ws = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
+    dados = ws.get_all_records()
 
     viagens_ativas = []
     for row in dados:
-        if str(row.get("Status", "")).strip().upper() == "OK":
+        if str(row.get("Status", "")).strip().lower() == "ok":
             viagens_ativas.append({
                 "numero_viagem": str(row.get("Numero Viagem", "")).strip(),
-                "data": row.get("Data", ""),
-                "placa": row.get("Placa", ""),
+                "data": str(row.get("Data", "")).strip(),
+                "placa": str(row.get("Placa", "")).strip(),
                 "telefone_motorista": str(row.get("Telefone Motorista", "")).strip(),
-                "motorista": row.get("Nome Motorista", ""),
-                "rota": row.get("Rota", ""),
-                "remetente": row.get("Remetente", "")
+                "motorista": str(row.get("Motorista", "")).strip(),
+                "rota": str(row.get("Rota", "")).strip(),
+                "remetente": str(row.get("Remetente", "")).strip()
             })
     return viagens_ativas
 
-# Carrega viagens ativas na inicialização
+# Inicializa as viagens na carga do módulo
 VIAGENS = carregar_viagens_ativas()
 
 # Mapa rápido: telefone -> número da viagem
