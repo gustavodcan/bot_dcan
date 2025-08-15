@@ -32,7 +32,7 @@ def carregar_viagens_ativas():
 
     viagens_ativas = []
     for row in dados:
-        if str(row.get("Status", "")).strip().lower() == "ok":
+        if str(row.get("Status", "")).strip().lower() != "ok":
             viagens_ativas.append({
                 "numero_viagem": str(row.get("Numero Viagem", "")).strip(),
                 "data": str(row.get("Data", "")).strip(),
