@@ -1,15 +1,40 @@
 import os
+import gspread
+from google.oauth2.service_account import Credentials
 
 # Liga/desliga aviso automático ao subir (Render)
 NOTIFICAR_VIAGENS_ON_START = os.getenv("NOTIFICAR_VIAGENS_ON_START", "1") == "1"
 
-# Base de viagens
-VIAGENS = [
-    {"numero_viagem": "1006", "data": "14/08/2025", "placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "PIRACICABA-SPXIRACEMÁPOLIS-SP", "remetente": "SUPERLAMINAÇÃO"},
-    {"numero_viagem": "1008", "data": "14/08/2025", "placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "EMBU DAS ARTES-SPXPINDAMONHANGABA-SP", "remetente": "SUPERLAMINAÇÃO"},
-    {"numero_viagem": "1010", "data": "14/08/2025", "placa": "FZL9I99", "telefone_motorista": "5511912538457", "motorista": "Desenvolvimento Dcan", "rota": "SANTANA DE PARNAÍBA-SPXARAÇARIGUAMA-SP", "remetente": "SUPERLAMINAÇÃO"},
-    {"numero_viagem": "1009", "data": "14/08/2025", "placa": "ALL4N99", "telefone_motorista": "5511969098799", "motorista": "Allo Allan Fallando", "rota": "Valorant x CS2", "remetente": "SUPERLAMINAÇÃO"},
-]
+# Configuração Google Sheets
+SPREADSHEET_NAME = "tickets_dcan"
+SCOPES = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+
+# Autenticação
+creds = Credentials.from_service_account_file("credenciais.json", scopes=SCOPES)
+gc = gspread.authorize(creds)
+
+def carregar_viagens_ativas():
+    """Lê a planilha e retorna apenas viagens com Status == 'OK'."""
+    sh = gc.open(SPREADSHEET_NAME)
+    worksheet = sh.sheet1
+    dados = worksheet.get_all_records()
+
+    viagens_ativas = []
+    for row in dados:
+        if str(row.get("Status", "")).strip().upper() == "OK":
+            viagens_ativas.append({
+                "numero_viagem": str(row.get("Numero Viagem", "")).strip(),
+                "data": row.get("Data", ""),
+                "placa": row.get("Placa", ""),
+                "telefone_motorista": str(row.get("Telefone Motorista", "")).strip(),
+                "motorista": row.get("Nome Motorista", ""),
+                "rota": row.get("Rota", ""),
+                "remetente": row.get("Remetente", "")
+            })
+    return viagens_ativas
+
+# Carrega viagens ativas na inicialização
+VIAGENS = carregar_viagens_ativas()
 
 # Mapa rápido: telefone -> número da viagem
 VIAGEM_POR_TELEFONE = {v["telefone_motorista"]: v["numero_viagem"] for v in VIAGENS}
