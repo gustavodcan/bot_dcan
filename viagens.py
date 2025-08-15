@@ -10,9 +10,9 @@ SHEET_NAME = "tickets_dcan"
 WORKSHEET_NAME = "tickets_dcan"
 
 def conectar_google_sheets():
-    cred_json_str = os.getenv("GOOGLE_CREDS_JSON")
+    cred_json_str = os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON")
     if not cred_json_str:
-        raise RuntimeError("Variável de ambiente GOOGLE_CREDS_JSON não encontrada.")
+        raise RuntimeError("Variável de ambiente GOOGLE_SHEETS_CREDENTIALS_JSON não encontrada.")
     
     import json
     cred_info = json.loads(cred_json_str)
@@ -45,13 +45,13 @@ def carregar_viagens_ativas():
     return viagens_ativas
 
 # Inicializa as viagens na carga do módulo
-viagens = carregar_viagens_ativas()
+VIAGENS = carregar_viagens_ativas()
 
 # Mapa rápido: telefone -> número da viagem
-VIAGEM_POR_TELEFONE = {v["telefone_motorista"]: v["numero_viagem"] for v in viagens}
+VIAGEM_POR_TELEFONE = {v["telefone_motorista"]: v["numero_viagem"] for v in VIAGENS}
 
 def get_viagens_por_telefone(telefone: str):
-    return [v for v in viagens if v.get("telefone_motorista") == telefone]
+    return [v for v in VIAGENS if v.get("telefone_motorista") == telefone]
 
 VIAGEM_ATIVA_POR_TELEFONE = {}
 
