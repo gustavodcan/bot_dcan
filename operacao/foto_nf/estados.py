@@ -9,12 +9,14 @@ from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
 from integracoes.infosimples import consultar_nfe_completa
-from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa, carregar_viagens_ativas
+from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa, carregar_viagens_ativas, VIAGENS
 from integracoes.google_sheets import atualizar_viagem_nf
 
 logger = logging.getLogger(__name__)
 
 def iniciar_fluxo_nf(numero, conversas):
+    from viagens import VIAGENS
+    
     VIAGENS.clear()
     VIAGENS.extend(carregar_viagens_ativas())
     viagens = get_viagens_por_telefone(numero)
