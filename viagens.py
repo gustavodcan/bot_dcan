@@ -10,9 +10,9 @@ SHEET_NAME = "tickets_dcan"
 WORKSHEET_NAME = "tickets_dcan"
 
 def conectar_google_sheets():
-    cred_json_str = os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON")
+    cred_json_str = os.getenv("GOOGLE_CREDS_JSON")
     if not cred_json_str:
-        raise RuntimeError("Variável de ambiente GOOGLE_SHEETS_CREDENTIALS_JSON não encontrada.")
+        raise RuntimeError("Variável de ambiente GOOGLE_CREDS_JSON não encontrada.")
     
     import json
     cred_info = json.loads(cred_json_str)
