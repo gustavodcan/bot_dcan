@@ -11,8 +11,8 @@ from viagens import VIAGEM_POR_TELEFONE, get_viagens_por_telefone, set_viagem_at
 logger = logging.getLogger(__name__)
 
 def iniciar_fluxo_ticket(numero, conversas):
-    VIAGENS.clear()
-    VIAGENS.extend(carregar_viagens_ativas())
+    viagens.clear()
+    viagens.extend(carregar_viagens_ativas())
     viagens = get_viagens_por_telefone(numero)
 
     if not viagens:
