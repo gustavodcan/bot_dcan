@@ -120,10 +120,10 @@ def tratar_estado_aguardando_imagem(numero, data, conversas):
         conversas[numero]["estado"] = "aguardando_imagem"
         return {"status": "cliente não identificado"}
 
-    if cliente == "saae":
-        conversas[numero]["estado"] = "aguardando_destino_saae"
-        enviar_mensagem(numero, "🛣️ Cliente SAAE detectado! Informe a *origem da carga* (ex: ETA Vitória).")
-        return {"status": "aguardando destino saae"}
+    #if cliente == "saae":
+    #    conversas[numero]["estado"] = "aguardando_destino_saae"
+    #    enviar_mensagem(numero, "🛣️ Cliente SAAE detectado! Informe a *origem da carga* (ex: ETA Vitória).")
+    #    return {"status": "aguardando destino saae"}
 
     dados = extrair_dados_por_cliente(cliente, texto)
 
