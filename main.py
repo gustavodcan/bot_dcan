@@ -160,13 +160,15 @@ def notificar_viagem():
         return jsonify({"status": "erro", "mensagem": "Não autorizado."}), 403
 
     try:
-        # 2. Captura dados enviados pelo ERP
+        # 2. Captura dados enviados pelo A3
         data = request.get_json(force=True)
         telefone_motorista = data.get("telefone_motorista")
+        nome_motorista = data.get("nome_motorista")
         numero_viagem = data.get("numero_viagem")
         rota = data.get("rota")
         placa = data.get("placa")
         remetente = data.get("remetente")
+        destinatario = data.get("destinatario")
 
         # Validação rápida
         if not (telefone_motorista and numero_viagem and rota and placa):
@@ -174,12 +176,12 @@ def notificar_viagem():
 
         # 3. Monta mensagem pro motorista
         mensagem = (
-            f"👋 Olá motorista!\n\n"
+            f"👋 Olá {nome_motorista}!\n\n"
             f"Você será responsável pela viagem *{numero_viagem}*.\n"
             f"🛣️ Rota: {rota}\n"
             f"🚛 Placa: {placa}\n"
             f"🏭 Remetente: {remetente}\n\n"
-            "Bom trabalho! ✅"
+            "O envio das informações: Nota Fiscal e Ticket estão sob sua responsabilidade! Bom trabalho! ✅"
         )
 
         # 4. Dispara via WhatsApp
