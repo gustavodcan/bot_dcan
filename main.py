@@ -180,7 +180,8 @@ def notificar_viagem():
             f"Você será responsável pela viagem *{numero_viagem}*.\n"
             f"🛣️ Rota: {rota}\n"
             f"🚛 Placa: {placa}\n"
-            f"🏭 Remetente: {remetente}\n\n"
+            f"🏭 Remetente: {remetente}\n"
+            f"🏭 Destinatário: {destinatario}\n\n"
             "O envio das informações: Nota Fiscal e Ticket estão sob sua responsabilidade! Bom trabalho! ✅"
         )
 
