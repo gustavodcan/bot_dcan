@@ -14,7 +14,7 @@ def iniciar_fluxo_ticket(numero, conversas):
     from viagens import VIAGENS
     
     VIAGENS.clear()
-    VIAGENS.extend(carregar_viagens_ativas())
+    VIAGENS.extend(carregar_viagens_ativas(status_filtro="FALTA TICKET"))
     viagens = get_viagens_por_telefone(numero)
 
     if not viagens:
