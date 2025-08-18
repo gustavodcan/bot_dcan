@@ -151,6 +151,47 @@ def webhook():
         return jsonify(resultado)
 
     return jsonify({"status": "sem estado válido"})
+
+@app.route("/notificar_viagem", methods=["POST"])
+def notificar_viagem():
+    # 1. Autenticação
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer ") or auth_header.split(" ")[1] != A3_KEY:
+        return jsonify({"status": "erro", "mensagem": "Não autorizado."}), 403
+
+    try:
+        # 2. Captura dados enviados pelo ERP
+        data = request.get_json(force=True)
+        telefone_motorista = data.get("telefone_motorista")
+        numero_viagem = data.get("numero_viagem")
+        rota = data.get("rota")
+        placa = data.get("placa")
+        remetente = data.get("remetente")
+
+        # Validação rápida
+        if not (telefone_motorista and numero_viagem and rota and placa):
+            return jsonify({"status": "erro", "mensagem": "Campos obrigatórios ausentes."}), 400
+
+        # 3. Monta mensagem pro motorista
+        mensagem = (
+            f"👋 Olá motorista!\n\n"
+            f"Você será responsável pela viagem *{numero_viagem}*.\n"
+            f"🛣️ Rota: {rota}\n"
+            f"🚛 Placa: {placa}\n"
+            f"🏭 Remetente: {remetente}\n\n"
+            "Bom trabalho! ✅"
+        )
+
+        # 4. Dispara via WhatsApp
+        enviar_mensagem(telefone_motorista, mensagem)
+        logger.info(f"[ERP] Viagem {numero_viagem} enviada ao motorista {telefone_motorista}")
+
+        # 5. Retorno OK pro ERP
+        return jsonify({"status": "ok", "mensagem": "Viagem enviada ao motorista."}), 200
+
+    except Exception as e:
+        logger.error("[ERP] Falha ao processar notificação de viagem", exc_info=True)
+        return jsonify({"status": "erro", "mensagem": str(e)}), 500
         
 # @app.route("/enviar_dados", methods=["POST"])
 @app.route("/enviar_dados_legacy", methods=["POST"])
