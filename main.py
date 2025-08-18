@@ -163,6 +163,7 @@ def notificar_viagem():
         # 2. Captura dados enviados pelo A3
         data = request.get_json(force=True)
         telefone_motorista = data.get("telefone_motorista")
+        data_coleta = data.get("data_coleta")
         nome_motorista = data.get("nome_motorista")
         numero_viagem = data.get("numero_viagem")
         rota = data.get("rota")
@@ -177,7 +178,7 @@ def notificar_viagem():
         # 3. Monta mensagem pro motorista
         mensagem = (
             f"👋 Olá {nome_motorista}!\n\n"
-            f"Você será responsável pela viagem *{numero_viagem}*.\n"
+            f"Você será responsável pela viagem *{numero_viagem}*. Na data {data_coleta}.\n"
             f"🛣️ Rota: {rota}\n"
             f"🚛 Placa: {placa}\n"
             f"🏭 Remetente: {remetente}\n"
