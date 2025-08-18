@@ -24,11 +24,11 @@ def extrair_dados_cliente_gerdau(img, texto: str):
 
     # Gerdau Pinda: "docto: nf 123456"
     m_outros_docs_pinda = re.search(r"(?i)docto[:：]?\s*nf\s*[-–—]?\s*(\d{4,10})", texto)
-    nota_fiscal_pinda = m_outros_docs_pinda.group(1) if m_outros_docs_pinda else NAO_ENCONTRADO
+    nota_fiscal_pinda = = (str(int(m_outros_docs_pinda.group(1))) if m_outros_docs_pinda else NAO_ENCONTRADO)
     
     # Gerdau Geral: padrão "12345-1" → pega o número antes do hífen
     matches_nota = re.findall(r"\b(\d{3,10})-\d{1,3}\b", texto)
-    nota_fiscal_geral = matches_nota[0] if matches_nota else NAO_ENCONTRADO
+    nota_fiscal_geral = (str(int(matches_nota[0])) if matches_nota else NAO_ENCONTRADO)
 
     nota_fiscal_final = (nota_fiscal_pinda if _encontrado(nota_fiscal_pinda) else nota_fiscal_geral)
 
