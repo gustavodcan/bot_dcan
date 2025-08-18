@@ -15,7 +15,7 @@ def conectar_google_sheets():
     ]
     creds = Credentials.from_service_account_info(cred_info, scopes=scopes)
     client = gspread.authorize(creds)
-    return client
+    return client.open("tickets_dcan")
 def _get_sheet():
     client = conectar_google_sheets()
     # ajuste NOME DA PLANILHA e da ABA se diferente
