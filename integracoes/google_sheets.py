@@ -9,13 +9,12 @@ def conectar_google_sheets():
         cred_json_str = f.read()
     cred_info = json.loads(cred_json_str)
 
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    
     creds = Credentials.from_service_account_info(cred_info, scopes=scopes)
     client = gspread.authorize(creds)
     return client.open("tickets_dcan")
+    
 def _get_sheet():
     client = conectar_google_sheets()
     # ajuste NOME DA PLANILHA e da ABA se diferente
