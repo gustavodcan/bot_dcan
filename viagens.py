@@ -24,24 +24,34 @@ def conectar_google_sheets():
     client = gspread.authorize(creds)
     return client
 
-def carregar_viagens_ativas():
-    """Busca na planilha todas as viagens com status 'ok'."""
-    client = conectar_google_sheets()
-    ws = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
-    dados = ws.get_all_records()
+def carregar_viagens_ativas(status_filtro=None):
+    sheet = conectar_google_sheets("tickets_dcan")
+    worksheet = sheet.get_worksheet(0)
+    rows = worksheet.get_all_records()
 
     viagens_ativas = []
-    for row in dados:
-        if str(row.get("Status", "")).strip().lower() != "ok":
-            viagens_ativas.append({
-                "numero_viagem": str(row.get("Numero Viagem", "")).strip(),
-                "data": str(row.get("Data", "")).strip(),
-                "placa": str(row.get("Placa", "")).strip(),
-                "telefone_motorista": str(row.get("Telefone Motorista", "")).strip(),
-                "motorista": str(row.get("Motorista", "")).strip(),
-                "rota": str(row.get("Rota", "")).strip(),
-                "remetente": str(row.get("Remetente", "")).strip()
-            })
+    for row in rows:
+        status = str(row.get("Status", "")).strip().upper()
+
+        # Aplica o filtro se foi informado
+        if status_filtro:
+            if status != status_filtro.upper():
+                continue
+        else:
+            # Se não passar filtro, pega tudo que NÃO for "OK"
+            if status == "OK":
+                continue
+
+        viagens_ativas.append({
+            "numero_viagem": str(row.get("Numero Viagem", "")).strip(),
+            "data": str(row.get("Data", "")).strip(),
+            "placa": str(row.get("Placa", "")).strip(),
+            "telefone_motorista": str(row.get("Telefone Motorista", "")).strip(),
+            "motorista": str(row.get("Motorista", "")).strip(),
+            "rota": str(row.get("Rota", "")).strip(),
+            "remetente": str(row.get("Remetente", "")).strip()
+        })
+
     return viagens_ativas
 
 # Inicializa as viagens na carga do módulo
