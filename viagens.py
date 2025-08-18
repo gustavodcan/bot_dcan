@@ -25,7 +25,7 @@ def conectar_google_sheets():
     return client
 
 def carregar_viagens_ativas(status_filtro=None):
-    sheet = conectar_google_sheets("tickets_dcan")
+    sheet = conectar_google_sheets()
     worksheet = sheet.get_worksheet(0)
     rows = worksheet.get_all_records()
 
