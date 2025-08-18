@@ -54,8 +54,7 @@ def carregar_viagens_ativas(status_filtro=None):
 
     return viagens_ativas
 
-# Inicializa as viagens na carga do módulo
-VIAGENS = carregar_viagens_ativas(status_filtro=None)
+VIAGENS = []
 
 # Mapa rápido: telefone -> número da viagem
 VIAGEM_POR_TELEFONE = {v["telefone_motorista"]: v["numero_viagem"] for v in VIAGENS}
