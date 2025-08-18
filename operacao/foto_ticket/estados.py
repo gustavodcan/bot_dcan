@@ -19,7 +19,7 @@ def iniciar_fluxo_ticket(numero, conversas):
     if not viagens:  # 🚨 Nenhuma viagem encontrada
         enviar_mensagem(
             numero,
-            "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com o despacho."
+            "⚠️ Não encontrei uma *viagem ativa* ou a *nota fiscal não foi enviada*. \n Por favor, fale com seu programador ou envie a nota fiscal no menu anterior.\n\n ⚠️ Conversa encerrada."
         )
         conversas.pop(numero, None)
         return {"status": "sem viagem"}
