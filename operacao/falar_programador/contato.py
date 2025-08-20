@@ -34,6 +34,8 @@ def tratar_descricao_setor(numero, mensagem_original, conversas):
         enviar_mensagem(numero, f"📨 Sua mensagem foi encaminhada ao setor {setor.title()}. Em breve alguém entrará em contato.")
         conversas[numero]["estado"] = "finalizado"
         conversas.pop(numero, None)
+        return {"status": f"mensagem encaminhada para {setor}"}
     else:
         enviar_lista_setor(numero, "⚠️ Setor não identificado. Vamos começar novamente.")
         conversas[numero] = {"estado": "aguardando_setor"}
+        return {"status": "setor nao identificado, aguardando setor"}
