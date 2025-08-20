@@ -54,9 +54,6 @@ def notificar_viagens_on_start():
         except Exception:
             logger.error(f"[VIAGENS] Falha ao notificar {v}", exc_info=True)
 
-# chame isso uma vez no boot do processo
-notificar_viagens_on_start()
-
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
 def webhook():
