@@ -198,29 +198,29 @@ def notificar_viagem():
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
         
 # @app.route("/enviar_dados", methods=["POST"])
-@app.route("/enviar_dados_legacy", methods=["POST"])
-def enviar_dados():
-    try:
-        dados = request.json  # espera receber JSON no corpo da requisição
-        data = dados.get("data")
-        cliente = dados.get("cliente")
-        cliente = cliente.upper() if cliente else ''
-        ticket = dados.get("ticket")
-        nota_fiscal = dados.get("nota_fiscal")
-        peso = dados.get("peso")
-        destino = dados.get("destino")
-        destino = destino.upper() if destino else ''
-        telefone = dados.get("telefone")
+#@app.route("/enviar_dados_legacy", methods=["POST"])
+#def enviar_dados():
+#    try:
+#        dados = request.json  # espera receber JSON no corpo da requisição
+#        data = dados.get("data")
+#        cliente = dados.get("cliente")
+#        cliente = cliente.upper() if cliente else ''
+#        ticket = dados.get("ticket")
+#        nota_fiscal = dados.get("nota_fiscal")
+#        peso = dados.get("peso")
+#        destino = dados.get("destino")
+#        destino = destino.upper() if destino else ''
+#        telefone = dados.get("telefone")
 
-        from integracoes.google_sheets import conectar_google_sheets
-        client = conectar_google_sheets()
-        planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
-        planilha.append_row([data or '', cliente or '', ticket or '', nota_fiscal or '', peso or '', destino or '', telefone or ''])
+#        from integracoes.google_sheets import conectar_google_sheets
+#        client = conectar_google_sheets()
+#        planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
+#        planilha.append_row([data or '', cliente or '', ticket or '', nota_fiscal or '', peso or '', destino or '', telefone or ''])
+#
+#        return jsonify({"status": "sucesso", "msg": "Dados enviados para Google Sheets!"})
+#    except Exception as e:
+#        logger.debug(f"🚨 Erro detectado: {e}")
+#        return jsonify({"status": "erro", "msg": str(e)}), 500
 
-        return jsonify({"status": "sucesso", "msg": "Dados enviados para Google Sheets!"})
-    except Exception as e:
-        logger.debug(f"🚨 Erro detectado: {e}")
-        return jsonify({"status": "erro", "msg": str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=10000, debug=True)
+#if __name__ == '__main__':
+#    app.run(host="0.0.0.0", port=10000, debug=True)
