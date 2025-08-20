@@ -2,9 +2,6 @@ import os
 from google.oauth2.service_account import Credentials
 import gspread
 
-# Liga/desliga aviso automático ao subir (Render)
-NOTIFICAR_VIAGENS_ON_START = os.getenv("NOTIFICAR_VIAGENS_ON_START", "1") == "1"
-
 # Nome da planilha e aba
 SHEET_NAME = "tickets_dcan"
 WORKSHEET_NAME = "tickets_dcan"
