@@ -337,6 +337,9 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         nota_viagem = viagem.get("nota_fiscal") if viagem else None
         nota_ticket = dados.get("nota_fiscal")
 
+        # Debug detalhado
+        logger.debug(f"[CHECK NF] Viagem esperava NF={nota_viagem}, Ticket trouxe NF={nota_ticket}")
+
         # Checagem: NF do ticket x NF da viagem
         if nota_viagem and nota_ticket and nota_viagem != nota_ticket:
             enviar_mensagem(
