@@ -1,4 +1,4 @@
-import os, re, logging, requests
+import os, re, logging, requests, pdfplumber
 from datetime import datetime
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
@@ -140,11 +140,21 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         texto = ler_texto_google_ocr("nota_pre_google.jpg")
 
     elif mime_type == "application/pdf":
-        logger.debug("[NF] Arquivo é PDF, enviando direto para o Google OCR")
+        logger.debug("[NF] Arquivo é PDF, tentando primeiro com Google OCR")
         texto = ler_texto_google_ocr("nota.pdf")
 
+        if not texto.strip():
+            logger.debug("[NF] Google OCR não retornou nada, tentando pdfplumber")
+            try:
+                with pdfplumber.open("nota.pdf") as pdf:
+                    texto_paginas = [page.extract_text() or "" for page in pdf.pages]
+                    texto = "\n".join(texto_paginas)
+                logger.debug(f"[NF] Texto extraído com pdfplumber: {repr(texto)[:500]}...")
+            except Exception:
+                logger.error("[NF] Falha ao extrair texto com pdfplumber", exc_info=True)
+
     # Log OCR bruto
-    logger.debug(f"[NF] OCR bruto extraído: {repr(texto)[:500]}...")  # limita pra não explodir log
+    logger.debug(f"[NF] OCR bruto/extraído: {repr(texto)[:500]}...")
 
     # Limpa texto
     texto = limpar_texto_ocr(texto)
