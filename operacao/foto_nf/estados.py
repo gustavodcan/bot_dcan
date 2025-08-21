@@ -98,7 +98,6 @@ def extrair_texto_pdf(caminho_pdf):
     return texto.strip()
 
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
-    # Detecta se veio imagem ou PDF
     url_arquivo = None
     mime_type = None
     nome_arquivo = None
@@ -112,46 +111,57 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         url_arquivo = data["document"].get("documentUrl")
         nome_arquivo = "nota.pdf"
 
+    logger.debug(f"[NF] Recebido arquivo — MIME: {mime_type}, URL: {url_arquivo}, Nome: {nome_arquivo}")
+
     if not mime_type or (not mime_type.startswith("image/") and mime_type != "application/pdf"):
         enviar_mensagem(numero, "📎 Envie uma *imagem* ou um *PDF* da nota fiscal.")
         return {"status": "aguardando imagem nf"}
 
-    # Baixa arquivo (imagem ou PDF)
+    # Baixa arquivo
     try:
         res = requests.get(url_arquivo, timeout=20)
         if res.status_code != 200:
             enviar_mensagem(numero, "❌ Erro ao baixar o arquivo da nota. Tente novamente.")
+            logger.error(f"[NF] Falha ao baixar arquivo ({res.status_code}) — URL: {url_arquivo}")
             return {"status": "erro ao baixar"}
         with open(nome_arquivo, "wb") as f:
             f.write(res.content)
-    except Exception as e:
-        logger.error("Falha ao baixar arquivo da NF", exc_info=True)
+        logger.debug(f"[NF] Arquivo salvo localmente: {nome_arquivo}, tamanho: {len(res.content)} bytes")
+    except Exception:
+        logger.error("[NF] Falha ao baixar arquivo", exc_info=True)
         enviar_mensagem(numero, "❌ Erro ao baixar o arquivo da nota. Tente novamente.")
         return {"status": "erro ao baixar"}
 
     texto = ""
     if mime_type.startswith("image/"):
-        # === OCR com pré-processamento de imagem ===
+        logger.debug("[NF] Arquivo é imagem, rodando OCR com pré-processamento")
         img = preprocessar_imagem("nota.jpg")
         img.save("nota_pre_google.jpg")
         texto = ler_texto_google_ocr("nota_pre_google.jpg")
 
     elif mime_type == "application/pdf":
-        # === OCR ou leitura nativa de PDF ===
-        texto = ler_texto_google_ocr("nota.pdf")  # mesma função, mas passando o PDF direto
+        logger.debug("[NF] Arquivo é PDF, enviando direto para o Google OCR")
+        texto = ler_texto_google_ocr("nota.pdf")
 
-    # Limpa e salva texto bruto
+    # Log OCR bruto
+    logger.debug(f"[NF] OCR bruto extraído: {repr(texto)[:500]}...")  # limita pra não explodir log
+
+    # Limpa texto
     texto = limpar_texto_ocr(texto)
     conversas[numero]["ocr_texto_nf"] = texto
+    logger.debug(f"[NF] Texto após limpeza: {repr(texto)[:500]}...")
 
     # Extrai chave
     chave = extrair_chave_acesso(texto)
+    logger.debug(f"[NF] Resultado extração chave: {chave}")
+
     if not chave:
         enviar_mensagem(numero, "❌ Não consegui identificar a *chave de acesso* na nota. Por favor, envie novamente.")
         conversas[numero]["estado"] = "aguardando_imagem_nf"
         return {"status": "chave não encontrada"}
 
-    logger.debug(f"[NF OCR] Chave extraída: {chave}")
+    logger.info(f"[NF] Chave encontrada com sucesso: {chave}")
+    
     # consulta direta na InfoSimples (sem confirmar chave antes)
     enviar_mensagem(numero, "🔎 Localizando as informações da nota, um instante…")
     try:
