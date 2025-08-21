@@ -48,6 +48,7 @@ def carregar_viagens_ativas(status_filtro=None):
             "motorista": str(row.get("Motorista", "")).strip(),
             "rota": str(row.get("Rota", "")).strip(),
             "remetente": str(row.get("Remetente", "")).strip()
+            "nota_fiscal": str(row.get("Nota Fiscal", "")).strip()
         })
 
     return viagens_ativas
