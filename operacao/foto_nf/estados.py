@@ -86,17 +86,29 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     conversas[numero]["estado"] = "aguardando_imagem_nf"
     return {"status": "viagem selecionada"}
 
+def extrair_texto_pdf(caminho_pdf):
+    """Extrai texto nativo de PDFs usando pdfplumber."""
+    texto = ""
+    try:
+        with pdfplumber.open(caminho_pdf) as pdf:
+            for page in pdf.pages:
+                texto += page.extract_text() or ""
+    except Exception as e:
+        logger.error(f"[PDF] Falha ao extrair texto direto: {e}")
+    return texto.strip()
+
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
-    # valida imagem
-    if "image" not in data or not data["image"].get("mimeType", "").startswith("image/"):
-        enviar_mensagem(numero, "📸 Envie uma *imagem* da nota fiscal.")
+    mime_type = data.get("image", {}).get("mimeType", "")
+    url_arquivo = data.get("image", {}).get("imageUrl")
+
+    if not mime_type.startswith("image/") and mime_type != "application/pdf":
+        enviar_mensagem(numero, "📎 Envie uma *imagem* ou um *PDF* da nota fiscal.")
         return {"status": "aguardando imagem nf"}
 
     numero_viagem = (
         conversas.get(numero, {}).get("numero_viagem_selecionado")
         or get_viagem_ativa(numero)
     )
-    
     if not numero_viagem:
         enviar_mensagem(
             numero,
@@ -104,25 +116,41 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         )
         conversas.pop(numero, None)
         return {"status": "sem viagem (nf bloqueada)"}
-    
-    # baixa imagem
-    url_img = data["image"]["imageUrl"]
+
+    # baixa arquivo
+    caminho = "nota.pdf" if mime_type == "application/pdf" else "nota.jpg"
     try:
-        res = requests.get(url_img, timeout=20)
+        res = requests.get(url_arquivo, timeout=20)
         if res.status_code != 200:
-            enviar_mensagem(numero, "❌ Erro ao baixar a imagem da nota. Tente novamente.")
+            enviar_mensagem(numero, "❌ Erro ao baixar a nota. Tente novamente.")
             return {"status": "erro ao baixar"}
-        with open("nota.jpg", "wb") as f:
+        with open(caminho, "wb") as f:
             f.write(res.content)
-    except Exception as e:
-        logger.error("Falha ao baixar imagem da NF", exc_info=True)
-        enviar_mensagem(numero, "❌ Erro ao baixar a imagem da nota. Tente novamente.")
+    except Exception:
+        logger.error("Falha ao baixar arquivo da NF", exc_info=True)
+        enviar_mensagem(numero, "❌ Erro ao baixar a nota. Tente novamente.")
         return {"status": "erro ao baixar"}
 
-    # OCR
-    img = preprocessar_imagem("nota.jpg")
-    img.save("nota_pre_google.jpg")
-    texto = ler_texto_google_ocr("nota_pre_google.jpg")
+    texto = ""
+
+    if mime_type == "application/pdf":
+        # tenta extrair texto nativo
+        texto = extrair_texto_pdf(caminho)
+        if not texto:
+            logger.warning("[PDF] Nenhum texto extraído, usando Vision OCR")
+            with open(caminho, "rb") as f:
+                content = f.read()
+            image = vision.Image(content=content)
+            client = vision.ImageAnnotatorClient()
+            response = client.document_text_detection(image=image)
+            if response.full_text_annotation:
+                texto = response.full_text_annotation.text
+    else:
+        # fluxo atual de imagem
+        img = preprocessar_imagem(caminho)
+        img.save("nota_pre_google.jpg")
+        texto = ler_texto_google_ocr("nota_pre_google.jpg")
+
     texto = limpar_texto_ocr(texto)
     conversas[numero]["ocr_texto_nf"] = texto
 
@@ -133,6 +161,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         conversas[numero]["estado"] = "aguardando_imagem_nf"
         return {"status": "chave não encontrada"}
 
+    logger.debug(f"[NF OCR] Chave extraída: {chave}")
     # consulta direta na InfoSimples (sem confirmar chave antes)
     enviar_mensagem(numero, "🔎 Localizando as informações da nota, um instante…")
     try:
