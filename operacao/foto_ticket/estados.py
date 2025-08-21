@@ -338,8 +338,11 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         nota_ticket = dados.get("nota_fiscal")
 
         # Checagem: NF do ticket x NF da viagem
-        if nota_viagem and nota_ticket and str(nota_viagem).lstrip("0") != str(nota_ticket).lstrip("0"):
-            enviar_mensagem(numero, f"❌ O ticket enviado pertence à NF {nota_ticket}, a viagem está vinculada à NF {nota_viagem}. Envie a foto correta do ticket.")
+        if nota_viagem and nota_ticket and nota_viagem != nota_ticket:
+            enviar_mensagem(
+                numero,
+                f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nota_viagem}. Envie a foto correta do ticket."
+            )
             conversas[numero]["estado"] = "aguardando_imagem"
             try:
                 os.remove("ticket.jpg")
