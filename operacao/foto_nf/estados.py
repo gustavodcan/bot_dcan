@@ -98,70 +98,53 @@ def extrair_texto_pdf(caminho_pdf):
     return texto.strip()
 
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
-    mime_type = None
+    # Detecta se veio imagem ou PDF
     url_arquivo = None
+    mime_type = None
+    nome_arquivo = None
 
     if "image" in data:
         mime_type = data["image"].get("mimeType", "")
         url_arquivo = data["image"].get("imageUrl")
+        nome_arquivo = "nota.jpg"
     elif "document" in data:
         mime_type = data["document"].get("mimeType", "")
         url_arquivo = data["document"].get("documentUrl")
+        nome_arquivo = "nota.pdf"
 
     if not mime_type or (not mime_type.startswith("image/") and mime_type != "application/pdf"):
         enviar_mensagem(numero, "📎 Envie uma *imagem* ou um *PDF* da nota fiscal.")
         return {"status": "aguardando imagem nf"}
-    numero_viagem = (
-        conversas.get(numero, {}).get("numero_viagem_selecionado")
-        or get_viagem_ativa(numero)
-    )
-    
-    if not numero_viagem:
-        enviar_mensagem(
-            numero,
-            "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com seu programador."
-        )
-        conversas.pop(numero, None)
-        return {"status": "sem viagem (nf bloqueada)"}
 
-    # baixa arquivo
-    caminho = "nota.pdf" if mime_type == "application/pdf" else "nota.jpg"
+    # Baixa arquivo (imagem ou PDF)
     try:
         res = requests.get(url_arquivo, timeout=20)
         if res.status_code != 200:
-            enviar_mensagem(numero, "❌ Erro ao baixar a nota. Tente novamente.")
+            enviar_mensagem(numero, "❌ Erro ao baixar o arquivo da nota. Tente novamente.")
             return {"status": "erro ao baixar"}
-        with open(caminho, "wb") as f:
+        with open(nome_arquivo, "wb") as f:
             f.write(res.content)
-    except Exception:
+    except Exception as e:
         logger.error("Falha ao baixar arquivo da NF", exc_info=True)
-        enviar_mensagem(numero, "❌ Erro ao baixar a nota. Tente novamente.")
+        enviar_mensagem(numero, "❌ Erro ao baixar o arquivo da nota. Tente novamente.")
         return {"status": "erro ao baixar"}
 
     texto = ""
-
-    if mime_type == "application/pdf":
-        # tenta extrair texto nativo
-        texto = extrair_texto_pdf(caminho)
-        if not texto:
-            logger.warning("[PDF] Nenhum texto extraído, usando Vision OCR")
-            with open(caminho, "rb") as f:
-                content = f.read()
-            image = vision.Image(content=content)
-            client = vision.ImageAnnotatorClient()
-            response = client.document_text_detection(image=image)
-            if response.full_text_annotation:
-                texto = response.full_text_annotation.text
-    else:
-        # fluxo atual de imagem
-        img = preprocessar_imagem(caminho)
+    if mime_type.startswith("image/"):
+        # === OCR com pré-processamento de imagem ===
+        img = preprocessar_imagem("nota.jpg")
         img.save("nota_pre_google.jpg")
         texto = ler_texto_google_ocr("nota_pre_google.jpg")
 
+    elif mime_type == "application/pdf":
+        # === OCR ou leitura nativa de PDF ===
+        texto = ler_texto_google_ocr("nota.pdf")  # mesma função, mas passando o PDF direto
+
+    # Limpa e salva texto bruto
     texto = limpar_texto_ocr(texto)
     conversas[numero]["ocr_texto_nf"] = texto
 
-    # extrai chave
+    # Extrai chave
     chave = extrair_chave_acesso(texto)
     if not chave:
         enviar_mensagem(numero, "❌ Não consegui identificar a *chave de acesso* na nota. Por favor, envie novamente.")
