@@ -2,6 +2,7 @@ Flask
 pillow
 requests
 google-cloud-vision
+pdfplumber
 google-auth
 gspread
 oauth2client
