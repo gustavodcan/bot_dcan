@@ -149,12 +149,12 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
                 with pdfplumber.open("nota.pdf") as pdf:
                     texto_paginas = [page.extract_text() or "" for page in pdf.pages]
                     texto = "\n".join(texto_paginas)
-                logger.debug(f"[NF] Texto extraído com pdfplumber: {repr(texto)[:500]}...")
+#                logger.debug(f"[NF] Texto extraído com pdfplumber: {repr(texto)[:500]}...")
             except Exception:
                 logger.error("[NF] Falha ao extrair texto com pdfplumber", exc_info=True)
 
     # Log OCR bruto
-    logger.debug(f"[NF] OCR bruto/extraído: {repr(texto)[:500]}...")
+#    logger.debug(f"[NF] OCR bruto/extraído: {repr(texto)[:500]}...")
 
     # Limpa texto
     texto = limpar_texto_ocr(texto)
