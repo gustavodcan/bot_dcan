@@ -98,17 +98,24 @@ def extrair_texto_pdf(caminho_pdf):
     return texto.strip()
 
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
-    mime_type = data.get("image", {}).get("mimeType", "")
-    url_arquivo = data.get("image", {}).get("imageUrl")
+    mime_type = None
+    url_arquivo = None
 
-    if not mime_type.startswith("image/") and mime_type != "application/pdf":
+    if "image" in data:
+        mime_type = data["image"].get("mimeType", "")
+        url_arquivo = data["image"].get("imageUrl")
+    elif "document" in data:
+        mime_type = data["document"].get("mimeType", "")
+        url_arquivo = data["document"].get("documentUrl")
+
+    if not mime_type or (not mime_type.startswith("image/") and mime_type != "application/pdf"):
         enviar_mensagem(numero, "📎 Envie uma *imagem* ou um *PDF* da nota fiscal.")
         return {"status": "aguardando imagem nf"}
-
     numero_viagem = (
         conversas.get(numero, {}).get("numero_viagem_selecionado")
         or get_viagem_ativa(numero)
     )
+    
     if not numero_viagem:
         enviar_mensagem(
             numero,
