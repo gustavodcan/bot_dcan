@@ -15,8 +15,6 @@ from integracoes.google_sheets import atualizar_viagem_nf
 logger = logging.getLogger(__name__)
 
 def iniciar_fluxo_nf(numero, conversas):
-    from viagens import VIAGENS
-    
     VIAGENS.clear()
     VIAGENS.extend(carregar_viagens_ativas(status_filtro="FALTA NOTA"))
     viagens = get_viagens_por_telefone(numero)
@@ -30,9 +28,9 @@ def iniciar_fluxo_nf(numero, conversas):
         return {"status": "sem viagem"}
 
     if len(viagens) == 1:
-        v = viagens[0]
-        conversas.setdefault(numero, {})["numero_viagem_selecionado"] = v["numero_viagem"]
-        set_viagem_ativa(numero, v["numero_viagem"])
+        selecionada = viagens[0]
+        conversas.setdefault(numero, {})["numero_viagem_selecionado"] = selecionada["numero_viagem"]
+        set_viagem_ativa(numero, selecionada["numero_viagem"])
         enviar_mensagem(
             numero,
             f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['data']} — {selecionada['placa']} · {selecionada['rota']}\n\n"
