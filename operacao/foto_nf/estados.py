@@ -159,7 +159,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     # Limpa texto
     texto = limpar_texto_ocr(texto)
     conversas[numero]["ocr_texto_nf"] = texto
-    logger.debug(f"[NF] Texto após limpeza: {repr(texto)[:500]}...")
+#    logger.debug(f"[NF] Texto após limpeza: {repr(texto)[:500]}...")
 
     # Extrai chave
     chave = extrair_chave_acesso(texto)
