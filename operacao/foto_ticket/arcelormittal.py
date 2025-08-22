@@ -23,24 +23,21 @@ def extrair_dados_cliente_arcelormittal(img, texto):
 
     peso_liquido = "NÃO ENCONTRADO"
 
-    if len(numeros) == 1:
-        peso_liquido = numeros[0]
-    elif len(numeros) > 1:
-        try:
-            # Pega o último número da lista
-            ultimo_numero = int(numeros[-1])
+    try:
+        # Pega sempre o último número da lista
+        ultimo_numero = int(numeros[-1])
 
-            # Busca a última linha que contém "pb XXXX kg"
-            linhas_pb = re.findall(r"^.*pb\s+(\d{4,6})\s+kg.*$", texto, re.MULTILINE | re.IGNORECASE)
-            if linhas_pb:
-                valor_pb = int(linhas_pb[-1])
-                peso_liquido = str(valor_pb - ultimo_numero)
-            else:
-                logger.debug("[❌] Valor entre 'pb' e 'kg' não encontrado.")
-                peso_liquido = "NÃO ENCONTRADO"
-        except Exception as e:
-            logger.debug(f"[❌] Erro ao calcular peso líquido: {e}")
+        # Busca a última linha que contém "pb XXXX kg"
+        linhas_pb = re.findall(r"^.*pb\s+(\d{4,6})\s+kg.*$", texto, re.MULTILINE | re.IGNORECASE)
+        if linhas_pb:
+            valor_pb = int(linhas_pb[-1])
+            peso_liquido = str(valor_pb - ultimo_numero)
+        else:
+            logger.debug("[❌] Valor entre 'pb' e 'kg' não encontrado.")
             peso_liquido = "NÃO ENCONTRADO"
+    except Exception as e:
+        logger.debug(f"[❌] Erro ao calcular peso líquido: {e}")
+        peso_liquido = "NÃO ENCONTRADO"
 
     logger.debug("🎯 Dados extraídos:")
     logger.debug(f"Nota Fiscal: {nota_val}")
