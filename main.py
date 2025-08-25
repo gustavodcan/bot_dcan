@@ -164,6 +164,7 @@ def notificar_viagem():
             nome_motorista,
             rota,
             remetente,
+            destinatario,
             emite_nf
         ]
 
