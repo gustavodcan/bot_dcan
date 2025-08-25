@@ -15,6 +15,7 @@ from integracoes.infosimples import consultar_nfe_completa
 from operacao.foto_ticket.defs import extrair_dados_da_imagem
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
+from integracoes.google_sheets import conectar_google_sheets, atualizar_viagem_ticket
 from operacao.falar_programador.contato import encaminhar_para_setor, tratar_descricao_setor
 from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae, extrair_dados_cliente_saae
 from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
