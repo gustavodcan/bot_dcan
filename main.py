@@ -154,6 +154,28 @@ def notificar_viagem():
         if not (telefone_motorista and numero_viagem and rota and placa):
             return jsonify({"status": "erro", "mensagem": "Campos obrigatórios ausentes."}), 400
 
+        #cria linha conforme ordem google sheets
+        linha = [
+            numero_viagem,
+            data_coleta,
+            placa,
+            telefone_motorista,
+            nome_motorista,
+            rota,
+            remetente,
+            emite_nf
+        ]
+
+        # salva na planilha
+        try:
+            client = conectar_google_sheets()
+            planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
+            planilha.append_row(linha)
+            logger.info(f"[A3] Viagem {numero_viagem} gravada no Google Sheets.")
+        except Exception:
+            logger.error("[A3] Falha ao gravar viagem no Google Sheets", exc_info=True)
+            return jsonify({"status": "erro ao salvar no Sheets"}), 500
+
         # 3. Monta mensagem pro motorista
         mensagem = (
             f"👋 Olá {nome_motorista}!\n\n"
