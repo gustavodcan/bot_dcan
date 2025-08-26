@@ -222,9 +222,10 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
 
         # Upload no Azure (indexado por viagem)
         try:
-            safe_viagem = re.sub(r\"[^\\w\\-]\", \"_\", numero_viagem) or \"SEM_VIAGEM\"
-            safe_ticket = re.sub(r\"[^\\w\\-]\", \"_\", ticket) or \"SEM_TICKET\"
-            caminho = f\"VIAGENS/{safe_viagem}/TICKET_{safe_ticket}.jpg\"
+            safe_viagem = re.sub(r"[^\w\-]", "_", numero_viagem or "") or "SEM_VIAGEM"
+            safe_ticket = re.sub(r"[^\w\-]", "_", ticket or "") or "SEM_TICKET"
+
+            caminho = f"VIAGENS/{safe_viagem}/TICKET_{safe_ticket}.jpg"
             salvar_imagem_azure("ticket.jpg", nome_imagem)
             os.remove("ticket.jpg")
         except Exception as e:
