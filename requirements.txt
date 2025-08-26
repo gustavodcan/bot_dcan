@@ -9,3 +9,4 @@ oauth2client
 azure-storage-file-share
 pycryptodome
 gunicorn
+psycopg2-binary
