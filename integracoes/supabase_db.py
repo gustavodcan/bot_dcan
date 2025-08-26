@@ -11,6 +11,17 @@ logger.debug(f"SUPABASE_URL={SUPABASE_URL}")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+def br_to_iso(data_str: str) -> str | None:
+    """
+    Converte 'dd/mm/aaaa' -> 'aaaa-mm-dd'.
+    """
+    if not data_str:
+        return None
+    try:
+        return datetime.strptime(data_str, "%d/%m/%Y").date().isoformat()
+    except ValueError:
+        raise ValueError(f"Data inválida: {data_str}")
+
 def salvar_viagem(dados: dict):
     """
     Insere uma nova viagem no Supabase.
@@ -18,7 +29,7 @@ def salvar_viagem(dados: dict):
     try:
         res = supabase.table("viagens").insert({
             "numero_viagem": dados.get("numero_viagem"),
-            "data": dados.get("data"),
+            "data": br_to_iso(dados.get("data")),
             "telefone_motorista": dados.get("telefone_motorista"),
             "motorista": dados.get("motorista"),
             "placa": dados.get("placa"),
