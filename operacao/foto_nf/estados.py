@@ -266,13 +266,24 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
 
     # se respondeu SIM: finaliza
     if texto_recebido.lower() in ["sim", "s"]:
-        atualizar_viagem(
-            numero_viagem,
-            {
-                "chave_acesso": dados.get("chave") or "",
-                "nota_fiscal": dados.get("numero") or ""
-            }
+        numero_viagem = (
+            conversas.get(numero, {}).get("numero_viagem_selecionado")
+            or get_viagem_ativa(numero)
         )
+
+        if numero_viagem:
+            atualizar_viagem(
+                numero_viagem,
+                {
+                    "chave_acesso": dados.get("chave") or "",
+                    "nota_fiscal": dados.get("numero") or ""
+                }
+            )
+        else:
+            logger.warning(
+                "[NF] Sem viagem selecionada/ativa na confirmação de NF para %s",
+                numero
+            )
 
         enviar_mensagem(numero, "✅ Perfeito! Dados confirmados. Obrigado! 🙌")
         conversas.pop(numero, None)
