@@ -6,7 +6,8 @@ from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
 from integracoes.infosimples import consultar_nfe_completa
 from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa, carregar_viagens_ativas, VIAGENS
-from integracoes.google_sheets import atualizar_viagem_nf
+#from integracoes.google_sheets import atualizar_viagem_nf
+from integracoes.supabase_db import atualizar_viagem
 
 logger = logging.getLogger(__name__)
 
@@ -265,20 +266,13 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
 
     # se respondeu SIM: finaliza
     if texto_recebido.lower() in ["sim", "s"]:
-        numero_viagem = (
-            conversas.get(numero, {}).get("numero_viagem_selecionado")
-            or get_viagem_ativa(numero)
+        atualizar_viagem(
+            numero_viagem,
+            {
+                "chave_acesso": dados.get("chave") or "",
+                "nota_fiscal": dados.get("numero") or ""
+            }
         )
-
-        if numero_viagem:
-            atualizar_viagem_nf(
-                numero_viagem=numero_viagem,
-                telefone=numero,
-                chave_acesso=dados.get("chave") or "",
-                nota_fiscal=dados.get("numero") or ""
-            )
-        else:
-            logger.warning("[NF] Sem viagem selecionada/ativa na confirmação de NF para %s", numero)
 
         enviar_mensagem(numero, "✅ Perfeito! Dados confirmados. Obrigado! 🙌")
         conversas.pop(numero, None)
