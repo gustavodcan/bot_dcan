@@ -224,7 +224,7 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
         try:
             with open("ticket.jpg", "rb") as f:
                 base64_str = base64.b64encode(f.read()).decode("utf-8")
-            data_uri = {base64_str}
+            data_uri = base64_str
             try:
                 atualizar_viagem(numero_viagem, {"foto_ticket": data_uri})
                 logger.info("[TICKET] foto_ticket gravada no Supabase (viagem %s).", numero_viagem)
@@ -400,7 +400,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         try:
             with open("ticket.jpg", "rb") as f:
                 base64_str = base64.b64encode(f.read()).decode("utf-8")
-            data_uri = {base64_str}
+            data_uri = base64_str
             try:
                 atualizar_viagem(numero_viagem, {"foto_ticket": data_uri})
                 logger.info("[TICKET] foto_ticket gravada no Supabase (viagem %s).", numero_viagem)
