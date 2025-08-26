@@ -1,46 +1,63 @@
-import os, psycopg2, logging
+import os
+import logging
+from supabase import create_client, Client
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("SUPABASE_DB_URL")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY")
 
-def conectar_db():
-    """Tenta conectar direto no 5432. 
-    Se der erro, tenta via pgbouncer (6543)."""
-    try:
-        logger.debug("[SUPABASE] Tentando conectar no Postgres (porta 5432)...")
-        return psycopg2.connect(DATABASE_URL, connect_timeout=30)
-    except Exception as e:
-        logger.warning(f"[SUPABASE] Falha no 5432: {e}. Tentando pooling 6543...")
-        # troca porta para 6543 (pgbouncer)
-        if DATABASE_URL and ":5432" in DATABASE_URL:
-            alt_url = DATABASE_URL.replace(":5432", ":6543")
-            return psycopg2.connect(alt_url, connect_timeout=30)
-        raise
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def salvar_viagem(dados):
+def salvar_viagem(dados: dict):
+    """
+    Insere uma nova viagem no Supabase.
+    """
     try:
-        conn = conectar_db()
-        cur = conn.cursor()
-        cur.execute("""
-            insert into viagens (
-                numero_viagem, data, telefone_motorista, motorista, placa, rota, remetente, status
-            ) values (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            dados.get("numero_viagem"),
-            dados.get("data"),
-            dados.get("placa"),
-            dados.get("telefone_motorista"),
-            dados.get("motorista"),
-            dados.get("rota"),
-            dados.get("remetente"),
-            dados.get("destinatario"),
-            dados.get("emite_nf"),
-            dados.get("status", "pendente"),
-        ))
-        conn.commit()
-        cur.close()
-        conn.close()
-        logger.info(f"[SUPABASE] Viagem {dados.get('numero_viagem')} salva com sucesso.")
+        res = supabase.table("viagens").insert({
+            "numero_viagem": dados.get("numero_viagem"),
+            "data": dados.get("data"),
+            "telefone_motorista": dados.get("telefone_motorista"),
+            "motorista": dados.get("motorista"),
+            "placa": dados.get("placa"),
+            "rota": dados.get("rota"),
+            "remetente": dados.get("remetente"),
+            "destinatario": dados.get("destinatario"),
+            "emite_nf": dados.get("emite_nf"),
+            "status": dados.get("status", "pendente")
+        }).execute()
+
+        if res.data:
+            logger.info(f"[SUPABASE] Viagem {dados.get('numero_viagem')} salva com sucesso.")
+        else:
+            logger.warning(f"[SUPABASE] Nenhum dado retornado ao salvar viagem {dados.get('numero_viagem')}.")
+
+        return res
     except Exception:
         logger.error("[SUPABASE] Erro ao salvar viagem", exc_info=True)
+        raise
+
+
+def atualizar_viagem(numero_viagem: str, campos: dict):
+    """
+    Atualiza os campos de uma viagem existente (busca por numero_viagem).
+    Exemplo:
+        atualizar_viagem("1017", {"status": "falta ticket", "nota_fiscal": "123456"})
+    """
+    try:
+        res = (
+            supabase.table("viagens")
+            .update(campos)
+            .eq("numero_viagem", numero_viagem)
+            .execute()
+        )
+
+        if res.data:
+            logger.info(f"[SUPABASE] Viagem {numero_viagem} atualizada com sucesso.")
+        else:
+            logger.warning(f"[SUPABASE] Nenhuma linha atualizada para a viagem {numero_viagem}.")
+
+        return res
+    except Exception:
+        logger.error(f"[SUPABASE] Erro ao atualizar viagem {numero_viagem}", exc_info=True)
+        raise
