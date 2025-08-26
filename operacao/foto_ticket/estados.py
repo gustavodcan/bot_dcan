@@ -1,4 +1,4 @@
-import os, re, requests, logging
+import os, re, requests, logging, base64
 from datetime import datetime
 from integracoes.google_sheets import conectar_google_sheets, atualizar_viagem_ticket
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens
@@ -220,16 +220,23 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
             conversas[numero]["estado"] = "finalizado"
             return {"status": "erro ao salvar"}
 
-        # Upload no Azure (indexado por viagem)
+        # Somente Base64 no Supabase (sem upload para Azure)
         try:
-            safe_viagem = re.sub(r"[^\w\-]", "_", numero_viagem or "") or "SEM_VIAGEM"
-            safe_ticket = re.sub(r"[^\w\-]", "_", ticket or "") or "SEM_TICKET"
-
-            caminho = f"VIAGENS/{safe_viagem}/TICKET_{safe_ticket}.jpg"
-            salvar_imagem_azure("ticket.jpg", nome_imagem)
-            os.remove("ticket.jpg")
-        except Exception as e:
-            logger.debug(f"⚠️ Erro ao salvar ou remover imagem: {e}")
+            with open("ticket.jpg", "rb") as f:
+                base64_str = base64.b64encode(f.read()).decode("utf-8")
+            data_uri = f"data:image/jpeg;base64,{base64_str}"
+            try:
+                atualizar_viagem(numero_viagem, {"foto_ticket": data_uri})
+                logger.info("[TICKET] foto_ticket gravada no Supabase (viagem %s).", numero_viagem)
+            except Exception:
+                logger.error("[TICKET] Falha ao salvar foto_ticket (Base64) no Supabase.", exc_info=True)
+            finally:
+                try:
+                    os.remove("ticket.jpg")
+                except FileNotFoundError:
+                    pass
+        except Exception:
+            logger.debug("⚠️ Erro ao ler/transformar ticket.jpg em Base64.", exc_info=True)
 
         enviar_mensagem(numero, "✅ Dados confirmados, Salvando as informações! Obrigado!")
         conversas.pop(numero)
@@ -389,15 +396,23 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
             logger.info("[TICKET] Supabase ok (viagem %s).", numero_viagem)
         except Exception:
             logger.error("[TICKET] Falha ao atualizar viagem no Supabase.", exc_info=True)
-        # 2) Upload no Azure (indexado por viagem)
+        # 2) Somente Base64 no Supabase (sem upload para Azure)
         try:
-            safe_viagem = re.sub(r"[^\w\-]", "_", numero_viagem) or "SEM_VIAGEM"
-            safe_ticket = re.sub(r"[^\w\-]", "_", ticket) or "SEM_TICKET"
-            caminho = f"VIAGENS/{safe_viagem}/TICKET_{safe_ticket}.jpg"
-            salvar_imagem_azure("ticket.jpg", caminho)
-            logger.info("[TICKET] Upload Azure ok em %s", caminho)
+            with open("ticket.jpg", "rb") as f:
+                base64_str = base64.b64encode(f.read()).decode("utf-8")
+            data_uri = f"data:image/jpeg;base64,{base64_str}"
+            try:
+                atualizar_viagem(numero_viagem, {"foto_ticket": data_uri})
+                logger.info("[TICKET] foto_ticket gravada no Supabase (viagem %s).", numero_viagem)
+            except Exception:
+                logger.error("[TICKET] Falha ao salvar foto_ticket (Base64) no Supabase.", exc_info=True)
         except Exception:
-            logger.error("[TICKET] Falha no upload para Azure.", exc_info=True)
+            logger.error("[TICKET] Falha ao gerar Base64 do ticket.jpg.", exc_info=True)
+        finally:
+            try:
+                os.remove("ticket.jpg")
+            except FileNotFoundError:
+                pass
 
         # 3) Limpa e finaliza
         try:
