@@ -6,7 +6,8 @@ from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_tex
 from operacao.foto_ticket.defs import extrair_dados_por_cliente
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from integracoes.azure import salvar_imagem_azure
-from viagens import VIAGEM_POR_TELEFONE, get_viagens_por_telefone, set_viagem_ativa, carregar_viagens_ativas, VIAGENS
+from viagens import VIAGEM_POR_TELEFONE, get_viagens_por_telefone, set_viagem_ativa, carregar_viagens_ativas, VIAGENS, get_viagem_ativa
+from integracoes.supabase_db import atualizar_viagem
 
 logger = logging.getLogger(__name__)
 
@@ -181,33 +182,49 @@ def tratar_estado_aguardando_imagem(numero, data, conversas):
 def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
     if texto_recebido in ['sim', 's']:
         dados_confirmados = conversas[numero]["dados"]
+        cliente = (conversas[numero].get("cliente") or "").upper()
+        ticket  = dados_confirmados.get("ticket") or dados_confirmados.get("brm_mes") or ""
+        peso    = dados_confirmados.get("peso_liquido") or ""
+        origem  = dados_confirmados.get("destino") or dados_confirmados.get("origem") or "N/A"
+        nota    = dados_confirmados.get("nota_fiscal") or ""
 
-        payload = {
-            "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "cliente": conversas[numero].get("cliente", "").upper(),
-            "ticket": dados_confirmados.get("ticket"),
-            "nota_fiscal": dados_confirmados.get("nota_fiscal"),
-            "peso": dados_confirmados.get("peso_liquido"),
-            "destino": dados_confirmados.get("destino", "N/A"),
-            "telefone": numero
-        }
+        # Resolve a viagem (selecionada ou ativa)
+        numero_viagem = (
+            conversas.get(numero, {}).get("numero_viagem_selecionado")
+            or get_viagem_ativa(numero)
+        )
 
+        if not numero_viagem:
+            enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Fale com o despacho.")
+            conversas.pop(numero, None)
+            try:
+                os.remove("ticket.jpg")
+            except FileNotFoundError:
+                pass
+            return {"status": "sem_viagem"}
+
+        # Atualiza a viagem no Supabase (campos do ticket)
         try:
-            client = conectar_google_sheets()
-            planilha = client.open("tickets_dcan").worksheet("tickets_dcan")
-            planilha.append_row([
-                payload["data"], payload["cliente"], payload["ticket"],
-                payload["nota_fiscal"], payload["peso"], payload["destino"],
-                payload["telefone"]
-            ])
-        except Exception as e:
-            logger.debug(f"❌ Erro ao salvar na planilha: {e}")
+            atualizar_viagem(
+                numero_viagem,
+                {
+                    "ticket": ticket,
+                    "peso": peso,
+                    "origem": origem,
+                }
+            )
+            logger.info("[TICKET] Supabase ok (viagem %s).", numero_viagem)
+        except Exception:
+            logger.error("[TICKET] Falha ao atualizar viagem no Supabase.", exc_info=True)
             enviar_mensagem(numero, "❌ Erro ao salvar os dados. Contate o suporte.")
             conversas[numero]["estado"] = "finalizado"
             return {"status": "erro ao salvar"}
 
+        # Upload no Azure (indexado por viagem)
         try:
-            nome_imagem = f"{payload['cliente']}/{payload['cliente']}_{payload['nota_fiscal']}.jpg"
+            safe_viagem = re.sub(r\"[^\\w\\-]\", \"_\", numero_viagem) or \"SEM_VIAGEM\"
+            safe_ticket = re.sub(r\"[^\\w\\-]\", \"_\", ticket) or \"SEM_TICKET\"
+            caminho = f\"VIAGENS/{safe_viagem}/TICKET_{safe_ticket}.jpg\"
             salvar_imagem_azure("ticket.jpg", nome_imagem)
             os.remove("ticket.jpg")
         except Exception as e:
@@ -358,19 +375,19 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         peso    = dados.get("peso_liquido") or ""
         origem  = dados.get("destino") or dados.get("origem") or "N/A"
 
-        # 1) Atualiza a linha da viagem (colunas do ticket)
+        # 1) Atualiza a viagem no Supabase (colunas do ticket)
         try:
-            atualizar_viagem_ticket(
-                numero_viagem=numero_viagem,
-                telefone=numero,
-                ticket=ticket,
-                peso=peso,
-                origem=origem or "N/A"
+            atualizar_viagem(
+                numero_viagem,
+                {
+                    "ticket": ticket,
+                    "peso": peso,
+                    "origem": origem or "N/A",
+                }
             )
-            logger.info("[TICKET] Sheets ok (viagem %s).", numero_viagem)
+            logger.info("[TICKET] Supabase ok (viagem %s).", numero_viagem)
         except Exception:
-            logger.error("[TICKET] Falha ao atualizar planilha da viagem.", exc_info=True)
-
+            logger.error("[TICKET] Falha ao atualizar viagem no Supabase.", exc_info=True)
         # 2) Upload no Azure (indexado por viagem)
         try:
             safe_viagem = re.sub(r"[^\w\-]", "_", numero_viagem) or "SEM_VIAGEM"
