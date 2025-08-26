@@ -10,3 +10,4 @@ azure-storage-file-share
 pycryptodome
 gunicorn
 psycopg2-binary
+supabase
