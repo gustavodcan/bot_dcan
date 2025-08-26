@@ -7,14 +7,10 @@ logger = logging.getLogger(__name__)
 SUPABASE_URL = os.getenv("SUPABASE_DB_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY")
 
-logger.debug(f"SUPABASE_URL={SUPABASE_URL}")
-
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def br_to_iso(data_str: str) -> str | None:
-    """
-    Converte 'dd/mm/aaaa' -> 'aaaa-mm-dd'.
-    """
+    #Converte 'dd/mm/aaaa' -> 'aaaa-mm-dd'.
     if not data_str:
         return None
     try:
@@ -23,9 +19,7 @@ def br_to_iso(data_str: str) -> str | None:
         raise ValueError(f"Data inválida: {data_str}")
 
 def salvar_viagem(dados: dict):
-    """
-    Insere uma nova viagem no Supabase.
-    """
+    #Insere uma nova viagem no Supabase.
     try:
         res = supabase.table("viagens").insert({
             "numero_viagem": dados.get("numero_viagem"),
@@ -36,8 +30,7 @@ def salvar_viagem(dados: dict):
             "rota": dados.get("rota"),
             "remetente": dados.get("remetente"),
             "destinatario": dados.get("destinatario"),
-            "emite_nf": dados.get("emite_nf"),
-            "status": dados.get("status", "pendente")
+            "emite_nf": dados.get("emite_nf")
         }).execute()
 
         if res.data:
@@ -52,11 +45,7 @@ def salvar_viagem(dados: dict):
 
 
 def atualizar_viagem(numero_viagem: str, campos: dict):
-    """
-    Atualiza os campos de uma viagem existente (busca por numero_viagem).
-    Exemplo:
-        atualizar_viagem("1017", {"status": "falta ticket", "nota_fiscal": "123456"})
-    """
+    #Atualiza os campos de uma viagem existente (busca por numero_viagem).
     try:
         res = (
             supabase.table("viagens")
