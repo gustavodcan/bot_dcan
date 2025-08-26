@@ -1,70 +1,94 @@
-import os
-from google.oauth2.service_account import Credentials
-import gspread
+import logging
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+from supabase_db import supabase  # usa o client já criado no módulo do supa
 
-# Nome da planilha e aba
-SHEET_NAME = "tickets_dcan"
-WORKSHEET_NAME = "tickets_dcan"
+logger = logging.getLogger(__name__)
 
-def conectar_google_sheets():
-    cred_json_str = os.getenv("GOOGLE_CREDS_JSON")
-    if not cred_json_str:
-        raise RuntimeError("Variável de ambiente GOOGLE_CREDS_JSON não encontrada.")
-    
-    import json
-    cred_info = json.loads(cred_json_str)
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
-    creds = Credentials.from_service_account_info(cred_info, scopes=scopes)
-    client = gspread.authorize(creds)
-    return client
+# ------------ Helpers de data ------------
+def iso_to_br(data_iso: Optional[str]) -> str:
+    """
+    Converte 'aaaa-mm-dd' -> 'dd/mm/aaaa' para exibição no app.
+    """
+    if not data_iso:
+        return ""
+    try:
+        # suporta tanto '2025-08-26' (date) quanto '2025-08-26T00:00:00Z' (timestamp)
+        if "T" in data_iso:
+            dt = datetime.fromisoformat(data_iso.replace("Z", "+00:00"))
+            return dt.strftime("%d/%m/%Y")
+        return datetime.strptime(data_iso, "%Y-%m-%d").strftime("%d/%m/%Y")
+    except Exception:
+        logger.debug(f"[DATA] Formato inesperado vindo do DB: {data_iso}")
+        return str(data_iso)
 
-def carregar_viagens_ativas(status_filtro=None):
-    client = conectar_google_sheets()        
-    spreadsheet = client.open("tickets_dcan")
-    worksheet = spreadsheet.get_worksheet(0)
-    rows = worksheet.get_all_records()
+# ------------ Consulta principal ------------
+def carregar_viagens_ativas(status_filtro: Optional=str) -> List[Dict[str, Any]]:
+    """
+    Busca viagens ativas no Supabase.
+    - Se 'status_filtro' vier, filtra exatamente por esse status (case-insensitive).
+    - Se não vier, retorna todas com status != 'OK'.
+    Campos retornados seguem o shape antigo para minimizar mudanças no app.
+    """
+    try:
+        query = (
+            supabase
+            .table("viagens")
+            .select(
+                "numero_viagem, data, placa, telefone_motorista, motorista, rota, "
+                "remetente, destinatario, nota_fiscal, status"
+            )
+        )
 
-    viagens_ativas = []
-    for row in rows:
-        status = str(row.get("Status", "")).strip().upper()
-
-        # Aplica o filtro se foi informado
         if status_filtro:
-            if status != status_filtro.upper():
-                continue
+            query = query.eq("status", str(status_filtro).upper())
         else:
-            # Se não passar filtro, pega tudo que NÃO for "OK"
-            if status == "OK":
-                continue
+            query = query.neq("status", "OK")
 
-        viagens_ativas.append({
-            "numero_viagem": str(row.get("Numero Viagem", "")).strip(),
-            "data": str(row.get("Data", "")).strip(),
-            "placa": str(row.get("Placa", "")).strip(),
-            "telefone_motorista": str(row.get("Telefone Motorista", "")).strip(),
-            "motorista": str(row.get("Motorista", "")).strip(),
-            "rota": str(row.get("Rota", "")).strip(),
-            "remetente": str(row.get("Remetente", "")).strip(),
-            "nota_fiscal": str(row.get("Nota Fiscal", "")).strip()
-        })
+        res = query.execute()
+        rows = res.data or []
 
-    return viagens_ativas
+        viagens_ativas: List[Dict[str, Any]] = []
+        for row in rows:
+            viagens_ativas.append({
+                "numero_viagem": str(row.get("numero_viagem") or "").strip(),
+                "data": iso_to_br(row.get("data")),  # app usa dd/mm/aaaa
+                "placa": str(row.get("placa") or "").strip(),
+                "telefone_motorista": str(row.get("telefone_motorista") or "").strip(),
+                "motorista": str(row.get("motorista") or "").strip(),
+                "rota": str(row.get("rota") or "").strip(),
+                "remetente": str(row.get("remetente") or "").strip(),
+                # mantido por compatibilidade com o código existente
+                "nota_fiscal": str(row.get("nota_fiscal") or "").strip(),
+                # extra, caso queira consumir
+                "destinatario": str(row.get("destinatario") or "").strip(),
+                "status": str(row.get("status") or "").strip().upper(),
+            })
 
-VIAGENS = []
+        return viagens_ativas
 
-# Mapa rápido: telefone -> número da viagem
-VIAGEM_POR_TELEFONE = {v["telefone_motorista"]: v["numero_viagem"] for v in VIAGENS}
+    except Exception as e:
+        logger.error(f"[SUPABASE] Erro ao carregar viagens: {e}", exc_info=True)
+        return []
 
-def get_viagens_por_telefone(telefone: str):
+# ------------ Cache em memória (compat) ------------
+VIAGENS: List[Dict[str, Any]] = []
+VIAGEM_POR_TELEFONE: Dict[str, str] = {}  # telefone -> número da viagem
+VIAGEM_ATIVA_POR_TELEFONE: Dict[str, str] = {}
+
+def refresh_viagens_cache(status_filtro: Optional[str] = None) -> None:
+    """
+    Atualiza os caches em memória com base no resultado do DB.
+    """
+    global VIAGENS, VIAGEM_POR_TELEFONE
+    VIAGENS = carregar_viagens_ativas(status_filtro=status_filtro)
+    VIAGEM_POR_TELEFONE = {v.get("telefone_motorista", ""): v.get("numero_viagem", "") for v in VIAGENS}
+
+def get_viagens_por_telefone(telefone: str) -> List[Dict[str, Any]]:
     return [v for v in VIAGENS if v.get("telefone_motorista") == telefone]
-
-VIAGEM_ATIVA_POR_TELEFONE = {}
 
 def set_viagem_ativa(telefone: str, numero_viagem: str):
     VIAGEM_ATIVA_POR_TELEFONE[telefone] = numero_viagem
 
-def get_viagem_ativa(telefone: str):
+def get_viagem_ativa(telefone: str) -> Optional[str]:
     return VIAGEM_ATIVA_POR_TELEFONE.get(telefone)
