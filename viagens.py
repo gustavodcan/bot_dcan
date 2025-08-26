@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-from supabase_db import supabase  # usa o client já criado no módulo do supa
+from integracoes.supabase_db import supabase  # usa o client já criado no módulo do supa
 
 logger = logging.getLogger(__name__)
 
