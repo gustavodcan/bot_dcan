@@ -18,11 +18,13 @@ def salvar_viagem(dados):
         """, (
             dados.get("numero_viagem"),
             dados.get("data"),
+            dados.get("placa"),
             dados.get("telefone_motorista"),
             dados.get("motorista"),
-            dados.get("placa"),
             dados.get("rota"),
             dados.get("remetente"),
+            dados.get("destinatario"),
+            dados.get("emite_nf"),
             dados.get("status", "pendente"),
         ))
         conn.commit()
