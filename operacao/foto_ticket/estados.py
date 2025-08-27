@@ -383,31 +383,30 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         peso    = dados.get("peso_liquido") or ""
         origem  = dados.get("destino") or dados.get("origem") or "N/A"
 
-        # 1) Atualiza a viagem no Supabase (colunas do ticket)
         try:
-            atualizar_viagem(
-                numero_viagem,
-                {
-                    "ticket": ticket,
-                    "peso": peso,
-                    "origem": origem or "N/A",
-                }
-            )
-            logger.info("[TICKET] Supabase ok (viagem %s).", numero_viagem)
-        except Exception:
-            logger.error("[TICKET] Falha ao atualizar viagem no Supabase.", exc_info=True)
-        # 2) Somente Base64 no Supabase (sem upload para Azure)
-        try:
-            with open("ticket.jpg", "rb") as f:
-                base64_str = base64.b64encode(f.read()).decode("utf-8")
-            data_uri = base64_str
+            # Monta o payload básico
+            payload = {
+                "ticket": ticket,
+                "peso": peso,
+                "origem": origem or "N/A",
+            }
+
+            # Tenta gerar o Base64 e incluir no payload
             try:
-                atualizar_viagem(numero_viagem, {"foto_ticket": data_uri})
-                logger.info("[TICKET] foto_ticket gravada no Supabase (viagem %s).", numero_viagem)
+                with open("ticket.jpg", "rb") as f:
+                    base_str = base64.b64encode(f.read()).decode("utf-8")  # sem prefixo data:
+                payload["foto_ticket"] = base_str
+                logger.info("[TICKET] Base64 gerado e adicionado ao payload (viagem %s).", numero_viagem)
             except Exception:
-                logger.error("[TICKET] Falha ao salvar foto_ticket (Base64) no Supabase.", exc_info=True)
+                logger.warning("[TICKET] Falha ao gerar Base64; seguindo sem foto_ticket.", exc_info=True)
+
+            # Uma única chamada ao Supabase com tudo junto
+            atualizar_viagem(numero_viagem, payload)
+            logger.info("[TICKET] Payload completo atualizado no Supabase (viagem %s).", numero_viagem)
+
         except Exception:
-            logger.error("[TICKET] Falha ao gerar Base64 do ticket.jpg.", exc_info=True)
+            logger.error("[TICKET] Falha ao enviar as informações ao Supabase.", exc_info=True)
+
         finally:
             try:
                 os.remove("ticket.jpg")
