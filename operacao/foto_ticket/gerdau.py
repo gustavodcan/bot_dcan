@@ -12,8 +12,8 @@ def extrair_dados_cliente_gerdau(img, texto: str):
     logger.debug("📜 Texto para extração:")
     logger.debug(texto)
 
-    # Gerdau Geral: ticket com 8 dígitos isolados
-    m_ticket_geral = re.search(r"\b(\d{8})(?!-)\b", texto)
+    # Gerdau Geral: ticket com 8 dígitos
+    m_ticket_geral = re.search(r"(\d{8})(?!-)", texto)
     ticket_val = m_ticket_geral.group(1) if m_ticket_geral else NAO_ENCONTRADO
 
     # Gerdau Pinda: “processo: 74928/1” (5+ dígitos com possível “/”)
