@@ -388,13 +388,12 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
             payload = {
                 "ticket": ticket,
                 "peso": peso,
-                "origem": origem or "N/A",
             }
 
             # Tenta gerar o Base64 e incluir no payload
             try:
                 with open("ticket.jpg", "rb") as f:
-                    base_str = base64.b64encode(f.read()).decode("utf-8")  # sem prefixo data:
+                    base_str = base64.b64encode(f.read()).decode("utf-8")
                 payload["foto_ticket"] = base_str
                 logger.info("[TICKET] Base64 gerado e adicionado ao payload (viagem %s).", numero_viagem)
             except Exception:
