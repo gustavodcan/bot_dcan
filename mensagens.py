@@ -13,7 +13,7 @@ def enviar_lista_viagens(numero, viagens, mensagem):
     options = [{
         "rowId": str(v["numero_viagem"]), 
         "title": str(v["numero_viagem"]),
-        "description": f"{v['placa']} - {v['data']} · \n{v['rota']}"
+        "description": f"{v['placa']} - {v['data']} · \n\n{v['rota']}"
     } for v in viagens]
 
     lista_title = f"Suas coletas ativas:"
