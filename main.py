@@ -24,6 +24,10 @@ from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_
 from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf, tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf
 import logging
 from viagens import VIAGENS
+import time  # ⏱️ timeout de conversa
+
+# Timeout global de inatividade (5 minutos)
+TIMEOUT_SECONDS = 60 * 5
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -60,19 +64,43 @@ def webhook():
 
     if tipo != "ReceivedCallback":
         return jsonify(status="ignorado")
-        
+
+    #Checagem de inatividade
+    agora = time.time()
+    registro = conversas.get(numero)
+
+    if registro:
+        expira_em = registro.get("expira_em", 0)
+        if expira_em and expira_em < agora:
+            # Expirou: avisa e encerra
+            enviar_mensagem(
+                numero,
+                "⚠️ *Inatividade detectada.* Encerrando a conversa.\n"
+                "Para continuar, envie uma nova mensagem para iniciar novamente. ✅"
+            )
+            conversas.pop(numero, None)
+            return jsonify(status="reiniciado por inatividade")
+
+    # Se não expirou e já existe conversa, renova o prazo a cada mensagem recebida
+    if registro and registro.get("estado"):
+        conversas[numero]["expira_em"] = agora + TIMEOUT_SECONDS
+
     #Se o bot não esta aguardando nada:
     if not estado:
         enviar_lista_setor(numero, "👋 Olá! Sou o bot de atendimento da DCAN Transportes.\n\n Como posso te ajudar?")
-        conversas[numero] = {"estado": "aguardando_confirmacao_setor"}
+        conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
         return jsonify(status="aguardando confirmação do setor")
 
     if estado == "aguardando_confirmacao_setor":
         if texto_recebido in ["comercial", "faturamento", "financeiro", "recursos humanos"]:
-            conversas[numero] = {"estado": f"aguardando_descricao_{texto_recebido}", "setor": texto_recebido}
+            conversas[numero] = {
+                "estado": f"aguardando_descricao_{texto_recebido}",
+                "setor": texto_recebido,
+                "expira_em": time.time() + TIMEOUT_SECONDS
+            }
             enviar_mensagem(numero, f"✏️ Por favor, descreva brevemente o motivo do seu contato com o setor {texto_recebido.title()}.")
         elif texto_recebido == "operacao":
-            conversas[numero] = {"estado": "aguardando_opcao_operacao"}
+            conversas[numero] = {"estado": "aguardando_opcao_operacao", "expira_em": time.time() + TIMEOUT_SECONDS}
             enviar_opcoes_operacao(numero)
         else:
             enviar_lista_setor(numero, "❌ Opção inválida. Por favor, escolha uma opção da lista.")
@@ -81,7 +109,7 @@ def webhook():
     if estado == "aguardando_opcao_operacao":
         if texto_recebido in ['foto_ticket']:
             resultado = iniciar_fluxo_ticket(numero, conversas)
-            return jsonify(resultado)    
+            return jsonify(resultado)
         elif texto_recebido in ['foto_nf']:
             resultado = iniciar_fluxo_nf(numero, conversas)
             return jsonify(resultado)
@@ -99,8 +127,9 @@ def webhook():
 
     if estado.startswith("aguardando_descricao_"):
         tratar_descricao_setor(numero, mensagem_original.strip(), conversas)
-        return jsonify(resultado)
-        
+        return jsonify(status="descricao encaminhada")
+        # OBS: o retorno acima evita usar uma variável 'resultado' não definida.
+
     if estado == "aguardando_imagem":
         resultado = tratar_estado_aguardando_imagem(numero, data, conversas)
         return jsonify(resultado)
@@ -112,7 +141,7 @@ def webhook():
     if estado == "aguardando_confirmacao_dados_nf":
         resultado = tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas)
         return jsonify(resultado)
-            
+
     if estado == "aguardando_nota_manual":
         resultado = tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas)
         return jsonify(resultado)
