@@ -30,7 +30,7 @@ bot_dcan/\
 │   │   ├── rio_das_pedras.py\
 │   │   └── saae.py\
 \
-💡 Funcionalidades\
+💡 Funcionalidades
 - Processamento de imagem com OCR (Google Vision)
 - Extração de dados de tickets por cliente
 - Extração de chave de acesso NF-e
@@ -39,7 +39,7 @@ bot_dcan/\
 - Upload da imagem para Azure
 - Uso de botões "Sim/Não" via Z-API
 
-✅ Estados Suportados\
+✅ Estados Suportados
 - aguardando_imagem
 - aguardando_confirmacao
 - aguardando_nota_manual
@@ -49,4 +49,4 @@ bot_dcan/\
 
 ✨ Créditos\
 Projeto interno DCAN Transportes — desenvolvido para automatizar e agilizar o processo logístico de recebimento de documentos.\
-Desenvolvido por Gustavo Natan de Oliveira.\
+Desenvolvido por Gustavo Natan de Oliveira.
