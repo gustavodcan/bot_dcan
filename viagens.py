@@ -5,15 +5,12 @@ from integracoes.supabase_db import supabase  # usa o client já criado no módu
 
 logger = logging.getLogger(__name__)
 
-# ------------ Helpers de data ------------
+#Converte data americana para brasileira
 def iso_to_br(data_iso: Optional[str]) -> str:
-    """
-    Converte 'aaaa-mm-dd' -> 'dd/mm/aaaa' para exibição no app.
-    """
     if not data_iso:
         return ""
     try:
-        # suporta tanto '2025-08-26' (date) quanto '2025-08-26T00:00:00Z' (timestamp)
+        #Suporta '2025-08-26'(date) e '2025-08-26T00:00:00Z'(timestamp)
         if "T" in data_iso:
             dt = datetime.fromisoformat(data_iso.replace("Z", "+00:00"))
             return dt.strftime("%d/%m/%Y")
@@ -22,14 +19,8 @@ def iso_to_br(data_iso: Optional[str]) -> str:
         logger.debug(f"[DATA] Formato inesperado vindo do DB: {data_iso}")
         return str(data_iso)
 
-# ------------ Consulta principal ------------
+#Consulta viagens no Supabase conforme StatusFiltro
 def carregar_viagens_ativas(status_filtro: Optional=str) -> List[Dict[str, Any]]:
-    """
-    Busca viagens ativas no Supabase.
-    - Se 'status_filtro' vier, filtra exatamente por esse status (case-insensitive).
-    - Se não vier, retorna todas com status != 'OK'.
-    Campos retornados seguem o shape antigo para minimizar mudanças no app.
-    """
     try:
         query = (
             supabase
@@ -52,15 +43,13 @@ def carregar_viagens_ativas(status_filtro: Optional=str) -> List[Dict[str, Any]]
         for row in rows:
             viagens_ativas.append({
                 "numero_viagem": str(row.get("numero_viagem") or "").strip(),
-                "data": iso_to_br(row.get("data")),  # app usa dd/mm/aaaa
+                "data": iso_to_br(row.get("data")),
                 "placa": str(row.get("placa") or "").strip(),
                 "telefone_motorista": str(row.get("telefone_motorista") or "").strip(),
                 "motorista": str(row.get("motorista") or "").strip(),
                 "rota": str(row.get("rota") or "").strip(),
                 "remetente": str(row.get("remetente") or "").strip(),
-                # mantido por compatibilidade com o código existente
                 "nota_fiscal": str(row.get("nota_fiscal") or "").strip(),
-                # extra, caso queira consumir
                 "destinatario": str(row.get("destinatario") or "").strip(),
                 "status": str(row.get("status") or "").strip().upper(),
             })
@@ -71,15 +60,13 @@ def carregar_viagens_ativas(status_filtro: Optional=str) -> List[Dict[str, Any]]
         logger.error(f"[SUPABASE] Erro ao carregar viagens: {e}", exc_info=True)
         return []
 
-# ------------ Cache em memória (compat) ------------
+#Cache em memória
 VIAGENS: List[Dict[str, Any]] = []
-VIAGEM_POR_TELEFONE: Dict[str, str] = {}  # telefone -> número da viagem
+VIAGEM_POR_TELEFONE: Dict[str, str] = {}  #Telefone e Número da viagem
 VIAGEM_ATIVA_POR_TELEFONE: Dict[str, str] = {}
 
+#Atualiza os caches em memória com base no resultado do DB.
 def refresh_viagens_cache(status_filtro: Optional[str] = None) -> None:
-    """
-    Atualiza os caches em memória com base no resultado do DB.
-    """
     global VIAGENS, VIAGEM_POR_TELEFONE
     VIAGENS = carregar_viagens_ativas(status_filtro=status_filtro)
     VIAGEM_POR_TELEFONE = {v.get("telefone_motorista", ""): v.get("numero_viagem", "") for v in VIAGENS}
