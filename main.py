@@ -5,7 +5,7 @@ from google.cloud import vision
 from Crypto.Util.Padding import pad
 from google.oauth2 import service_account
 from flask import Flask, request, jsonify
-import requests, re, os, json, gspread, base64
+import requests, re, os, json, gspread, base64, logging, time
 from PIL import Image, ImageEnhance, ImageFilter
 from azure.storage.fileshare import ShareFileClient
 from google.oauth2.service_account import Credentials
@@ -22,11 +22,9 @@ from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_seto
 from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao, tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket, tratar_estado_selecionando_viagem_ticket
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, A3_KEY, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf, tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf
-import logging
 from viagens import VIAGENS
-import time  # ⏱️ timeout de conversa
 
-# Timeout global de inatividade (5 minutos)
+#Timeout global de inatividade
 TIMEOUT_SECONDS = 60 * 5
 
 logging.basicConfig(
@@ -38,8 +36,6 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 conversas = {}
-
-logger.info("BOOT Bot DCAN — versão 0.15")
 
 #Identifica o tipo de mensagem recebida
 @app.route('/webhook', methods=['POST'])
@@ -81,7 +77,7 @@ def webhook():
             conversas.pop(numero, None)
             return jsonify(status="reiniciado por inatividade")
 
-    # Se não expirou e já existe conversa, renova o prazo a cada mensagem recebida
+    #Se não expirou e já existe conversa, renova o prazo a cada mensagem recebida
     if registro and registro.get("estado"):
         conversas[numero]["expira_em"] = agora + TIMEOUT_SECONDS
 
@@ -91,6 +87,7 @@ def webhook():
         conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
         return jsonify(status="aguardando confirmação do setor")
 
+    #Define DEF seguinte baseado no setor recebido pelo usuário
     if estado == "aguardando_confirmacao_setor":
         if texto_recebido in ["comercial", "faturamento", "financeiro", "recursos humanos"]:
             conversas[numero] = {
@@ -106,6 +103,7 @@ def webhook():
             enviar_lista_setor(numero, "❌ Opção inválida. Por favor, escolha uma opção da lista.")
         return jsonify(status="resposta motorista")
 
+    #Define DEF seguinte com base na seleção do usuário no setor "Operação"
     if estado == "aguardando_opcao_operacao":
         if texto_recebido in ['foto_ticket']:
             resultado = iniciar_fluxo_ticket(numero, conversas)
@@ -119,47 +117,57 @@ def webhook():
             conversas.pop(numero, None)
         return jsonify(status="resposta motorista")
 
+    #Manda para o DEF "Selecionando Viagem_NF" após seleção da viagem
     if estado == "selecionando_viagem_nf":
         numero_viagem = data.get("listResponseMessage", {}).get("selectedRowId", "")
         logger.debug(f"[DEBUG] selectedRowId recebido: {data.get('listResponseMessage', {}).get('selectedRowId')}")
         resultado = tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas)
         return jsonify(resultado)
 
+    #Encaminha mensagem de assunto do usuário para o setor resposável
     if estado.startswith("aguardando_descricao_"):
         tratar_descricao_setor(numero, mensagem_original.strip(), conversas)
         return jsonify(status="descricao encaminhada")
         # OBS: o retorno acima evita usar uma variável 'resultado' não definida.
 
+    #Manda para o DEF "Aguardando Imagem Ticket" após envio da foto
     if estado == "aguardando_imagem":
         resultado = tratar_estado_aguardando_imagem(numero, data, conversas)
         return jsonify(resultado)
 
+    #Manda para o DEF "Aguardando Imagem NF" após envio da foto
     if estado == "aguardando_imagem_nf":
         resultado = tratar_estado_aguardando_imagem_nf(numero, data, conversas)
         return jsonify(resultado)
 
+    #Manda para o DEF "Confirmação Dados NF" após envio de "Sim" ou "Não"
     if estado == "aguardando_confirmacao_dados_nf":
         resultado = tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
+    #Manda para o DEF "Aguardando NF Manual" após envio do número da nota fiscal
     if estado == "aguardando_nota_manual":
         resultado = tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
+    #Manda para o DEF "Selecionando Viagem_Ticket" após seleção da viagem
     if estado == "selecionando_viagem_ticket":
         resultado = tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas)
         return jsonify(resultado)
 
+    #Manda para o DEF "Aguardando Destino SAAE" após detecção do OCR 
     if estado == "aguardando_destino_saae":
         resultado = tratar_estado_aguardando_destino_saae(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
+    #Manda para o DEF "Aguardando Confirmação" após envio de "Sim" ou "Não"
     if estado == "aguardando_confirmacao":
         resultado = processar_confirmacao_final(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
     return jsonify({"status": "sem estado válido"})
 
+#POST para recebimento de dados da viagem (A3)
 @app.route("/notificar_viagem", methods=["POST"])
 def notificar_viagem():
     # 1. Autenticação
@@ -197,7 +205,6 @@ def notificar_viagem():
                 "remetente": remetente,
                 "destinatario": destinatario,
                 "emite_nf": emite_nf,
-                "status": "falta nota"  # ou o que fizer sentido no início
             })
             logger.info(f"[A3] Viagem {numero_viagem} gravada no Supabase.")
         except Exception:
@@ -219,7 +226,7 @@ def notificar_viagem():
         enviar_mensagem(telefone_motorista, mensagem)
         logger.info(f"[ERP] Viagem {numero_viagem} enviada ao motorista {telefone_motorista}")
 
-        # 5. Retorno OK pro ERP
+        # 5. Retorno OK pro A3
         return jsonify({"status": "ok", "mensagem": "Viagem enviada ao motorista."}), 200
 
     except Exception as e:
