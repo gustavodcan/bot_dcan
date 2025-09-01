@@ -3,6 +3,7 @@ from config import INSTANCE_ID, API_TOKEN, CLIENT_TOKEN
 
 logger = logging.getLogger(__name__)
 
+#Cria lista(options) de viagens e envia para o motorista
 def enviar_lista_viagens(numero, viagens, mensagem):
     if not INSTANCE_ID or not API_TOKEN or not CLIENT_TOKEN:
         logger.error("[Z-API] Variáveis de ambiente faltando: INSTANCE_ID/API_TOKEN/CLIENT_TOKEN.")
@@ -45,7 +46,8 @@ def enviar_lista_viagens(numero, viagens, mensagem):
     except Exception:
         logger.error("[Z-API] Erro ao enviar lista interativa", exc_info=True)
         return False
-        
+
+#Envia mensagem simples baseada no "texto"
 def enviar_mensagem(numero, texto):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
     payload = {"phone": numero, "message": texto}
@@ -56,6 +58,7 @@ def enviar_mensagem(numero, texto):
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[🟢 Texto simples enviado] Status {res.status_code}: {res.text}")
 
+#Envia botões de Sim ou Não
 def enviar_botoes_sim_nao(numero, mensagem):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-button-list"
     payload = {
@@ -75,6 +78,7 @@ def enviar_botoes_sim_nao(numero, mensagem):
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
 
+#Cria(manualmente) lista de setores e envia para o motorista
 def enviar_lista_setor(numero, mensagem):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
     payload = {
@@ -99,6 +103,7 @@ def enviar_lista_setor(numero, mensagem):
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
 
+#Cria botões(manualmente) da operação e envia para motorista
 def enviar_opcoes_operacao(numero):
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-button-list"
     payload = {
