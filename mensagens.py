@@ -93,6 +93,7 @@ def enviar_lista_setor(numero, mensagem):
                 {"id": "financeiro",  "description": "(Pagamentos, Descontos e Dúvidas)", "title": "Financeiro"},
                 {"id": "recursos humanos", "description": "(Vagas, Documentação e Benefícios)", "title": "Recursos Humanos"},
                 {"id": "operacao", "description": "(Coletas, Entregas e Tickets)", "title": "Operação"},
+                {"id": "manutencao", "description": "(Checklist Manutenção)", "title": "Manutenção"},
             ]
         }
     }
