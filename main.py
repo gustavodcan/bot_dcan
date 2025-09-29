@@ -101,6 +101,8 @@ def webhook():
             enviar_opcoes_operacao(numero)
         elif texto_recebido == "manutencao":
             enviar_mensagem(numero, "🔧 Enviar checklist de manutenção ainda está em desenvolvimento. Em breve estará disponível!")
+            conversas[numero]["estado"] = "finalizado"
+            conversas.pop(numero, None)
         else:
             enviar_lista_setor(numero, "❌ Opção inválida. Por favor, escolha uma opção da lista.")
         return jsonify(status="resposta motorista")
