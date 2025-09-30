@@ -9,5 +9,6 @@ def tratar_estado_aguardando_km_manutencao(numero, texto_recebido, conversas):
         f"📋 Recebi os dados:\n"
         f"KM: {km_checklist}\n"
     )
+    enviar_mensagem(numero, msg)
     conversas[numero] = {"estado": "finalizado"}
     return {"status": "finalizado", "mensagem": msg}
