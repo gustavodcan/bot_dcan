@@ -3,12 +3,11 @@ from mensagens import enviar_mensagem
 
 logger = logging.getLogger(__name__)
 
-def tratar_estado_aguardando_km_manutencao (numero, texto_recebido, conversas):
-    km_checklist = texto_recebido
+def tratar_estado_aguardando_km_manutencao(numero, texto_recebido, conversas):
+    km_checklist = str(texto_recebido).strip()
     msg = (
         f"📋 Recebi os dados:\n"
-        f"KM: {texto_recebido.title()}\n"
+        f"KM: {km_checklist}\n"
     )
-    conversas[numero]["estado"] = "finalizado"
-    conversas.pop(numero, None)
-    return {"status": "finalizado"}
+    conversas[numero] = {"estado": "finalizado"}
+    return {"status": "finalizado", "mensagem": msg}
