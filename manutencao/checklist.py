@@ -35,10 +35,10 @@ def tratar_estado_aguardando_problema_manutencao(numero, texto_recebido, convers
 #        dados = conversas[numero]["dados"]
         resumo = (
             "📋 *Abertura de Manutenção*\n"
-            f"• Placa: {data.get("placa")}\n"
-            f"• KM: {data.get("km_checklist")}\n"
-            f"• Problema: {data.get("problema")}\n\n"
-            f"A placa {data.get("placa")} com KM {data.get("km_checklist")} está com o problema: {data.get("problema")}."
+            f"• Placa: {data.get["placa"]}\n"
+            f"• KM: {data.get["km_checklist"]}\n"
+            f"• Problema: {data.get["problema"]}\n\n"
+            f"A placa {data.get["placa"]} com KM {data.get["km_checklist"]} está com o problema: {data.get["problema"]}."
         )
 
         enviar_mensagem(numero, resumo)
