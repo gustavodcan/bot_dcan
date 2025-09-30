@@ -146,7 +146,7 @@ def webhook():
 
     #Manda para o DEF "Aguardando Placa Manutencao" após seleção do checklist
     if estado == "aguardando_problema_manutencao":
-        resultado = aguardando_problema_manutencao(numero, texto_recebido, conversas)
+        resultado = tratar_estado_aguardando_problema_manutencao(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
     #Manda para o DEF "Aguardando Imagem Ticket" após envio da foto
