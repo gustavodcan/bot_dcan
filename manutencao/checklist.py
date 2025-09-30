@@ -1,4 +1,4 @@
-import logging, os, requests
+import logging, os, re, requests
 from mensagens import enviar_mensagem
 
 logger = logging.getLogger(__name__)
