@@ -3,8 +3,12 @@ from mensagens import enviar_mensagem
 
 logger = logging.getLogger(__name__)
 
-if estado == "aguardando_placa_manutencao":
-  enviar_mensagem(numero, f"✏️ Por favor, envie a placa do veículo.")
-  else:
-    enviar_lista_setor(numero, "❌ Opção inválida. Por favor, escolha uma opção da lista.")
-  return jsonify(status="resposta motorista")
+def tratar_estado_aguardando_km_manutencao (numero, texto_recebido, conversas):
+    km_checklist = texto_recebido
+    msg = (
+        f"📋 Recebi os dados:\n"
+        f"KM: {texto_recebido.title()}\n"
+    )
+    conversas[numero]["estado"] = "finalizado"
+    conversas.pop(numero, None)
+    return {"status": "finalizado"}
