@@ -14,12 +14,12 @@ from integracoes.azure import salvar_imagem_azure
 from integracoes.infosimples import consultar_nfe_completa
 from operacao.foto_ticket.defs import extrair_dados_da_imagem
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
-from manutencao.checklist import tratar_estado_aguardando_km_manutencao
 from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
 from integracoes.google_sheets import conectar_google_sheets, atualizar_viagem_ticket
 from operacao.falar_programador.contato import encaminhar_para_setor, tratar_descricao_setor
 from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae, extrair_dados_cliente_saae
 from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
+from manutencao.checklist import tratar_estado_aguardando_km_manutencao, tratar_estado_aguardando_placa_manutencao, tratar_estado_aguardando_problema_manutencao
 from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao, tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket, tratar_estado_selecionando_viagem_ticket
 from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, A3_KEY, CERTIFICADO_BASE64, CERTIFICADO_SENHA, INFOSIMPLES_TOKEN, CHAVE_AES, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH, GOOGLE_CREDS_JSON, INSTANCE_ID, API_TOKEN, CLIENT_TOKEN)
 from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf, tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf
@@ -101,7 +101,7 @@ def webhook():
             conversas[numero] = {"estado": "aguardando_opcao_operacao", "expira_em": time.time() + TIMEOUT_SECONDS}
             enviar_opcoes_operacao(numero)
         elif texto_recebido == "manutencao":
-            enviar_mensagem(numero, "✏️ Por favor, envie o KM do veículo")
+            enviar_mensagem(numero, "🛠️ Vamos abrir uma manutenção.\nQual o KM do veículo?")
             conversas[numero]["estado"] = "aguardando_km_manutencao"
         else:
             enviar_lista_setor(numero, "❌ Opção inválida. Por favor, escolha uma opção da lista.")
@@ -134,9 +134,19 @@ def webhook():
         return jsonify(status="descricao encaminhada")
         # OBS: o retorno acima evita usar uma variável 'resultado' não definida.
 
-    #Manda para o DEF "Aguardando Placa Manutencao" após seleção do checklist
+    #Manda para o DEF "Aguardando KM Manutencao" após seleção do checklist
     if estado == "aguardando_km_manutencao":
         resultado = tratar_estado_aguardando_km_manutencao(numero, texto_recebido, conversas)
+        return jsonify(resultado)
+
+    #Manda para o DEF "Aguardando Placa Manutencao" após seleção do checklist
+    if estado == "aguardando_placa_manutencao":
+        resultado = tratar_estado_aguardando_placa_manutencao(numero, texto_recebido, conversas)
+        return jsonify(resultado)
+
+    #Manda para o DEF "Aguardando Placa Manutencao" após seleção do checklist
+    if estado == "aguardando_problema_manutencao":
+        resultado = aguardando_problema_manutencao(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
     #Manda para o DEF "Aguardando Imagem Ticket" após envio da foto
