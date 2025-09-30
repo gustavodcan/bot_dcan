@@ -5,12 +5,12 @@ logger = logging.getLogger(__name__)
 
 def tratar_estado_aguardando_km_manutencao(numero, texto_recebido, conversas):
     km_checklist = re.sub(r"\D", "", str(texto_recebido))
-    if not km_checklist:
-        return None
-    try:
-        return int(km_checklist)
-    except ValueError:
-        return None
+#    if not km_checklist:
+#        return None
+#    try:
+#        return int(km_checklist)
+#    except ValueError:
+#        return None
     
     conversas[numero]["dados"]["km"] = km_checklist
     enviar_mensagem(numero, "✅ KM anotado.\nQual a placa do veículo? (ex.: ABC1D23 ou ABC-1234)")
