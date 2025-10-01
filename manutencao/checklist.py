@@ -3,13 +3,10 @@ from mensagens import enviar_mensagem
 
 logger = logging.getLogger(__name__)
 
-import re
-from mensagens import enviar_mensagem
-
 def _normalizar_validar_placa(texto: str):
     placa = re.sub(r"[^A-Za-z0-9]", "", str(texto)).upper()
-    padrao_antigo = re.compile(r"^[A-Z]{3}\d{4}$")     # ABC1234
-    padrao_mercosul = re.compile(r"^[A-Z]{3}\d[A-Z]\d{2}$")  # ABC1D23
+    padrao_antigo = re.compile(r"^[A-Z]{3}\d{4}$")
+    padrao_mercosul = re.compile(r"^[A-Z]{3}\d[A-Z]\d{2}$")
     if padrao_antigo.match(placa) or padrao_mercosul.match(placa):
         return placa
     return None
@@ -20,10 +17,9 @@ def tratar_estado_aguardando_km_manutencao(numero, texto_recebido, conversas):
         enviar_mensagem(numero, "❌ Não entendi o KM. Envie só números (ex.: 120345).")
         return {"status": "aguardando_km"}
 
-    # garante estrutura da conversa sem sobrescrever dados existentes
     conv = conversas.setdefault(numero, {"estado": "aguardando_km_manutencao", "dados": {}})
     conv.setdefault("dados", {})
-    conv["dados"]["km"] = int(km_str)  # ou mantenha string se preferir
+    conv["dados"]["km"] = int(km_str)
     conv["estado"] = "aguardando_placa_manutencao"
 
     enviar_mensagem(numero, "✅ KM anotado.\nQual a placa do veículo? (ex.: ABC1D23 ou ABC-1234)")
@@ -66,5 +62,5 @@ def tratar_estado_aguardando_problema_manutencao(numero, texto_recebido, convers
     )
 
     enviar_mensagem(numero, resumo)
-    conversas.pop(numero, None)  # encerra o fluxo
+    conversas.pop(numero, None)
     return {"status": "finalizado", "mensagem": resumo}
