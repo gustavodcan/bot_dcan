@@ -22,6 +22,20 @@ def _get_sheet():
     ws = sh.worksheet("tickets_dcan")
     return ws
 
+def manutencao_get_sheet_ocorrecia():
+    client = conectar_google_sheets()
+    # ajuste NOME DA PLANILHA e da ABA se diferente
+    sh = client.open("manutencao_ocorrencia")
+    ws = sh.worksheet("ocorrencia")
+    return ws_man_oc
+
+def manutencao_get_sheet_base():
+    client = conectar_google_sheets()
+    # ajuste NOME DA PLANILHA e da ABA se diferente
+    sh = client.open("manutencao_ocorrencia")
+    ws = sh.worksheet("base")
+    return ws_man_base
+
 def _map_header(ws):
     """Retorna dict {nome_coluna: indice_coluna} lendo a primeira linha."""
     header = ws.row_values(1)
