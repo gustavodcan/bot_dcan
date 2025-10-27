@@ -25,3 +25,15 @@ mapa_setores = {
     "financeiro": os.getenv("SETOR_FINANCEIRO", "DEFAULT_FINANCEIRO"),
     "recursos humanos": os.getenv("SETOR_RH", "DEFAULT_RH")
 }
+
+#A3SOFT VARS:
+
+A3SOFT_BASE_URL = os.getenv("A3SOFT_BASE_URL")
+
+A3SOFT_LOGIN = os.getenv("A3SOFT_LOGIN")
+A3SOFT_SENHA = os.getenv("A3SOFT_SENHA")
+
+A3SOFT_ENDPOINT_LOGIN = os.getenv("A3SOFT_ENDPOINT_LOGIN")
+A3SOFT_ENDPOINT_XML = os.getenv("A3SOFT_ENDPOINT_XML")
+A3SOFT_ENDPOINT_NF = os.getenv("A3SOFT_ENDPOINT_NF")
+A3SOFT_ENDPOINT_TICKET = os.getenv("A3SOFT_ENDPOINT_TICKET")
