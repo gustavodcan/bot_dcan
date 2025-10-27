@@ -31,8 +31,10 @@ def _abs(url_base: str, path: str) -> str:
 
 def login_obter_token(login: str | None = None, senha: str | None = None) -> dict:
     """
-    POST login com body:
-      { "wsautenticacao": "login", "wssenha": "senha" }
+    POST login
+    Body: { "wsautenticacao": "login", "wssenha": "senha" }
+    Resposta esperada:
+      {"mensagem":"Token gerado com sucesso","token":"<JWT>"}
     """
     url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_LOGIN)
     payload = {
@@ -42,7 +44,11 @@ def login_obter_token(login: str | None = None, senha: str | None = None) -> dic
     try:
         resp = _session.post(url, json=payload, headers=JSON_HDRS, timeout=(5, 20))
         resp.raise_for_status()
-        return {"ok": True, "data": resp.json()}
+        data = resp.json()
+        token = data.get("token")
+        if not token:
+            return {"ok": False, "error": "token_ausente", "data": data}
+        return {"ok": True, "data": data, "token": token}
     except requests.exceptions.Timeout:
         return {"ok": False, "error": "timeout"}
     except requests.RequestException as e:
@@ -51,19 +57,9 @@ def login_obter_token(login: str | None = None, senha: str | None = None) -> dic
         return {"ok": False, "error": "invalid_json"}
 
 def receber_xml(xml_str: str, token: str) -> dict:
-    """
-    POST ReceberXML
-    Body esperado pelo ERP (ajuste se necessário):
-      { "token": "string", "xml": "string" }
-    """
-    if not A3SOFT_ENDPOINT_XML:
-        return {"ok": False, "error": "endpoint_xml_nao_configurado"}
-
+    # Body: { "token": "string", "xml": "string" }
     url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_XML)
-    body = {
-        "token": token,
-        "xml": xml_str
-    }
+    body = {"token": token, "xml": xml_str}
     try:
         resp = _session.post(url, json=body, headers=JSON_HDRS, timeout=(5, 60))
         resp.raise_for_status()
@@ -73,24 +69,9 @@ def receber_xml(xml_str: str, token: str) -> dict:
         return {"ok": False, "error": str(e)}
 
 def enviar_nf(token: str, numero_viagem: int, chave_acesso: str) -> dict:
-    """
-    POST ReceberNFe
-    Body:
-      {
-        "token": "string",
-        "numeroViagem": 0,
-        "chaveAcesso": "string"
-      }
-    """
-    if not A3SOFT_ENDPOINT_NF:
-        return {"ok": False, "error": "endpoint_nf_nao_configurado"}
-
+    # Body: { "token":"string", "numeroViagem":0, "chaveAcesso":"string" }
     url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_NF)
-    body = {
-        "token": token,
-        "numeroViagem": int(numero_viagem),
-        "chaveAcesso": str(chave_acesso)
-    }
+    body = {"token": token, "numeroViagem": int(numero_viagem), "chaveAcesso": str(chave_acesso)}
     try:
         resp = _session.post(url, json=body, headers=JSON_HDRS, timeout=(5, 60))
         resp.raise_for_status()
@@ -105,24 +86,10 @@ def enviar_ticket(
     numero_nota: str,
     ticket_balanca: str,
     peso: int | float,
-    foto_nome: str,
-    foto_base64: str
+    foto_nome: str | None = None,
+    foto_base64: str | None = None
 ) -> dict:
-    """
-    POST TicketBalanca
-    Body:
-      {
-        "token": "string",
-        "numeroViagem": 0,
-        "numeroNota": "string",
-        "ticketBalanca": "string",
-        "peso": 0,
-        "foto": { "nome": "string", "base64": "string" }
-      }
-    """
-    if not A3SOFT_ENDPOINT_TICKET:
-        return {"ok": False, "error": "endpoint_ticket_nao_configurado"}
-
+    # Body: { "token":"string","numeroViagem":0,"numeroNota":"string","ticketBalanca":"string","peso":0,"foto":{"nome":"string","base64":"string"} }
     url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_TICKET)
     body = {
         "token": token,
@@ -131,10 +98,8 @@ def enviar_ticket(
         "ticketBalanca": str(ticket_balanca),
         "peso": float(peso),
     }
-
     if foto_nome and foto_base64:
         body["foto"] = {"nome": foto_nome, "base64": foto_base64}
-
     try:
         resp = _session.post(url, json=body, headers=JSON_HDRS, timeout=(5, 60))
         resp.raise_for_status()
@@ -142,4 +107,3 @@ def enviar_ticket(
     except Exception as e:
         logger.exception("[A3SOFT] Falha em TicketBalanca")
         return {"ok": False, "error": str(e)}
-
