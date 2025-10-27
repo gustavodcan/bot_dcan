@@ -11,3 +11,4 @@ pycryptodome
 gunicorn
 psycopg2-binary
 supabase
+xml.etree.ElementTree
