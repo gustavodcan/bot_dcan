@@ -306,29 +306,19 @@ def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
     enviar_botoes_sim_nao(numero, msg)
     return {"status": "aguardando confirmação"}
 
-def _file_to_base64(path: str) -> tuple[str, str] | tuple[None, None]:
-    try:
-        nome = os.path.basename(path)
-        with open(path, "rb") as f:
-            b64 = base64.b64encode(f.read()).decode("utf-8")
-        return nome, b64
-    except Exception:
-        logger.exception("[A3/TICKET] Falha ao abrir/encode da foto do ticket")
-        return None, None
-
 def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
     # estrutura segura
     conv = conversas.setdefault(numero, {})
     dados = conv.setdefault("dados", {})
     nf_consulta = conv.get("nf_consulta", {}) or {}
 
-    # FOTO — tenta em 3 origens: (nome,base64) prontos, depois path
-    foto_nome   = dados.get("ticket_img_nome") or conv.get("ticket_img_nome")
-    foto_base64 = dados.get("ticket_img_b64")  or conv.get("ticket_img_b64")
-    if not (foto_nome and foto_base64):
-        foto_path = dados.get("ticket_imagem_path") or conv.get("ticket_imagem_path")
-        if foto_path:
-            foto_nome, foto_base64 = _file_to_base64(foto_path)
+    foto_nome   = "ticket.jpg"
+    foto_base64 = (
+        dados.get("ticket_img_b64")
+        or conv.get("ticket_img_b64")
+        or dados.get("foto_ticket")         # se você armazenar no mesmo dict
+        or conv.get("foto_ticket")
+    )
 
     if not (foto_nome and foto_base64):
         enviar_mensagem(numero, "📸 A foto do ticket é obrigatória. Envie uma foto nítida do ticket de balança.")
@@ -377,10 +367,6 @@ def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
         enviar_mensagem(numero, "⚠️ Peso inválido para enviar ao A3Soft.")
         logger.error(f"[A3/TICKET] peso inválido: {peso_val}")
         return {"ok": False, "error": "peso_invalido"}
-
-    # foto: se só tem path, converte
-    if (foto_path and not (foto_nome and foto_base64)):
-        foto_nome, foto_base64 = _file_to_base64(foto_path)
 
     # login/token
     auth = login_obter_token()
