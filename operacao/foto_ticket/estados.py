@@ -322,11 +322,10 @@ def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
     nf_consulta = conv.get("nf_consulta", {}) or {}
 
     # coleta segura dos campos
-    numero_viagem  = (
-        dados.get("numero_viagem")
-        or nf_consulta.get("numero_viagem")
-        or conv.get("numero_viagem")
-    )
+    numero_viagem = (
+        conversas.get(numero, {}).get("numero_viagem_selecionado")
+        or get_viagem_ativa(numero))
+    
     numero_nota    = (
         dados.get("numero_nf")
         or nf_consulta.get("numero")
