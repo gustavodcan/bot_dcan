@@ -327,19 +327,17 @@ def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
         or get_viagem_ativa(numero))
     
     numero_nota    = (
-        dados.get("numero_nf")
-        or nf_consulta.get("numero")
-        or conv.get("numero_nf")
+        # Pega nota fiscal registrada na viagem
+        viagens = get_viagens_por_telefone(numero)
+        viagem = next((v for v in viagens if v["numero_viagem"] == numero_viagem), None)
+
+        nota_viagem = viagem.get("nota_fiscal") if viagem else None
+        nota_ticket = dados.get("nota_fiscal")
     )
-    ticket_balanca = (
-        dados.get("ticket")
-        or conv.get("ticket")
-    )
-    peso_val       = (
-        dados.get("peso")          # pode vir como "25.480" ou "25480"
-        or nf_consulta.get("peso_bruto")
-        or conv.get("peso")
-    )
+
+    ticket_balanca = (dados.get("ticket") or dados.get("brm_mes") or "")
+
+    peso_val       = (dados.get("peso_liquido") or "")
 
     # foto (opcional)
     foto_path  = dados.get("ticket_imagem_path") or conv.get("ticket_imagem_path")
