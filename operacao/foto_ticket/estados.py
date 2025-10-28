@@ -491,6 +491,11 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
             except Exception:
                 logger.warning("[TICKET] Falha ao gerar Base64; seguindo sem foto_ticket.", exc_info=True)
 
+            conv   = conversas.setdefault(numero, {})
+            dados  = conv.setdefault("dados", {})
+            dados["ticket_img_b64"]  = base_str
+            dados["ticket_img_nome"] = "ticket.jpg"
+
             # Uma única chamada ao Supabase com tudo junto
             atualizar_viagem(numero_viagem, payload)
             logger.info("[TICKET] Payload completo atualizado no Supabase (viagem %s).", numero_viagem)
