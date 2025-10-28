@@ -51,56 +51,71 @@ def receber_xml(token: str, chave_acesso: str) -> dict:
     """
     Chama /TNFeController/XML.
     O servidor pode responder:
-      - JSON: { "xml": "<xml ...>" }
+      - JSON: { "xml": "<xml ...>" } (às vezes com aspas/escapes problemáticos)
       - ou o XML direto como texto.
-    Retorna sempre {"ok": True, "xml": "<xml>...</xml>"} quando der certo.
+    Retorna {"ok": True, "xml": "<xml>...</xml>"} quando der certo.
     """
-    url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_XML)
+    url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_XML)  # ex: "/datasnap/rest/TNFeController/XML"
     body = {"token": token, "chaveAcesso": str(chave_acesso)}
 
-    def _resp_to_dict(r):
-        txt = (r.text or "")
-        if r.status_code >= 400:
-            return {
-                "ok": False,
-                "status": r.status_code,
-                "error": "http_error",
-                "text": txt[:2000],
-            }
-        # Tenta JSON com {"xml": "..."}
+    def _parse_response(r):
+        txt = r.text or ""
+        status = r.status_code
+        if status >= 400:
+            return {"ok": False, "status": status, "error": "http_error", "text": txt[:2000]}
+
         ct = (r.headers.get("Content-Type") or "").lower()
+
+        # 1) Caso JSON normal
         if "json" in ct or txt.lstrip().startswith("{"):
+            # Tenta JSON "de verdade" primeiro
             try:
                 j = r.json()
-                xml_s = j.get("xml") if isinstance(j, dict) else None
-                if not xml_s:
-                    return {"ok": False, "error": "json_sem_campo_xml", "text": txt[:2000]}
-                return {"ok": True, "xml": xml_s}
-            except Exception as je:
-                return {"ok": False, "error": f"json_decode_error: {je}", "text": txt[:2000]}
-        # Senão, devolve o texto puro (deve ser XML)
+                if isinstance(j, dict) and j.get("xml"):
+                    return {"ok": True, "xml": j["xml"]}
+                # Se por algum motivo não tem 'xml', cai no fallback de regex
+            except Exception:
+                pass
+
+            # 2) Fallback regex: extrai o valor de "xml": "..."
+            m = re.search(r'"xml"\s*:\s*"(.*)"\s*}\s*$', txt, flags=re.DOTALL)
+            if m:
+                xml_quoted = m.group(1)
+                # desescapa \n, \t, \", \uXXXX etc.
+                try:
+                    xml_unescaped = bytes(xml_quoted, "utf-8").decode("unicode_escape")
+                    return {"ok": True, "xml": xml_unescaped}
+                except Exception as je:
+                    return {"ok": False, "status": status, "error": f"json_regex_decode_error: {je}", "text": txt[:2000]}
+
+            # 3) Se ainda não deu, retorna erro informativo
+            return {"ok": False, "status": status, "error": "json_sem_campo_xml", "text": txt[:2000]}
+
+        # 4) Não é JSON — assume XML direto
         return {"ok": True, "xml": txt}
 
     try:
-        # DataSnap costuma aceitar POST aqui; se mudar, dá pra tentar PUT como fallback
         r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
-        res = _resp_to_dict(r)
+        res = _parse_response(r)
         if res["ok"]:
             return res
-        # fallback simples: tenta PUT se vier 404/405
+
+        # Fallback: tenta PUT se for erro típico de rota/método
         if res.get("status") in (404, 405):
             r2 = _session.put(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
-            return _resp_to_dict(r2)
+            return _parse_response(r2)
+
         return res
+
     except requests.exceptions.RetryError:
-        # tenta sem adapter pra pegar o corpo do erro
         try:
             r = requests.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
-            return _resp_to_dict(r)
+            return _parse_response(r)
         except Exception as ee:
-            return {"ok": False, "error": f"fallback_exception: {ee}"}
+            return {"ok": False, "status": None, "error": f"fallback_exception: {ee}", "text": ""}
+
     except Exception as e:
-        return {"ok": False, "error": str(e)}
+        return {"ok": False, "status": None, "error": str(e), "text": ""}
 
 def enviar_nf(token: str, numero_viagem: int, chave_acesso: str) -> dict:
     """POST /ReceberNFe   Body: { "token":"...", "numeroViagem":0, "chaveAcesso":"..." }"""
