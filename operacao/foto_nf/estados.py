@@ -196,12 +196,17 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
             return {"status": "erro_a3soft", "detalhe": res_a3}
 
     xml_bruto = (res_a3.get("xml") or "").strip().replace("\ufeff", "")
+    logger.debug(f"[A3SOFT] XML bruto retornado (até 2000 chars): {res_a3.get('xml', '')[:2000]}")
 
     # 3) parse do XML direto aqui
     try:
         root = ET.fromstring(xml_bruto)
     except ET.ParseError:
-        enviar_mensagem(numero, "⚠️ Retorno do A3Soft não é um XML válido.")
+        logger.error(
+            "[A3SOFT] Retorno não é XML válido. Conteúdo recebido:\n"
+            + (xml_bruto[:2000] if xml_bruto else "<vazio>")
+        )
+        enviar_mensagem(numero, "⚠️ Retorno do A3Soft não é um XML válido (foi logado no servidor).")
         return {"status": "xml_invalido"}
 
     def get_text(*xpaths, default=""):
