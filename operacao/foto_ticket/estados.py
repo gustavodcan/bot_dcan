@@ -322,11 +322,11 @@ def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
     nf_consulta = conv.get("nf_consulta", {}) or {}
 
     # Pega nota fiscal registrada na viagem
-    viagens = get_viagens_por_telefone(numero)
-    viagem = next((v for v in viagens if v["numero_viagem"] == numero_viagem), None)
+#    viagens = get_viagens_por_telefone(numero)
+#    viagem = next((v for v in viagens if v["numero_viagem"] == numero_viagem), None)
 
-    nota_viagem = viagem.get("nota_fiscal") if viagem else None
-    nota_ticket = dados.get("nota_fiscal")
+#    nota_viagem = viagem.get("nota_fiscal") if viagem else None
+#    nota_ticket = dados.get("nota_fiscal")
 
     # coleta segura dos campos
     numero_viagem = (
