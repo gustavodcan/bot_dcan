@@ -220,16 +220,16 @@ def enviar_ticket(
         "peso": float(peso),
         "valorMercadoria": float("1"),
         "quantidade": float("1"),
+        "foto": {"nome": str(foto_nome), "base64": str(foto_base64)},
     }
-    if foto_nome and foto_base64:
-        body["foto"] = {"nome": foto_nome, "base64": foto_base64}
-
-    # 🔍 log detalhado do body que vai ser enviado
+    
+    # 🔍 logs úteis
     try:
         import json
-        logger.debug(f"[A3/TICKET] Enviando body -> {json.dumps(body, ensure_ascii=False)[:2000]}")
+        foto_len = len(foto_base64 or "")
+        logger.debug(f"[A3/TICKET] Enviando body -> {json.dumps({**body, 'foto': {'nome': body['foto']['nome'], 'base64': f'<{foto_len} chars>'}}, ensure_ascii=False)[:2000]}")
     except Exception:
-        logger.debug(f"[A3/TICKET] Enviando body (repr) -> {repr(body)[:2000]}")
+        logger.debug(f"[A3/TICKET] Enviando body (repr) -> nome={body['foto']['nome']} base64_len={len(foto_base64 or '')}")
 
     try:
         r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
@@ -244,11 +244,9 @@ def enviar_ticket(
             return {"ok": False, "status": r.status_code, "error": "http_error", "data": data}
 
         return {"ok": True, "data": data}
-
     except requests.exceptions.RetryError as e:
         logger.exception("[A3/TICKET] RetryError")
         return {"ok": False, "status": None, "error": f"retry_error: {e}"}
     except Exception as e:
         logger.exception("[A3/TICKET] Exceção geral")
         return {"ok": False, "status": None, "error": str(e)}
-
