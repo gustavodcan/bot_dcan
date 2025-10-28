@@ -11,11 +11,21 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
+# integracoes/a3soft/client.py (topo: sessão)
 _session = requests.Session()
-_retry = Retry(total=2, connect=2, read=2, backoff_factor=0.5,
-               status_forcelist=[429,500,502,503,504], allowed_methods=["POST"])
+_retry = Retry(
+    total=1,                  # menos tentativas pra não "comer" o erro real
+    connect=1,
+    read=1,
+    backoff_factor=0.5,
+    status_forcelist=[429, 502, 503, 504],  # tira 500 daqui p/ não virar ResponseError
+    allowed_methods=["POST"],
+    raise_on_status=False,    # importante: não explode em 5xx, devolve resp
+)
 _adapter = HTTPAdapter(max_retries=_retry)
-_session.mount("http://", _adapter); _session.mount("https://", _adapter)
+_session.mount("http://", _adapter)
+_session.mount("https://", _adapter)
+
 
 JSON_HDRS = {"Content-Type":"application/json","accept":"application/json"}
 
@@ -38,15 +48,37 @@ def login_obter_token(login: str | None=None, senha: str | None=None) -> dict:
     except ValueError: return {"ok": False, "error":"invalid_json"}
 
 def receber_xml(token: str, chave_acesso: str) -> dict:
-    """POST /ReceberXML   Body: { "token":"...", "chaveAcesso":"..." }"""
+    """POST /ReceberXML   Body: { "token":"...", "chaveAcesso":"..." }  -> retorna XML (texto)"""
     url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_XML)
     body = {"token": token, "chaveAcesso": str(chave_acesso)}
     try:
-        r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(5,60))
-        r.raise_for_status()
-        return {"ok": True, "data": r.json()}
+        r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
+        # se vier 5xx/4xx, queremos ver o texto do erro
+        if r.status_code >= 400:
+            return {
+                "ok": False,
+                "status": r.status_code,
+                "error": "http_error",
+                "text": (r.text or "").strip()[:2000],  # log curto p/ debug
+            }
+        return {"ok": True, "xml": r.text}
+    except requests.exceptions.RetryError as e:
+        # fallback: 1 tentativa direta sem adapter p/ capturar resposta real
+        try:
+            r = requests.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
+            if r.status_code >= 400:
+                return {
+                    "ok": False,
+                    "status": r.status_code,
+                    "error": "http_error_no_retry",
+                    "text": (r.text or "").strip()[:2000],
+                }
+            return {"ok": True, "xml": r.text}
+        except Exception as ee:
+            return {"ok": False, "error": f"fallback_exception: {ee}"}
     except Exception as e:
-        logger.exception("[A3SOFT] Falha em ReceberXML"); return {"ok": False, "error": str(e)}
+        return {"ok": False, "error": str(e)}
+
 
 def enviar_nf(token: str, numero_viagem: int, chave_acesso: str) -> dict:
     """POST /ReceberNFe   Body: { "token":"...", "numeroViagem":0, "chaveAcesso":"..." }"""
