@@ -5,7 +5,7 @@ from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
 import xml.etree.ElementTree as ET
-from integracoes.a3soft.client import login_obter_token, receber_xml
+from integracoes.a3soft.client import login_obter_token, receber_xml, enviar_nf
 from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa, carregar_viagens_ativas, VIAGENS
 #from integracoes.google_sheets import atualizar_viagem_nf
 from integracoes.supabase_db import atualizar_viagem
@@ -325,8 +325,8 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
                 else:
                     # número da viagem: ajuste a origem conforme seu fluxo
                     numero_viagem = (
-                        conversas[numero]["dados"].get("numero_viagem")
-                        or conversas[numero].get("nf_consulta", {}).get("numero_viagem")
+                        conversas.get(numero, {}).get("numero_viagem_selecionado")
+                        or get_viagem_ativa(numero)
                     )
                     if not numero_viagem:
                         enviar_mensagem(numero, "⚠️ Não achei o número da viagem para enviar ao A3Soft.")
