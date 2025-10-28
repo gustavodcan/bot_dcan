@@ -154,6 +154,38 @@ def receber_xml(token: str, chave_acesso: str) -> dict:
     except Exception as e:
         return {"ok": False, "status": None, "error": str(e), "text": ""}
 
+def enviar_nf(token: str, numero_viagem: int, chave_acesso: str) -> dict:
+    """
+    POST /TMapaLogisticoController/ReceberNFe
+    Body:
+      { "token":"...", "numeroViagem": 0, "chaveAcesso":"..." }
+    Retorna {"ok": True, "data": <json|texto>} ou {"ok": False, ...}
+    """
+    url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_NF)  # "/datasnap/rest/TMapaLogisticoController/ReceberNFe"
+    body = {
+        "token": token,
+        "numeroViagem": int(numero_viagem),
+        "chaveAcesso": str(chave_acesso),
+    }
+
+    try:
+        r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
+        # alguns servidores respondem texto; tenta json mas aceita texto
+        try:
+            data = r.json()
+        except Exception:
+            data = (r.text or "").strip()
+
+        if r.status_code >= 400:
+            return {"ok": False, "status": r.status_code, "error": "http_error", "data": data}
+
+        return {"ok": True, "data": data}
+
+    except requests.exceptions.RetryError as e:
+        return {"ok": False, "status": None, "error": f"retry_error: {e}"}
+    except Exception as e:
+        return {"ok": False, "status": None, "error": str(e)}
+
 def enviar_ticket(token: str, numero_viagem: int, numero_nota: str,
                   ticket_balanca: str, peso: int | float,
                   foto_nome: str | None=None, foto_base64: str | None=None) -> dict:
