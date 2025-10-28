@@ -4,7 +4,8 @@ from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viage
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
-from integracoes.infosimples import consultar_nfe_completa
+import xml.etree.ElementTree as ET
+from integracoes.a3soft.client import login_obter_token, receber_xml
 from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa, carregar_viagens_ativas, VIAGENS
 #from integracoes.google_sheets import atualizar_viagem_nf
 from integracoes.supabase_db import atualizar_viagem
@@ -172,56 +173,65 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         return {"status": "chave não encontrada"}
 
     logger.info(f"[NF] Chave encontrada com sucesso: {chave}")
-    
-    # consulta direta na InfoSimples (sem confirmar chave antes)
-    enviar_mensagem(numero, "🔎 Localizando as informações da nota, um instante…")
+
+    enviar_mensagem(numero, "🔄 Consultando dados da NF no A3Soft...")
+
+    # 1) login pra pegar token
+    auth = login_obter_token()
+    if not auth.get("ok") or not auth.get("token"):
+        enviar_mensagem(numero, f"⚠️ Falha ao autenticar no A3Soft: {auth.get('error')}")
+        return {"status": "erro_a3soft_auth"}
+
+    # 2) chamar ReceberXML (ERP devolve XML, não JSON)
+    res_a3 = receber_xml(token=auth["token"], chave_acesso=chave)
+    if not res_a3.get("ok"):
+        enviar_mensagem(numero, f"⚠️ Falha ao consultar NF no A3Soft: {res_a3.get('error')}")
+        return {"status": "erro_a3soft"}
+
+    xml_bruto = (res_a3.get("xml") or "").strip().replace("\ufeff", "")
+
+    # 3) parse do XML direto aqui
     try:
-        resultado = consultar_nfe_completa(chave)
-    except Exception:
-        logger.error("Erro inesperado consultando InfoSimples", exc_info=True)
-        enviar_mensagem(numero, "❌ Ocorreu um erro ao consultar a nota. Envie a imagem novamente.")
-        conversas[numero]["estado"] = "aguardando_imagem_nf"
-        return {"status": "erro consulta"}
+        root = ET.fromstring(xml_bruto)
+    except ET.ParseError:
+        enviar_mensagem(numero, "⚠️ Retorno do A3Soft não é um XML válido.")
+        return {"status": "xml_invalido"}
 
-    if not resultado or resultado.get("code") != 200:
-        msg = resultado.get("code_message", "Erro ao consultar a nota.")
-        enviar_mensagem(numero, f"❌ {msg}\nPor favor, envie a imagem novamente.")
-        conversas[numero]["estado"] = "aguardando_imagem_nf"
-        return {"status": "consulta falhou"}
+    def get_text(*xpaths, default=""):
+        for xp in xpaths:
+            el = root.find(xp)
+            if el is not None and el.text and el.text.strip():
+                return el.text.strip()
+        return default
 
-    # normaliza dados
-    dados_raw = resultado.get("data", {})
-    dados = dados_raw[0] if isinstance(dados_raw, list) else dados_raw
+    # chave pode vir em <chNFe> ou no Id (IdNFe + 44 dígitos)
+    chave_xml = get_text(".//chNFe") or chave
+    if not get_text(".//chNFe"):
+        m = re.search(r"IdNFe(\d{44})", xml_bruto)
+        if m:
+            chave_xml = m.group(1)
 
-    emitente = dados.get("emitente", {})
-    emitente_nome = emitente.get("nome") or emitente.get("nome_fantasia") or "Não informado"
-    emitente_cnpj = emitente.get("cnpj") or "Não informado"
+    emitente_nome = get_text(".//emit/xNome") or "Não informado"
+    emitente_cnpj = get_text(".//emit/CNPJ") or "Não informado"
+    destinatario_nome = get_text(".//dest/xNome") or "Não informado"
+    destinatario_cnpj = get_text(".//dest/CNPJ") or "Não informado"
 
-    destinatario = dados.get("destinatario", {})
-    destinatario_nome = destinatario.get("nome") or destinatario.get("nome_fantasia") or "Não informado"
-    destinatario_cnpj = destinatario.get("cnpj") or "Não informado"
-
-    nfe = dados.get("nfe", {})
-    nfe_numero = nfe.get("numero") or "Não informado"
-    nfe_emissao_raw = nfe.get("data_emissao") or ""
+    nfe_numero = get_text(".//ide/nNF") or "Não informado"
+    emissao_iso = get_text(".//ide/dhEmi") or ""
     try:
-        dt = datetime.strptime(nfe_emissao_raw[:19], "%d/%m/%Y %H:%M:%S")
-        nfe_emissao = dt.strftime("%d/%m/%Y")
+        nfe_emissao = datetime.fromisoformat(emissao_iso.replace("Z", "+00:00")).strftime("%d/%m/%Y") if emissao_iso else "Não informado"
     except Exception:
-        nfe_emissao = "Não informado"
+        nfe_emissao = emissao_iso or "Não informado"
 
-    transporte = dados.get("transporte", {})
-    modalidade = transporte.get("modalidade_frete") or "Não informado"
+    modalidade = get_text(".//transp/modFrete") or ""
     modalidade_num = "".join(re.findall(r"\d+", modalidade)) if modalidade else "Não informado"
 
-    volumes = transporte.get("volumes", [])
-    primeiro_volume = volumes[0] if isinstance(volumes, list) and volumes else {}
-    peso_bruto = primeiro_volume.get("peso_bruto") or "Não informado"
+    peso_bruto = get_text(".//transp/vol/pesoB") or get_text(".//transp/vol/pesoL") or "Não informado"
 
-    # guarda para possível reuso
+    # 4) salvar e seguir o fluxo igual antes
     conversas[numero]["estado"] = "aguardando_confirmacao_dados_nf"
     conversas[numero]["nf_consulta"] = {
-        "chave": chave,
+        "chave": chave_xml,
         "emitente_nome": emitente_nome,
         "emitente_cnpj": emitente_cnpj,
         "destinatario_nome": destinatario_nome,
@@ -231,8 +241,9 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         "modalidade": modalidade_num,
         "peso_bruto": peso_bruto,
     }
+    conversas[numero]["ocr_texto_nf_xml"] = xml_bruto  # opcional p/ debug
 
-    # envia resumo para confirmação
+    # envia resumo p/ confirmação (igual você já fazia)
     msg = (
         "✅ *Nota encontrada! Confira os dados:*\n\n"
         f"*Emitente:* {emitente_nome}\n"
