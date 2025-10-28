@@ -185,8 +185,15 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     # 2) chamar ReceberXML (ERP devolve XML, não JSON)
     res_a3 = receber_xml(token=auth["token"], chave_acesso=chave)
     if not res_a3.get("ok"):
-        enviar_mensagem(numero, f"⚠️ Falha ao consultar NF no A3Soft: {res_a3.get('error')}")
-        return {"status": "erro_a3soft"}
+        # loga status + trecho do corpo p/ entender o 500 do ERP
+        status = res_a3.get("status")
+        corpo  = (res_a3.get("text") or res_a3.get("error") or "")[:500]
+        logger.error(f"[A3] ReceberXML falhou (status={status}) corpo={corpo}")
+        enviar_mensagem(numero, "⚠️ Erro ao consultar a NF no A3Soft. Vou tentar novamente em instantes.")
+        # opcional: 1 re-tentativa simples
+        res_a3 = receber_xml(token=auth["token"], chave_acesso=chave)
+        if not res_a3.get("ok"):
+            return {"status": "erro_a3soft", "detalhe": res_a3}
 
     xml_bruto = (res_a3.get("xml") or "").strip().replace("\ufeff", "")
 
