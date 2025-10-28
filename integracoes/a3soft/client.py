@@ -48,37 +48,59 @@ def login_obter_token(login: str | None=None, senha: str | None=None) -> dict:
     except ValueError: return {"ok": False, "error":"invalid_json"}
 
 def receber_xml(token: str, chave_acesso: str) -> dict:
-    """POST /ReceberXML   Body: { "token":"...", "chaveAcesso":"..." }  -> retorna XML (texto)"""
+    """
+    Chama /TNFeController/XML.
+    O servidor pode responder:
+      - JSON: { "xml": "<xml ...>" }
+      - ou o XML direto como texto.
+    Retorna sempre {"ok": True, "xml": "<xml>...</xml>"} quando der certo.
+    """
     url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_XML)
     body = {"token": token, "chaveAcesso": str(chave_acesso)}
-    try:
-        r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
-        # se vier 5xx/4xx, queremos ver o texto do erro
+
+    def _resp_to_dict(r):
+        txt = (r.text or "")
         if r.status_code >= 400:
             return {
                 "ok": False,
                 "status": r.status_code,
                 "error": "http_error",
-                "text": (r.text or "").strip()[:2000],  # log curto p/ debug
+                "text": txt[:2000],
             }
-        return {"ok": True, "xml": r.text}
-    except requests.exceptions.RetryError as e:
-        # fallback: 1 tentativa direta sem adapter p/ capturar resposta real
+        # Tenta JSON com {"xml": "..."}
+        ct = (r.headers.get("Content-Type") or "").lower()
+        if "json" in ct or txt.lstrip().startswith("{"):
+            try:
+                j = r.json()
+                xml_s = j.get("xml") if isinstance(j, dict) else None
+                if not xml_s:
+                    return {"ok": False, "error": "json_sem_campo_xml", "text": txt[:2000]}
+                return {"ok": True, "xml": xml_s}
+            except Exception as je:
+                return {"ok": False, "error": f"json_decode_error: {je}", "text": txt[:2000]}
+        # Senão, devolve o texto puro (deve ser XML)
+        return {"ok": True, "xml": txt}
+
+    try:
+        # DataSnap costuma aceitar POST aqui; se mudar, dá pra tentar PUT como fallback
+        r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
+        res = _resp_to_dict(r)
+        if res["ok"]:
+            return res
+        # fallback simples: tenta PUT se vier 404/405
+        if res.get("status") in (404, 405):
+            r2 = _session.put(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
+            return _resp_to_dict(r2)
+        return res
+    except requests.exceptions.RetryError:
+        # tenta sem adapter pra pegar o corpo do erro
         try:
             r = requests.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
-            if r.status_code >= 400:
-                return {
-                    "ok": False,
-                    "status": r.status_code,
-                    "error": "http_error_no_retry",
-                    "text": (r.text or "").strip()[:2000],
-                }
-            return {"ok": True, "xml": r.text}
+            return _resp_to_dict(r)
         except Exception as ee:
             return {"ok": False, "error": f"fallback_exception: {ee}"}
     except Exception as e:
         return {"ok": False, "error": str(e)}
-
 
 def enviar_nf(token: str, numero_viagem: int, chave_acesso: str) -> dict:
     """POST /ReceberNFe   Body: { "token":"...", "numeroViagem":0, "chaveAcesso":"..." }"""
