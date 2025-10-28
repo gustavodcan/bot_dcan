@@ -186,13 +186,30 @@ def enviar_nf(token: str, numero_viagem: int, chave_acesso: str) -> dict:
     except Exception as e:
         return {"ok": False, "status": None, "error": str(e)}
 
-def enviar_ticket(token: str, numero_viagem: int, numero_nota: str,
-                  ticket_balanca: str, peso: int | float,
-                  foto_nome: str | None=None, foto_base64: str | None=None) -> dict:
+def enviar_ticket(
+    token: str,
+    numero_viagem: int,
+    numero_nota: str,
+    ticket_balanca: str,
+    peso: int | float,
+    valorMercadoria: int | float,
+    quantidade: int | float,
+    foto_nome: str | None = None,
+    foto_base64: str | None = None
+) -> dict:
     """
-    POST /TicketBalanca
-    Body: { "token":"...","numeroViagem":0,"numeroNota":"...","ticketBalanca":"...","peso":0,
-            "foto":{"nome":"...","base64":"..."} (opcional) }
+    POST /TMapaLogisticoController/TicketBalanca
+    Body:
+      {
+        "token": "string",
+        "numeroViagem": 0,
+        "numeroNota": "string",
+        "ticketBalanca": "string",
+        "peso": 0,
+        "valorMercadoria": 0,
+        "quantidade": 0,
+        "foto": {"nome": "string", "base64": "string"}  # opcional
+      }
     """
     url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_TICKET)
     body = {
@@ -201,12 +218,25 @@ def enviar_ticket(token: str, numero_viagem: int, numero_nota: str,
         "numeroNota": str(numero_nota),
         "ticketBalanca": str(ticket_balanca),
         "peso": float(peso),
+        "valorMercadoria": float("1"),
+        "quantidade": float("1"),
     }
     if foto_nome and foto_base64:
         body["foto"] = {"nome": foto_nome, "base64": foto_base64}
+
     try:
-        r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(5,60))
-        r.raise_for_status()
-        return {"ok": True, "data": r.json()}
+        r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
+        try:
+            data = r.json()
+        except Exception:
+            data = (r.text or "").strip()
+
+        if r.status_code >= 400:
+            return {"ok": False, "status": r.status_code, "error": "http_error", "data": data}
+
+        return {"ok": True, "data": data}
+    except requests.exceptions.RetryError as e:
+        return {"ok": False, "status": None, "error": f"retry_error: {e}"}
     except Exception as e:
-        logger.exception("[A3SOFT] Falha em TicketBalanca"); return {"ok": False, "error": str(e)}
+        return {"ok": False, "status": None, "error": str(e)}
+
