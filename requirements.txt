@@ -11,7 +11,4 @@ pycryptodome
 gunicorn
 psycopg2-binary
 supabase
-xml.etree.ElementTree
-urllib.parse
-requests.adapters
-urllib3.util.retry
+urllib3
