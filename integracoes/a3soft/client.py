@@ -224,6 +224,13 @@ def enviar_ticket(
     if foto_nome and foto_base64:
         body["foto"] = {"nome": foto_nome, "base64": foto_base64}
 
+    # 🔍 log detalhado do body que vai ser enviado
+    try:
+        import json
+        logger.debug(f"[A3/TICKET] Enviando body -> {json.dumps(body, ensure_ascii=False)[:2000]}")
+    except Exception:
+        logger.debug(f"[A3/TICKET] Enviando body (repr) -> {repr(body)[:2000]}")
+
     try:
         r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
         try:
@@ -231,12 +238,17 @@ def enviar_ticket(
         except Exception:
             data = (r.text or "").strip()
 
+        logger.debug(f"[A3/TICKET] Resposta HTTP {r.status_code} - corpo: {str(data)[:1000]}")
+
         if r.status_code >= 400:
             return {"ok": False, "status": r.status_code, "error": "http_error", "data": data}
 
         return {"ok": True, "data": data}
+
     except requests.exceptions.RetryError as e:
+        logger.exception("[A3/TICKET] RetryError")
         return {"ok": False, "status": None, "error": f"retry_error: {e}"}
     except Exception as e:
+        logger.exception("[A3/TICKET] Exceção geral")
         return {"ok": False, "status": None, "error": str(e)}
 
