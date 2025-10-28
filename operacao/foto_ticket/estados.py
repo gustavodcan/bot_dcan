@@ -322,12 +322,18 @@ def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
     dados = conv.setdefault("dados", {})
     nf_consulta = conv.get("nf_consulta", {}) or {}
 
-    # Pega nota fiscal registrada na viagem
-#    viagens = get_viagens_por_telefone(numero)
-#    viagem = next((v for v in viagens if v["numero_viagem"] == numero_viagem), None)
+    # FOTO — tenta em 3 origens: (nome,base64) prontos, depois path
+    foto_nome   = dados.get("ticket_img_nome") or conv.get("ticket_img_nome")
+    foto_base64 = dados.get("ticket_img_b64")  or conv.get("ticket_img_b64")
+    if not (foto_nome and foto_base64):
+        foto_path = dados.get("ticket_imagem_path") or conv.get("ticket_imagem_path")
+        if foto_path:
+            foto_nome, foto_base64 = _file_to_base64(foto_path)
 
-#    nota_viagem = viagem.get("nota_fiscal") if viagem else None
-#    nota_ticket = dados.get("nota_fiscal")
+    if not (foto_nome and foto_base64):
+        enviar_mensagem(numero, "📸 A foto do ticket é obrigatória. Envie uma foto nítida do ticket de balança.")
+        logger.error("[A3/TICKET] foto obrigatória ausente (nome/base64)")
+        return {"ok": False, "error": "foto_obrigatoria_ausente"}
 
     # coleta segura dos campos
     numero_viagem = (
@@ -392,8 +398,8 @@ def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
         peso=peso_float,
         valorMercadoria=1,
         quantidade=1,
-        foto_nome=foto_nome,
-        foto_base64=foto_base64
+        foto_nome=str(numero_nota),
+        foto_base64=base_str
     )
 
     if res.get("ok"):
