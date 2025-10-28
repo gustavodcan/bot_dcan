@@ -320,6 +320,11 @@ def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
         or conv.get("foto_ticket")
     )
 
+    # foto (opcional)
+    foto_path  = dados.get("ticket_imagem_path") or conv.get("ticket_imagem_path")
+    foto_nome  = dados.get("ticket_img_nome") or conv.get("ticket_img_nome")
+    foto_base64= dados.get("ticket_img_b64")  or conv.get("ticket_img_b64")
+    
     if not (foto_nome and foto_base64):
         enviar_mensagem(numero, "📸 A foto do ticket é obrigatória. Envie uma foto nítida do ticket de balança.")
         logger.error("[A3/TICKET] foto obrigatória ausente (nome/base64)")
@@ -335,11 +340,6 @@ def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
     ticket_balanca = (dados.get("ticket") or dados.get("brm_mes") or "")
 
     peso_val       = (dados.get("peso_liquido") or "")
-
-    # foto (opcional)
-    foto_path  = dados.get("ticket_imagem_path") or conv.get("ticket_imagem_path")
-    foto_nome  = dados.get("ticket_img_nome") or conv.get("ticket_img_nome")
-    foto_base64= dados.get("ticket_img_b64")  or conv.get("ticket_img_b64")
 
     # validações/sanitizações
     if not numero_viagem:
@@ -384,8 +384,8 @@ def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
         peso=peso_float,
         valorMercadoria=1,
         quantidade=1,
-        foto_nome=str(numero_nota),
-        foto_base64=base_str
+        foto_nome=foto_nome,
+        foto_base64=foto_base64
     )
 
     if res.get("ok"):
