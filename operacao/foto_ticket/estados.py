@@ -305,6 +305,108 @@ def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
     enviar_botoes_sim_nao(numero, msg)
     return {"status": "aguardando confirmação"}
 
+def _file_to_base64(path: str) -> tuple[str, str] | tuple[None, None]:
+    try:
+        nome = os.path.basename(path)
+        with open(path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+        return nome, b64
+    except Exception:
+        logger.exception("[A3/TICKET] Falha ao abrir/encode da foto do ticket")
+        return None, None
+
+def enviar_ticket_para_a3soft_no_confirm(numero: str, conversas: dict):
+    # estrutura segura
+    conv = conversas.setdefault(numero, {})
+    dados = conv.setdefault("dados", {})
+    nf_consulta = conv.get("nf_consulta", {}) or {}
+
+    # coleta segura dos campos
+    numero_viagem  = (
+        dados.get("numero_viagem")
+        or nf_consulta.get("numero_viagem")
+        or conv.get("numero_viagem")
+    )
+    numero_nota    = (
+        dados.get("numero_nf")
+        or nf_consulta.get("numero")
+        or conv.get("numero_nf")
+    )
+    ticket_balanca = (
+        dados.get("ticket")
+        or conv.get("ticket")
+    )
+    peso_val       = (
+        dados.get("peso")          # pode vir como "25.480" ou "25480"
+        or nf_consulta.get("peso_bruto")
+        or conv.get("peso")
+    )
+
+    # foto (opcional)
+    foto_path  = dados.get("ticket_imagem_path") or conv.get("ticket_imagem_path")
+    foto_nome  = dados.get("ticket_img_nome") or conv.get("ticket_img_nome")
+    foto_base64= dados.get("ticket_img_b64")  or conv.get("ticket_img_b64")
+
+    # validações/sanitizações
+    if not numero_viagem:
+        enviar_mensagem(numero, "⚠️ Não achei o *número da viagem* para enviar ao A3Soft.")
+        logger.error("[A3/TICKET] numero_viagem ausente")
+        return {"ok": False, "error": "numero_viagem_ausente"}
+
+    if not numero_nota:
+        enviar_mensagem(numero, "⚠️ Não achei o *número da nota* para enviar ao A3Soft.")
+        logger.error("[A3/TICKET] numero_nota ausente")
+        return {"ok": False, "error": "numero_nota_ausente"}
+
+    if not ticket_balanca:
+        enviar_mensagem(numero, "⚠️ Não achei o *número do ticket* da balança.")
+        logger.error("[A3/TICKET] ticket_balanca ausente")
+        return {"ok": False, "error": "ticket_ausente"}
+
+    # normaliza peso (float)
+    try:
+        # remove tudo que não for dígito/ponto/vírgula e normaliza vírgula
+        s = str(peso_val)
+        s = re.sub(r"[^0-9,\.]", "", s).replace(",", ".")
+        peso_float = float(s)
+    except Exception:
+        enviar_mensagem(numero, "⚠️ Peso inválido para enviar ao A3Soft.")
+        logger.error(f"[A3/TICKET] peso inválido: {peso_val}")
+        return {"ok": False, "error": "peso_invalido"}
+
+    # foto: se só tem path, converte
+    if (foto_path and not (foto_nome and foto_base64)):
+        foto_nome, foto_base64 = _file_to_base64(foto_path)
+
+    # login/token
+    auth = login_obter_token()
+    if not auth.get("ok") or not auth.get("token"):
+        enviar_mensagem(numero, "⚠️ Não consegui autenticar no A3Soft para enviar o ticket.")
+        logger.error(f"[A3/TICKET] auth falhou: {auth}")
+        return {"ok": False, "error": "auth_falhou"}
+
+    # call A3
+    res = a3_enviar_ticket(
+        token=auth["token"],
+        numero_viagem=int(numero_viagem),
+        numero_nota=str(numero_nota),
+        ticket_balanca=str(ticket_balanca),
+        peso=peso_float,
+        valorMercadoria=1,
+        quantidade=1,
+        foto_nome=foto_nome,
+        foto_base64=foto_base64
+    )
+
+    if res.get("ok"):
+        enviar_mensagem(numero, "📤 Ticket enviado ao A3Soft com sucesso.")
+        logger.info(f"[A3/TICKET] OK: {str(res.get('data'))[:500]}")
+    else:
+        enviar_mensagem(numero, "⚠️ Falha ao enviar o Ticket ao A3Soft.")
+        logger.error(f"[A3/TICKET] ERRO: {res}")
+
+    return res
+
 def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
     if conversas is None or numero not in conversas:
         logger.warning("[TICKET] Conversa ausente para %s", numero)
@@ -418,6 +520,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         except FileNotFoundError:
             pass
 
+        enviar_ticket_para_a3soft_no_confirm(numero, conversas)
         enviar_mensagem(numero, f"✅ Dados confirmados. Ticket indexado na *viagem {numero_viagem}*. Obrigado!")
         conversas.pop(numero, None)
         return {"status": "finalizado"}
