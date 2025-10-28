@@ -49,84 +49,110 @@ def login_obter_token(login: str | None=None, senha: str | None=None) -> dict:
 
 def receber_xml(token: str, chave_acesso: str) -> dict:
     """
-    Chama /TNFeController/XML.
+    Chama /TNFeController/XML e devolve {"ok": True, "xml": "<xml...>"}.
     O servidor pode responder:
-      - JSON: { "xml": "<xml ...>" } (às vezes com aspas/escapes problemáticos)
-      - ou o XML direto como texto.
-    Retorna {"ok": True, "xml": "<xml>...</xml>"} quando der certo.
+      - HTML contendo o XML (escapado ou não)
+      - JSON {"xml":"..."} (raro)
+      - XML puro
     """
-    url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_XML)  # ex: "/datasnap/rest/TNFeController/XML"
+
+    url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_XML)  # "/datasnap/rest/TNFeController/XML"
     body = {"token": token, "chaveAcesso": str(chave_acesso)}
 
-    def _parse_response(r):
+    def _extract_xml_from_html(txt: str) -> str | None:
+        """Tenta achar o XML dentro do HTML, lidando com escapes (&lt; &gt;)."""
+        if not txt:
+            return None
+
+        # Se vier escapado, desescapa
+        if "&lt;" in txt or "&gt;" in txt or "&quot;" in txt or "&amp;" in txt:
+            txt = html.unescape(txt)
+
+        # corta qualquer lixo antes/ depois — procura um início "plausível" de XML
+        starts = ["<?xml", "<soap:Envelope", "<NFe", "<nfeProc", "<retConsNFeLog", "<nfeConsultaNFeLogResult"]
+        start_idx = min([i for i in (txt.find(s) for s in starts) if i >= 0], default=-1)
+        if start_idx < 0:
+            return None
+        cand = txt[start_idx:]
+
+        # se houver fechamento de </html> depois, corta antes
+        html_close = cand.lower().find("</html>")
+        if html_close > 0:
+            cand = cand[:html_close]
+
+        # housekeeping: strip e tenta parsear "como está"
+        cand = cand.strip()
+        # se passar no XML parser, ótimo — se não, ainda assim devolvemos; quem chama decide/parsa/loga
+        try:
+            import xml.etree.ElementTree as ET
+            ET.fromstring(cand)
+            return cand
+        except Exception:
+            # Às vezes vem algum rodapé HTML residual; tente cortar após o último '>' de uma tag conhecida
+            # tenta fechar em </soap:Envelope> ou </nfeProc>
+            for end_tag in ["</soap:Envelope>", "</nfeProc>", "</retConsNFeLog>", "</nfeConsultaNFeLogResult>"]:
+                j = cand.find(end_tag)
+                if j > 0:
+                    maybe = cand[: j + len(end_tag)]
+                    try:
+                        import xml.etree.ElementTree as ET
+                        ET.fromstring(maybe)
+                        return maybe
+                    except Exception:
+                        pass
+            return cand  # devolve mesmo assim p/ o chamador logar/avaliar
+
+    def _resp_to_dict(r: requests.Response) -> dict:
         txt = r.text or ""
-        status = r.status_code
-        if status >= 400:
-            return {"ok": False, "status": status, "error": "http_error", "text": txt[:2000]}
+        ct  = (r.headers.get("Content-Type") or "").lower()
 
-        ct = (r.headers.get("Content-Type") or "").lower()
+        if r.status_code >= 400:
+            return {"ok": False, "status": r.status_code, "error": "http_error", "text": txt[:2000]}
 
-        # 1) Caso JSON normal
+        # 1) HTML -> extrai XML
+        if "html" in ct or txt.lstrip().lower().startswith("<!doctype html"):
+            xml_candidate = _extract_xml_from_html(txt)
+            if xml_candidate:
+                return {"ok": True, "xml": xml_candidate}
+            return {"ok": False, "status": r.status_code, "error": "html_sem_xml", "text": txt[:2000]}
+
+        # 2) JSON -> tenta pegar campo xml
         if "json" in ct or txt.lstrip().startswith("{"):
-            # Tenta JSON "de verdade" primeiro
             try:
                 j = r.json()
                 if isinstance(j, dict) and j.get("xml"):
                     return {"ok": True, "xml": j["xml"]}
-                # Se por algum motivo não tem 'xml', cai no fallback de regex
             except Exception:
-                pass
+                # JSON malformado — tenta regex bruta
+                m = re.search(r'"xml"\s*:\s*"(.*)"\s*}\s*$', txt, flags=re.DOTALL)
+                if m:
+                    return {"ok": True, "xml": m.group(1)}
+            return {"ok": False, "status": r.status_code, "error": "json_sem_campo_xml", "text": txt[:2000]}
 
-            # 2) Fallback regex: extrai o valor de "xml": "..."
-            m = re.search(r'"xml"\s*:\s*"(.*)"\s*}\s*$', txt, flags=re.DOTALL)
-            if m:
-                xml_quoted = m.group(1)
-                # desescapa \n, \t, \", \uXXXX etc.
-                try:
-                    xml_unescaped = bytes(xml_quoted, "utf-8").decode("unicode_escape")
-                    return {"ok": True, "xml": xml_unescaped}
-                except Exception as je:
-                    return {"ok": False, "status": status, "error": f"json_regex_decode_error: {je}", "text": txt[:2000]}
-
-            # 3) Se ainda não deu, retorna erro informativo
-            return {"ok": False, "status": status, "error": "json_sem_campo_xml", "text": txt[:2000]}
-
-        # 4) Não é JSON — assume XML direto
+        # 3) Default: assume XML puro
         return {"ok": True, "xml": txt}
 
     try:
         r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
-        res = _parse_response(r)
+        res = _resp_to_dict(r)
         if res["ok"]:
             return res
 
-        # Fallback: tenta PUT se for erro típico de rota/método
+        # Fallback: alguns endpoints DataSnap aceitam PUT
         if res.get("status") in (404, 405):
             r2 = _session.put(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
-            return _parse_response(r2)
+            return _resp_to_dict(r2)
 
         return res
 
     except requests.exceptions.RetryError:
         try:
             r = requests.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
-            return _parse_response(r)
+            return _resp_to_dict(r)
         except Exception as ee:
             return {"ok": False, "status": None, "error": f"fallback_exception: {ee}", "text": ""}
-
     except Exception as e:
         return {"ok": False, "status": None, "error": str(e), "text": ""}
-
-def enviar_nf(token: str, numero_viagem: int, chave_acesso: str) -> dict:
-    """POST /ReceberNFe   Body: { "token":"...", "numeroViagem":0, "chaveAcesso":"..." }"""
-    url = _abs(A3SOFT_BASE_URL, A3SOFT_ENDPOINT_NF)
-    body = {"token": token, "numeroViagem": int(numero_viagem), "chaveAcesso": str(chave_acesso)}
-    try:
-        r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(5,60))
-        r.raise_for_status()
-        return {"ok": True, "data": r.json()}
-    except Exception as e:
-        logger.exception("[A3SOFT] Falha em ReceberNFe"); return {"ok": False, "error": str(e)}
 
 def enviar_ticket(token: str, numero_viagem: int, numero_nota: str,
                   ticket_balanca: str, peso: int | float,
