@@ -1,15 +1,15 @@
 import os, requests, logging
-from config import INSTANCE_ID, API_TOKEN, CLIENT_TOKEN
+from config import ZAPI_INSTANCE_ID, ZAPI_API_TOKEN, ZAPI_CLIENT_TOKEN
 
 logger = logging.getLogger(__name__)
 
 #Cria lista(options) de viagens e envia para o motorista
 def enviar_lista_viagens(numero, viagens, mensagem):
-    if not INSTANCE_ID or not API_TOKEN or not CLIENT_TOKEN:
-        logger.error("[Z-API] Variáveis de ambiente faltando: INSTANCE_ID/API_TOKEN/CLIENT_TOKEN.")
+    if not ZAPI_INSTANCE_ID or not ZAPI_API_TOKEN or not ZAPI_CLIENT_TOKEN:
+        logger.error("[Z-API] Variáveis de ambiente faltando: ZAPI_INSTANCE_ID/ZAPI_API_TOKEN/ZAPI_CLIENT_TOKEN.")
         return False
 
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
+    url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-option-list"
 
     options = [{
         "rowId": str(v["numero_viagem"]), 
@@ -31,7 +31,7 @@ def enviar_lista_viagens(numero, viagens, mensagem):
 
     headers = {
         "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
+        "Client-Token": ZAPI_CLIENT_TOKEN
     }
 
     logger.debug(f"[DEBUG] Lista enviada para {numero}: {options}")
@@ -49,18 +49,18 @@ def enviar_lista_viagens(numero, viagens, mensagem):
 
 #Envia mensagem simples baseada no "texto"
 def enviar_mensagem(numero, texto):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-text"
+    url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-text"
     payload = {"phone": numero, "message": texto}
     headers = {
         "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
+        "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[🟢 Texto simples enviado] Status {res.status_code}: {res.text}")
 
 #Envia botões de Sim ou Não
 def enviar_botoes_sim_nao(numero, mensagem):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-button-list"
+    url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-button-list"
     payload = {
         "phone": numero,
         "message": mensagem,
@@ -73,14 +73,14 @@ def enviar_botoes_sim_nao(numero, mensagem):
     }
     headers = {
         "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
+        "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
 
 #Cria(manualmente) lista de setores e envia para o motorista
 def enviar_lista_setor(numero, mensagem):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-option-list"
+    url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-option-list"
     payload = {
         "phone": numero,
         "message": mensagem,
@@ -99,14 +99,14 @@ def enviar_lista_setor(numero, mensagem):
     }
     headers = {
         "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
+        "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[🟪 Lista enviada] Status {res.status_code}: {res.text}")
 
 #Cria botões(manualmente) da operação e envia para motorista
 def enviar_opcoes_operacao(numero):
-    url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{API_TOKEN}/send-button-list"
+    url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-button-list"
     payload = {
         "phone": numero,
         "message": "Você está falando com o setor de Operações. O que deseja fazer?",
@@ -120,7 +120,7 @@ def enviar_opcoes_operacao(numero):
     }
     headers = {
         "Content-Type": "application/json",
-        "Client-Token": CLIENT_TOKEN
+        "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[🟦 Botões operação enviados] Status {res.status_code}: {res.text}")
