@@ -11,7 +11,6 @@ from azure.storage.fileshare import ShareFileClient
 from google.oauth2.service_account import Credentials
 #Importação de de Defs e Estados
 from integracoes.azure import salvar_imagem_azure
-from integracoes.infosimples import consultar_nfe_completa
 from operacao.foto_ticket.defs import extrair_dados_da_imagem
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
