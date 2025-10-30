@@ -1,29 +1,12 @@
 #Importação de Bibliotecas
-from datetime import datetime
-from Crypto.Cipher import AES
-from google.cloud import vision
-from Crypto.Util.Padding import pad
-from google.oauth2 import service_account
+import s, re, os, json, gspread, base64, logging, time
 from flask import Flask, request, jsonify
-import requests, re, os, json, gspread, base64, logging, time
-from PIL import Image, ImageEnhance, ImageFilter
-from azure.storage.fileshare import ShareFileClient
-from google.oauth2.service_account import Credentials
+
 #Importação de de Defs e Estados
-from integracoes.azure import salvar_imagem_azure
-from operacao.foto_ticket.defs import extrair_dados_da_imagem
-from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
-from integracoes.google_vision import (ler_texto_google_ocr, preprocessar_imagem)
-from integracoes.google_sheets import conectar_google_sheets, atualizar_viagem_ticket
-from operacao.falar_programador.contato import encaminhar_para_setor, tratar_descricao_setor
-from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae, extrair_dados_cliente_saae
 from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
-from integracoes.a3soft.client import login_obter_token, receber_xml
 from manutencao.checklist import tratar_estado_aguardando_km_manutencao, tratar_estado_aguardando_placa_manutencao, tratar_estado_aguardando_problema_manutencao
-from operacao.foto_ticket.estados import tratar_estado_aguardando_confirmacao, tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket, tratar_estado_selecionando_viagem_ticket
-from config import (AZURE_FILE_ACCOUNT_NAME, AZURE_FILE_ACCOUNT_KEY, AZURE_FILE_SHARE_NAME, DCAN_TOKEN_KEY, GOOGLE_SHEETS_PATH, GOOGLE_CREDS_PATH)
-from operacao.foto_nf.estados import tratar_estado_aguardando_imagem_nf, tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf
-from viagens import VIAGENS
+from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket, tratar_estado_selecionando_viagem_ticket
+from operacao.foto_nf.estados import tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf
 
 #Timeout global de inatividade
 TIMEOUT_SECONDS = 60 * 5
@@ -174,8 +157,9 @@ def webhook():
         resultado = tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas)
         return jsonify(resultado)
 
-    #Manda para o DEF "Aguardando Destino SAAE" após detecção do OCR 
+   #Manda para o DEF "Aguardando Destino SAAE" após detecção do OCR 
     if estado == "aguardando_destino_saae":
+        from operacao.foto_ticket.saae import tratar_estado_aguardando_destino_saae
         resultado = tratar_estado_aguardando_destino_saae(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
@@ -186,11 +170,13 @@ def webhook():
 
     def receber_xml_a3soft(chave_acesso: str) -> dict:
         """Faz login e chama o endpoint /ReceberXML do A3Soft"""
+        from integracoes.a3soft.client import login_obter_token
         auth = login_obter_token()
         if not auth.get("ok"):
             return {"ok": False, "error": f"falha_login: {auth.get('error')}"}
 
         token = auth["token"]
+        from integracoes.a3soft.client import receber_xml
         res = receber_xml(token=token, chave_acesso=chave_acesso)
         return res
 
