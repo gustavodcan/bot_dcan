@@ -1,5 +1,5 @@
 #Importação de Bibliotecas
-import s, re, os, json, gspread, base64, logging, time
+import json, logging, time
 from flask import Flask, request, jsonify
 
 #Importação de de Defs e Estados
