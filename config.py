@@ -14,11 +14,6 @@ GOOGLE_CREDS_JSON = os.getenv("GOOGLE_CREDS_JSON")
 GOOGLE_CREDS_PATH = "/etc/secrets/GOOGLE_CREDS_JSON"
 GOOGLE_SHEETS_PATH = "/etc/secrets/acc_servico"
 
-INFOSIMPLES_TOKEN = os.getenv("INFOSIMPLES_TOKEN")
-CERTIFICADO_BASE64 = os.getenv("CERTIFICADO_BASE64")
-CERTIFICADO_SENHA = os.getenv("CERTIFICADO_SENHA")
-CHAVE_AES = os.getenv("CHAVE_AES")
-
 mapa_setores = {
     "comercial": os.getenv("SETOR_COMERCIAL", "DEFAULT_COMERCIAL"),
     "faturamento": os.getenv("SETOR_FATURAMENTO", "DEFAULT_FATURAMENTO"),
