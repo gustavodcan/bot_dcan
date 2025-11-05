@@ -14,7 +14,7 @@ def encaminhar_para_setor(numero_usuario, setor, mensagem):
 
     texto = f"📥 Atendimento automático\nPor favor, não responda.\n\n O telefone: {numero_usuario} solicitou contato do setor {setor.title()} através da seguinte mensagem:\n\n{mensagem}"
 
-    url = f"https://api.z-api.io/instances/{os.getenv('INSTANCE_ID')}/token/{os.getenv('API_TOKEN')}/send-text"
+    url = f"https://api.z-api.io/instances/{os.getenv('ZAPI_INSTANCE_ID')}/token/{os.getenv('ZAPI_API_TOKEN')}/send-text"
     payload = {
         "phone": numero_destino,
         "message": texto
