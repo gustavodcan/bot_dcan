@@ -21,7 +21,7 @@ def encaminhar_para_setor(numero_usuario, setor, mensagem):
     }
     headers = {
         "Content-Type": "application/json",
-        "Client-Token": os.getenv("CLIENT_TOKEN")
+        "Client-Token": os.getenv("ZAPI_CLIENT_TOKEN")
     }
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[📨 Encaminhado para {setor}] Status {res.status_code}: {res.text}")
