@@ -15,10 +15,10 @@ GOOGLE_CREDS_PATH = "/etc/secrets/GOOGLE_CREDS_JSON"
 GOOGLE_SHEETS_PATH = "/etc/secrets/acc_servico"
 
 mapa_setores = {
-    "comercial": os.getenv("SETOR_COMERCIAL", "DEFAULT_COMERCIAL"),
-    "faturamento": os.getenv("SETOR_FATURAMENTO", "DEFAULT_FATURAMENTO"),
-    "financeiro": os.getenv("SETOR_FINANCEIRO", "DEFAULT_FINANCEIRO"),
-    "recursos humanos": os.getenv("SETOR_RH", "DEFAULT_RH")
+    "comercial": os.getenv("SETOR_COMERCIAL"),
+    "faturamento": os.getenv("SETOR_FATURAMENTO"),
+    "financeiro": os.getenv("SETOR_FINANCEIRO"),
+    "recursos humanos": os.getenv("SETOR_RH")
 }
 
 #A3SOFT VARS:
