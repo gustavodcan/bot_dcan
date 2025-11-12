@@ -34,13 +34,13 @@ def salvar_viagem(dados: dict):
         }).execute()
 
         if res.data:
-            logger.info(f"[SUPABASE] Viagem {dados.get('numero_viagem')} salva com sucesso.")
+            #logger.info(f"[SUPABASE] Viagem {dados.get('numero_viagem')} salva com sucesso.")
         else:
-            logger.warning(f"[SUPABASE] Nenhum dado retornado ao salvar viagem {dados.get('numero_viagem')}.")
+            #logger.warning(f"[SUPABASE] Nenhum dado retornado ao salvar viagem {dados.get('numero_viagem')}.")
 
         return res
     except Exception:
-        logger.error("[SUPABASE] Erro ao salvar viagem", exc_info=True)
+        #logger.error("[SUPABASE] Erro ao salvar viagem", exc_info=True)
         raise
 
 
