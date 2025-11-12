@@ -196,7 +196,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
             return {"status": "erro_a3soft", "detalhe": res_a3}
 
     xml_bruto = (res_a3.get("xml") or "").strip().replace("\ufeff", "")
-    logger.debug(f"[A3SOFT] XML bruto retornado (até 2000 chars): {res_a3.get('xml', '')[:2000]}")
+    #logger.debug(f"[A3SOFT] XML bruto retornado (até 2000 chars): {res_a3.get('xml', '')[:2000]}")
 
     # 3) parse do XML direto aqui
     try:
@@ -253,7 +253,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         "modalidade": modalidade_num,
         "peso_bruto": peso_bruto,
     }
-    conversas[numero]["ocr_texto_nf_xml"] = xml_bruto  # opcional p/ debug
+    #conversas[numero]["ocr_texto_nf_xml"] = xml_bruto  # opcional p/ debug
 
     # envia resumo p/ confirmação (igual você já fazia)
     msg = (
