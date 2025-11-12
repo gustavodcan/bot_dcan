@@ -34,13 +34,13 @@ def salvar_viagem(dados: dict):
         }).execute()
 
         if res.data:
-            #logger.info(f"[SUPABASE] Viagem {dados.get('numero_viagem')} salva com sucesso.")
+            logger.info(f"[SUPABASE] Viagem {dados.get('numero_viagem')} salva com sucesso.")
         else:
-            #logger.warning(f"[SUPABASE] Nenhum dado retornado ao salvar viagem {dados.get('numero_viagem')}.")
+            logger.warning(f"[SUPABASE] Nenhum dado retornado ao salvar viagem {dados.get('numero_viagem')}.")
 
         return res
     except Exception:
-        #logger.error("[SUPABASE] Erro ao salvar viagem", exc_info=True)
+        logger.error("[SUPABASE] Erro ao salvar viagem", exc_info=True)
         raise
 
 
@@ -55,11 +55,11 @@ def atualizar_viagem(numero_viagem: str, campos: dict):
         )
 
         if res.data:
-            #logger.info(f"[SUPABASE] Viagem {numero_viagem} atualizada com sucesso.")
+            logger.info(f"[SUPABASE] Viagem {numero_viagem} atualizada com sucesso.")
         else:
-            #logger.warning(f"[SUPABASE] Nenhuma linha atualizada para a viagem {numero_viagem}.")
+            logger.warning(f"[SUPABASE] Nenhuma linha atualizada para a viagem {numero_viagem}.")
 
         return res
     except Exception:
-        #logger.error(f"[SUPABASE] Erro ao atualizar viagem {numero_viagem}", exc_info=True)
+        logger.error(f"[SUPABASE] Erro ao atualizar viagem {numero_viagem}", exc_info=True)
         raise
