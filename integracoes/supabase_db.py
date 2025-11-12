@@ -55,11 +55,11 @@ def atualizar_viagem(numero_viagem: str, campos: dict):
         )
 
         if res.data:
-            logger.info(f"[SUPABASE] Viagem {numero_viagem} atualizada com sucesso.")
+            #logger.info(f"[SUPABASE] Viagem {numero_viagem} atualizada com sucesso.")
         else:
-            logger.warning(f"[SUPABASE] Nenhuma linha atualizada para a viagem {numero_viagem}.")
+            #logger.warning(f"[SUPABASE] Nenhuma linha atualizada para a viagem {numero_viagem}.")
 
         return res
     except Exception:
-        logger.error(f"[SUPABASE] Erro ao atualizar viagem {numero_viagem}", exc_info=True)
+        #logger.error(f"[SUPABASE] Erro ao atualizar viagem {numero_viagem}", exc_info=True)
         raise
