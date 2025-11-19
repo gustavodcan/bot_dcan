@@ -15,8 +15,8 @@ bot_dcan/\
 ├── a3soft                       # Sistema TMS utilizado\   
 │   ├── client.py\
 │   └── routes.py\
-├── operacao/                    # Opção "Operação" na lista de Areas\ 
-│   ├── falar_programador/       # COntato dos programadores\  
+├── operacao/                    # Opção Operação na lista de Areas\
+│   ├── falar_programador/       # Contato dos programadores\  
 │   │   └── contato.py\
 │   ├── foto_nf/                 # Tratamento .pdf ou .png das NF's\
 │   │   ├── defs.py\
