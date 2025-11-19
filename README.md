@@ -12,16 +12,16 @@ bot_dcan/\
 │   ├── google_sheets.py\
 │   ├── google_vision.py\
 │   └── supabase.py\
-├── a3soft/   
+├── a3soft/                       # Sistema TMS utilizado\   
 │   ├── client.py\
 │   └── routes.py\
-├── operacao/\
-│   ├── falar_programador/\
+├── operacao/\                    # Opção "Operação" na lista de Areas\ 
+│   ├── falar_programador/\       # COntato dos programadores\  
 │   │   └── contato.py\
-│   ├── foto_nf/\
+│   ├── foto_nf/\                 # Tratamento .pdf ou .png das NF's\
 │   │   ├── defs.py\
 │   │   └── estados.py\
-│   ├── foto_ticket/\
+│   ├── foto_ticket/\             # Arquivo individual para cada Cliente com Ticket\ 
 │   │   ├── arcelormittal.py\
 │   │   ├── cdr.py\
 │   │   ├── defs.py\
