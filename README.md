@@ -21,7 +21,7 @@ bot_dcan/\
 │   ├── foto_nf/                 # Tratamento .pdf ou .png das NF's\
 │   │   ├── defs.py\
 │   │   └── estados.py\
-│   ├── foto_ticket/             # Arquivo individual para cada Cliente com Ticket\ 
+│   ├── foto_ticket/             # Arquivo individual para cada Cliente com Ticket\
 │   │   ├── arcelormittal.py\
 │   │   ├── cdr.py\
 │   │   ├── defs.py\
