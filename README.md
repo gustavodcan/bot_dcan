@@ -1,5 +1,5 @@
 🤖 Bot DCAN - Processador de Tickets e Notas Fiscais via WhatsApp\
-Este projeto é um bot de WhatsApp construído com Flask, integrado com APIs externas como Google Vision, Google Sheets, InfoSimples e Azure File Storage.\
+Este projeto é um bot de WhatsApp construído com Flask, integrado com APIs externas como Google Vision, Supabase, A3Soft(TMS) e Z-API.\
 Ele processa imagens de tickets e notas fiscais enviadas por motoristas e automatiza o registro dos dados.
 
 📁 Estrutura do Projeto\
@@ -34,18 +34,10 @@ bot_dcan/\
 - Processamento de imagem com OCR (Google Vision)
 - Extração de dados de tickets por cliente
 - Extração de chave de acesso NF-e
-- Consulta NF-e via InfoSimples
-- Envio de dados para Google Sheets
-- Upload da imagem para Azure
-- Uso de botões "Sim/Não" via Z-API
-
-✅ Estados Suportados
-- aguardando_imagem
-- aguardando_confirmacao
-- aguardando_nota_manual
-- aguardando_destino_saae
-- aguardando_imagem_nf
-- aguardando_confirmacao_chave
+- Consulta NF-e via A3Danfe
+- Envio de dados para SupaBase
+- Upload da imagem e informações extraídas para A3Soft
+- Uso de botões e listas via Z-API
 
 ✨ Créditos\
 Projeto interno DCAN Transportes — desenvolvido para automatizar e agilizar o processo logístico de recebimento de documentos.\
