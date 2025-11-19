@@ -11,7 +11,10 @@ bot_dcan/\
 │   ├── azure.py\
 │   ├── google_sheets.py\
 │   ├── google_vision.py\
-│   └── infosimples.py\
+│   └── supabase.py\
+├── a3soft/   
+│   ├── client.py\
+│   └── routes.py\
 ├── operacao/\
 │   ├── falar_programador/\
 │   │   └── contato.py\
