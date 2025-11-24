@@ -187,8 +187,10 @@ def webhook():
 @app.route("/notificar_viagem", methods=["POST"])
 def notificar_viagem():
     # 1. Autenticação
+    from config import DCAN_TOKEN_KEY
+    
     auth_header = request.headers.get("Authorization", "")
-    if not auth_header.startswith("Bearer ") or auth_header.split(" ")[1] != TOKEN_KEY:
+    if not auth_header.startswith("Bearer ") or auth_header.split(" ")[1] != DCAN_TOKEN_KEY:
         return jsonify({"status": "erro", "mensagem": "Não autorizado."}), 403
 
     try:
