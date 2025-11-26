@@ -227,7 +227,7 @@ def notificar_viagem():
             logger.info(f"[A3] Viagem {numero_viagem} gravada no Supabase.")
         except Exception:
             logger.error("[A3] Falha ao gravar viagem no Supabase", exc_info=True)
-            return jsonify({"status": "erro ao salvar no Supabase"}), 500
+            return jsonify({"status": "Viagem já lançada no sistema"}), 500
 
         # 3. Monta mensagem pro motorista
         mensagem = (
