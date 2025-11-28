@@ -29,8 +29,8 @@ def salvar_viagem(dados: dict):
             "placa": dados.get("placa"),
             "rota": dados.get("rota"),
             "remetente": dados.get("remetente"),
-            "destinatario": dados.get("destinatario"),
-            "emite_nf": dados.get("emite_nf")
+            "destinatario": dados.get("destinatario")
+#            "emite_nf": dados.get("emite_nf")
         }).execute()
 
         if res.data:
