@@ -204,7 +204,7 @@ def notificar_viagem():
         placa = data.get("placa")
         remetente = data.get("remetente")
         destinatario = data.get("destinatario")
-        emite_nf = data.get("emite_nf")
+#        emite_nf = data.get("emite_nf")
 
         # Validação rápida
         if not (telefone_motorista and numero_viagem and rota and placa):
@@ -222,7 +222,7 @@ def notificar_viagem():
                 "rota": rota,
                 "remetente": remetente,
                 "destinatario": destinatario,
-                "emite_nf": emite_nf,
+#                "emite_nf": emite_nf,
             })
             logger.info(f"[A3] Viagem {numero_viagem} gravada no Supabase.")
         except Exception:
