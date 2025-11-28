@@ -481,20 +481,28 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
                 "ticket": ticket,
                 "peso": peso,
             }
+        try:
+            safe_viagem = re.sub(r"[^\w\-]", "_", numero_viagem) or "SEM_VIAGEM"
+            safe_ticket = re.sub(r"[^\w\-]", "_", ticket) or "SEM_TICKET"
+            caminho = f"VIAGENS/{safe_viagem}/TICKET_{safe_ticket}.jpg"
+            salvar_imagem_azure("ticket.jpg", caminho)
+            logger.info("[TICKET] Upload Azure ok em %s", caminho)
+        except Exception:
+            logger.error("[TICKET] Falha no upload para Azure.", exc_info=True)
 
-            # Tenta gerar o Base64 e incluir no payload
-            try:
-                with open("ticket.jpg", "rb") as f:
-                    base_str = base64.b64encode(f.read()).decode("utf-8")
-                payload["foto_ticket"] = base_str
-                logger.info("[TICKET] Base64 gerado e adicionado ao payload (viagem %s).", numero_viagem)
-            except Exception:
-                logger.warning("[TICKET] Falha ao gerar Base64; seguindo sem foto_ticket.", exc_info=True)
+#            # Tenta gerar o Base64 e incluir no payload
+#            try:
+#                with open("ticket.jpg", "rb") as f:
+#                    base_str = base64.b64encode(f.read()).decode("utf-8")
+#                payload["foto_ticket"] = base_str
+#                logger.info("[TICKET] Base64 gerado e adicionado ao payload (viagem %s).", numero_viagem)
+#            except Exception:
+#                logger.warning("[TICKET] Falha ao gerar Base64; seguindo sem foto_ticket.", exc_info=True)
 
             conv   = conversas.setdefault(numero, {})
             dados  = conv.setdefault("dados", {})
-            dados["ticket_img_b64"]  = base_str
-            dados["ticket_img_nome"] = "ticket.jpg"
+#            dados["ticket_img_b64"]  = base_str
+#            dados["ticket_img_nome"] = "ticket.jpg"
 
             # Uma única chamada ao Supabase com tudo junto
             atualizar_viagem(numero_viagem, payload)
