@@ -481,6 +481,9 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
                 "ticket": ticket,
                 "peso": peso,
             }
+        except Exception:
+            logger.error("[TICKET] Falha ao atualizar SupaBase da viagem.", exc_info=True)
+            
         try:
             safe_viagem = re.sub(r"[^\w\-]", "_", numero_viagem) or "SEM_VIAGEM"
             safe_ticket = re.sub(r"[^\w\-]", "_", ticket) or "SEM_TICKET"
