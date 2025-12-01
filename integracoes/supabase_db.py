@@ -15,7 +15,7 @@ def br_to_iso(data_str: str) -> str | None:
         return None
     try:
 #        return datetime.strptime(data_str, "%d/%m/%Y").date().isoformat()
-        return datetime.strptime(data_str, "%Y/%m/%d").date().isoformat()
+        return datetime.strptime(data_str, "%Y-%m-%d").date().isoformat()
     except ValueError:
         raise ValueError(f"Data inválida: {data_str}")
 
