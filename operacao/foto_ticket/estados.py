@@ -526,7 +526,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         except FileNotFoundError:
             pass
 
-        enviar_ticket_para_a3soft_no_confirm(numero, conversas)
+#        enviar_ticket_para_a3soft_no_confirm(numero, conversas)
         enviar_mensagem(numero, f"✅ Dados confirmados. Ticket indexado na *viagem {numero_viagem}*. Obrigado!")
         conversas.pop(numero, None)
         return {"status": "finalizado"}
