@@ -479,8 +479,13 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
             # Monta o payload básico
             payload = {
                 "ticket": ticket,
-                "peso": peso,
+                "peso": peso
             }
+
+            conv   = conversas.setdefault(numero, {})
+            dados  = conv.setdefault("dados", {})
+            atualizar_viagem(numero_viagem, payload)
+            logger.info("[TICKET] Payload completo atualizado no Supabase (viagem %s).", numero_viagem)
         except Exception:
             logger.error("[TICKET] Falha ao atualizar SupaBase da viagem.", exc_info=True)
             
@@ -502,14 +507,14 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
 #            except Exception:
 #                logger.warning("[TICKET] Falha ao gerar Base64; seguindo sem foto_ticket.", exc_info=True)
 
-            conv   = conversas.setdefault(numero, {})
-            dados  = conv.setdefault("dados", {})
+#            conv   = conversas.setdefault(numero, {})
+#            dados  = conv.setdefault("dados", {})
 #            dados["ticket_img_b64"]  = base_str
 #            dados["ticket_img_nome"] = "ticket.jpg"
 
             # Uma única chamada ao Supabase com tudo junto
-            atualizar_viagem(numero_viagem, payload)
-            logger.info("[TICKET] Payload completo atualizado no Supabase (viagem %s).", numero_viagem)
+#            atualizar_viagem(numero_viagem, payload)
+#            logger.info("[TICKET] Payload completo atualizado no Supabase (viagem %s).", numero_viagem)
 
         except Exception:
             logger.error("[TICKET] Falha ao enviar as informações ao Supabase.", exc_info=True)
