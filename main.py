@@ -229,6 +229,8 @@ def notificar_viagem():
             logger.error("[A3] Falha ao gravar viagem no Supabase", exc_info=True)
             return jsonify({"status": "Viagem já lançada no sistema"}), 500
 
+        from datetime import datetime
+        
         # 3. Monta mensagem pro motorista
         mensagem = (
             f"👋 Olá {nome_motorista}!\n\n"
