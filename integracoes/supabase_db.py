@@ -14,7 +14,8 @@ def br_to_iso(data_str: str) -> str | None:
     if not data_str:
         return None
     try:
-        return datetime.strptime(data_str, "%d/%m/%Y").date().isoformat()
+#        return datetime.strptime(data_str, "%d/%m/%Y").date().isoformat()
+        return datetime.strptime(data_str, "%Y/%m/%d").date().isoformat()
     except ValueError:
         raise ValueError(f"Data inválida: {data_str}")
 
@@ -23,8 +24,8 @@ def salvar_viagem(dados: dict):
     try:
         res = supabase.table("viagens").insert({
             "numero_viagem": dados.get("numero_viagem"),
-#            "data": br_to_iso(dados.get("data")),
-            "data": dados.get("data"),
+            "data": br_to_iso(dados.get("data")),
+#            "data": dados.get("data"),
             "telefone_motorista": dados.get("telefone_motorista"),
             "motorista": dados.get("motorista"),
             "placa": dados.get("placa"),
