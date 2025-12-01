@@ -232,7 +232,7 @@ def notificar_viagem():
         # 3. Monta mensagem pro motorista
         mensagem = (
             f"👋 Olá {nome_motorista}!\n\n"
-            f"Você será responsável pela viagem *{numero_viagem}*. Na data {data_coleta}.\n"
+            f"Você será responsável pela viagem *{numero_viagem}*. Na data {datetime.strptime(data_coleta, '%Y-%m-%d').strftime('%d/%m/%Y')}.\n"
             f"🛣️ Rota: {rota}\n"
             f"🚛 Placa: {placa}\n"
             f"🏭 Remetente: {remetente}\n"
