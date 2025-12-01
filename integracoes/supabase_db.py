@@ -23,7 +23,8 @@ def salvar_viagem(dados: dict):
     try:
         res = supabase.table("viagens").insert({
             "numero_viagem": dados.get("numero_viagem"),
-            "data": br_to_iso(dados.get("data")),
+#            "data": br_to_iso(dados.get("data")),
+            "data": dados.get("data"),
             "telefone_motorista": dados.get("telefone_motorista"),
             "motorista": dados.get("motorista"),
             "placa": dados.get("placa"),
