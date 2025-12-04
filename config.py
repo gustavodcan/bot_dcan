@@ -14,6 +14,10 @@ GOOGLE_CREDS_JSON = os.getenv("GOOGLE_CREDS_JSON")
 GOOGLE_CREDS_PATH = "/etc/secrets/GOOGLE_CREDS_JSON"
 GOOGLE_SHEETS_PATH = "/etc/secrets/acc_servico"
 
+NSDOCS_BASE_URL = os.getenv("NSDOCS_BASE_URL")
+NSDOCS_TOKEN    = os.getenv("NSDOCS_TOKEN")
+NSDOCS_EMPRESA_CNPJ = os.getenv("NSDOCS_EMPRESA_CNPJ")
+
 mapa_setores = {
     "comercial": os.getenv("SETOR_COMERCIAL"),
     "faturamento": os.getenv("SETOR_FATURAMENTO"),
