@@ -174,88 +174,64 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
 
     logger.info(f"[NF] Chave encontrada com sucesso: {chave}")
 
-    enviar_mensagem(numero, "🔄 Consultando dados da NF...")
+    from integracoes.nsdocs.client import buscar_ou_consultar_e_buscar
 
-    # 1) login pra pegar token
-    auth = login_obter_token()
-    if not auth.get("ok") or not auth.get("token"):
-        enviar_mensagem(numero, f"⚠️ Falha ao autenticar no A3Soft: {auth.get('error')}")
-        return {"status": "erro_a3soft_auth"}
+    enviar_mensagem(numero, "🔎 Consultando dados da NF no NSDocs...")
 
-    # 2) chamar ReceberXML (ERP devolve XML, não JSON)
-    res_a3 = receber_xml(token=auth["token"], chave_acesso=chave)
-    if not res_a3.get("ok"):
-        # loga status + trecho do corpo p/ entender o 500 do ERP
-        status = res_a3.get("status")
-        corpo  = (res_a3.get("text") or res_a3.get("error") or "")[:500]
-        logger.error(f"[A3] ReceberXML falhou (status={status}) corpo={corpo}")
-        enviar_mensagem(numero, "⚠️ Erro ao consultar a NF no A3Soft. Vou tentar novamente em instantes.")
-        # opcional: 1 re-tentativa simples
-        res_a3 = receber_xml(token=auth["token"], chave_acesso=chave)
-        if not res_a3.get("ok"):
-            return {"status": "erro_a3soft", "detalhe": res_a3}
+    # sanitize chave
+    import re
+    chave = re.sub(r"\D", "", chave or "")
+    if len(chave) != 44:
+        enviar_mensagem(numero, "❌ Chave de acesso inválida (precisa de 44 dígitos).")
+        conversas[numero]["estado"] = "aguardando_imagem_nf"
+        return {"status": "chave inválida"}
 
-    xml_bruto = (res_a3.get("xml") or "").strip().replace("\ufeff", "")
-    #logger.debug(f"[A3SOFT] XML bruto retornado (até 2000 chars): {res_a3.get('xml', '')[:2000]}")
+    resp = buscar_ou_consultar_e_buscar(chave)
+    if not resp.get("ok"):
+        logger.error(f"[NSDOCS] Falha na consulta: {resp}")
+        enviar_mensagem(numero, "⚠️ Não consegui consultar a NF no NSDocs agora.")
+        return {"status": "erro_nsdocs", "detalhe": resp}
 
-    # 3) parse do XML direto aqui
-    try:
-        root = ET.fromstring(xml_bruto)
-    except ET.ParseError:
-        logger.error(
-            "[A3SOFT] Retorno não é XML válido. Conteúdo recebido:\n"
-            + (xml_bruto[:2000] if xml_bruto else "<vazio>")
-        )
-        enviar_mensagem(numero, "⚠️ Retorno do A3Soft não é um XML válido (foi logado no servidor).")
-        return {"status": "xml_invalido"}
+    lista = resp.get("data", [])
+    if not lista:
+        enviar_mensagem(numero, "⚠️ NSDocs não retornou dados para essa chave. Confirme a imagem ou tente novamente.")
+        conversas[numero]["estado"] = "aguardando_imagem_nf"
+        return {"status": "nf_nao_encontrada"}
 
-    def get_text(*xpaths, default=""):
-        for xp in xpaths:
-            el = root.find(xp)
-            if el is not None and el.text and el.text.strip():
-                return el.text.strip()
-        return default
+    # NSDocs retorna lista; usa o primeiro item
+    item = lista[0] or {}
+    emitente_nome = item.get("emitente_nome") or "Não informado"
+    emitente_cnpj = item.get("emitente_cnpj") or "Não informado"
+    destinatario_nome = item.get("destinatario_nome") or "Não informado"
+    destinatario_cnpj = item.get("destinatario_cnpj") or "Não informado"
+    numero_nf = str(item.get("numero") or "")
+    data_emissao = item.get("data_emissao") or "Não informado"
 
-    # chave pode vir em <chNFe> ou no Id (IdNFe + 44 dígitos)
-    chave_xml = get_text(".//chNFe") or chave
-    if not get_text(".//chNFe"):
-        m = re.search(r"IdNFe(\d{44})", xml_bruto)
-        if m:
-            chave_xml = m.group(1)
+    # peso pode vir como string "00.00,000". Normaliza para exibição e uso interno.
+    peso_raw = item.get("peso")
+    peso_norm = None
+    if peso_raw:
+        try:
+            s = str(peso_raw).strip().replace(".", "").replace(",", ".")  # "00.00,000" -> "0000.000"
+            peso_norm = float(s)
+        except Exception:
+            peso_norm = None
 
-    emitente_nome = get_text(".//emit/xNome") or "Não informado"
-    emitente_cnpj = get_text(".//emit/CNPJ") or "Não informado"
-    destinatario_nome = get_text(".//dest/xNome") or "Não informado"
-    destinatario_cnpj = get_text(".//dest/CNPJ") or "Não informado"
-
-    nfe_numero = get_text(".//ide/nNF") or "Não informado"
-    emissao_iso = get_text(".//ide/dhEmi") or ""
-    try:
-        nfe_emissao = datetime.fromisoformat(emissao_iso.replace("Z", "+00:00")).strftime("%d/%m/%Y") if emissao_iso else "Não informado"
-    except Exception:
-        nfe_emissao = emissao_iso or "Não informado"
-
-    modalidade = get_text(".//transp/modFrete") or ""
-    modalidade_num = "".join(re.findall(r"\d+", modalidade)) if modalidade else "Não informado"
-
-    peso_bruto = get_text(".//transp/vol/pesoB") or get_text(".//transp/vol/pesoL") or "Não informado"
-
-    # 4) salvar e seguir o fluxo igual antes
-    conversas[numero]["estado"] = "aguardando_confirmacao_dados_nf"
-    conversas[numero]["nf_consulta"] = {
-        "chave": chave_xml,
+    # guarda e segue o fluxo
+    conv = conversas.setdefault(numero, {})
+    dados = conv.setdefault("dados", {})
+    conv["nf_consulta"] = {
+        "chave": chave,
         "emitente_nome": emitente_nome,
         "emitente_cnpj": emitente_cnpj,
         "destinatario_nome": destinatario_nome,
         "destinatario_cnpj": destinatario_cnpj,
-        "numero": nfe_numero,
-        "emissao": nfe_emissao,
-        "modalidade": modalidade_num,
-        "peso_bruto": peso_bruto,
+        "numero": numero_nf,
+        "emissao": data_emissao,
+        "peso_bruto": peso_norm if peso_norm is not None else (peso_raw or "Não informado"),
     }
-    #conversas[numero]["ocr_texto_nf_xml"] = xml_bruto  # opcional p/ debug
+    conversas[numero]["estado"] = "aguardando_confirmacao_dados_nf"
 
-    # envia resumo p/ confirmação (igual você já fazia)
     msg = (
         "✅ *Nota encontrada! Confira os dados:*\n\n"
         f"*Emitente:* {emitente_nome}\n"
