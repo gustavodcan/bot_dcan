@@ -63,7 +63,7 @@ def consultar_chave_acesso(chave_acesso: str):
     POST /consultar/dfe (x-www-form-urlencoded) body: documento={chave}
     Retorno 200 indica que indexou/consultou; depois chame GET novamente.
     """
-    url = _abs("/consultar/dfe")
+    url = _abs("/consultas/dfe")
     headers = dict(HEADERS_DFE)
     # x-www-form-urlencoded
     headers["Content-Type"] = "application/x-www-form-urlencoded"
@@ -78,7 +78,7 @@ def consultar_chave_acesso(chave_acesso: str):
             j = txt
         logger.debug(f"[NSDOCS][POST dfe] {r.status_code} body={str(j)[:800]}")
         if r.status_code != 200:
-            return {"ok": False, "status": r.status_code, "error": "http_error", "body": j}
+            return {"ok": False, "status": r.status_code, "error": "http_error", "data": j}
         return {"ok": True, "data": j}
     except Exception as e:
         logger.exception("[NSDOCS][POST dfe] exceção")
