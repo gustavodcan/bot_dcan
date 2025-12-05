@@ -209,9 +209,8 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     peso = item.get("peso")
 
     # guarda e segue o fluxo
-    conv = conversas.setdefault(numero, {})
-    dados = conv.setdefault("dados", {})
-    conv["nf_consulta"] = {
+    conversas[numero]["estado"] = "aguardando_confirmacao_dados_nf"
+    conversas[numero]["nf_consulta"] = {
         "chave": chave,
         "emitente_nome": emitente_nome,
         "emitente_cnpj": emitente_cnpj,
@@ -221,7 +220,6 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         "emissao": data_emissao,
         "peso_bruto": peso,
     }
-    conversas[numero]["estado"] = "aguardando_confirmacao_dados_nf"
 
     msg = (
         "✅ *Nota encontrada! Confira os dados:*\n\n"
