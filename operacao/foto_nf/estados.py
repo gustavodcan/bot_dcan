@@ -189,12 +189,12 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     resp = buscar_ou_consultar_e_buscar(chave)
     if not resp.get("ok"):
         logger.error(f"[NSDOCS] Falha na consulta: {resp}")
-        enviar_mensagem(numero, "⚠️ Não consegui consultar a NF no NSDocs agora.")
+        enviar_mensagem(numero, "⚠️ Não consegui consultar a NF agora. Por favor, tente novamente em instantes")
         return {"status": "erro_nsdocs", "detalhe": resp}
 
     lista = resp.get("data", [])
     if not lista:
-        enviar_mensagem(numero, "⚠️ NSDocs não retornou dados para essa chave. Confirme a imagem ou tente novamente.")
+        enviar_mensagem(numero, "⚠️ Não foram encontrados dados para essa chave. Confirme a imagem ou tente novamente.")
         conversas[numero]["estado"] = "aguardando_imagem_nf"
         return {"status": "nf_nao_encontrada"}
 
@@ -206,16 +206,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     destinatario_cnpj = item.get("destinatario_cnpj") or "Não informado"
     numero_nf = str(item.get("numero") or "")
     data_emissao = item.get("data_emissao") or "Não informado"
-
-    # peso pode vir como string "00.00,000". Normaliza para exibição e uso interno.
-    peso_raw = item.get("peso")
-    peso_norm = None
-    if peso_raw:
-        try:
-            s = str(peso_raw).strip().replace(".", "").replace(",", ".")  # "00.00,000" -> "0000.000"
-            peso_norm = float(s)
-        except Exception:
-            peso_norm = None
+    peso = item.get("peso")
 
     # guarda e segue o fluxo
     conv = conversas.setdefault(numero, {})
@@ -228,7 +219,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         "destinatario_cnpj": destinatario_cnpj,
         "numero": numero_nf,
         "emissao": data_emissao,
-        "peso_bruto": peso_norm if peso_norm is not None else (peso_raw or "Não informado"),
+        "peso_bruto": peso,
     }
     conversas[numero]["estado"] = "aguardando_confirmacao_dados_nf"
 
