@@ -63,7 +63,7 @@ def consultar_chave_acesso(chave_acesso: str):
     headers = dict(BASE_HEADERS)
     # x-www-form-urlencoded
     headers["Content-Type"] = "application/x-www-form-urlencoded"
-    data = {"documento": chave_acesso}
+    body = {"documento": chave_acesso}
     try:
         r = _session.post(url, headers=headers, data=data, timeout=30)
         txt = (r.text or "").strip()
