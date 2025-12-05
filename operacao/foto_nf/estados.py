@@ -218,7 +218,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         "destinatario_cnpj": destinatario_cnpj,
         "numero": numero_nf,
         "emissao": data_emissao,
-        "peso_bruto": peso_bruto,
+        "peso_bruto": peso,
     }
 
     msg = (
