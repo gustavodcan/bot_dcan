@@ -65,7 +65,7 @@ def consultar_chave_acesso(chave_acesso: str):
     headers["Content-Type"] = "application/x-www-form-urlencoded"
     body = {"documento": chave_acesso}
     try:
-        r = _session.post(url, headers=headers, body=body, timeout=30)
+        r = _session.post(url, headers=headers, data=body, timeout=30)
         txt = (r.text or "").strip()
         # pode ser que retorne texto simples; tenta json, mas não exige
         try:
