@@ -218,7 +218,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         "destinatario_cnpj": destinatario_cnpj,
         "numero": numero_nf,
         "emissao": data_emissao,
-        "peso_bruto": peso,
+        "peso_bruto": peso_bruto,
     }
 
     msg = (
@@ -227,9 +227,8 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         f"*CNPJ Emitente:* {emitente_cnpj}\n"
         f"*Destinatário:* {destinatario_nome}\n"
         f"*CNPJ Destinatário:* {destinatario_cnpj}\n"
-        f"*Número:* {nfe_numero}\n"
-        f"*Emissão:* {nfe_emissao}\n"
-        f"*Modalidade Frete:* {modalidade_num}\n"
+        f"*Número:* {numero_nf}\n"
+        f"*Emissão:* {data_emissao}\n"
         f"*Peso Bruto:* {peso_bruto}\n\n"
         "Está tudo correto?"
     )
