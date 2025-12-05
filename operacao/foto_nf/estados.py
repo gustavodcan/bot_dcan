@@ -229,7 +229,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         f"*CNPJ Destinatário:* {destinatario_cnpj}\n"
         f"*Número:* {numero_nf}\n"
         f"*Emissão:* {data_emissao}\n"
-        f"*Peso Bruto:* {peso_bruto}\n\n"
+        f"*Peso Bruto:* {peso}\n\n"
         "Está tudo correto?"
     )
     enviar_botoes_sim_nao(numero, msg)
