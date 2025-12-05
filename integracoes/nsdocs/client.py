@@ -65,7 +65,7 @@ def consultar_chave_acesso(chave_acesso: str):
     headers["Content-Type"] = "application/x-www-form-urlencoded"
     body = {"documento": chave_acesso}
     try:
-        r = _session.post(url, headers=headers, data=data, timeout=30)
+        r = _session.post(url, headers=headers, body=body, timeout=30)
         txt = (r.text or "").strip()
         # pode ser que retorne texto simples; tenta json, mas não exige
         try:
@@ -74,7 +74,7 @@ def consultar_chave_acesso(chave_acesso: str):
             j = txt
         logger.debug(f"[NSDOCS][POST dfe] {r.status_code} body={str(j)[:800]}")
         if r.status_code != 200:
-            return {"ok": False, "status": r.status_code, "error": "http_error", "data": j}
+            return {"ok": False, "status": r.status_code, "error": "http_error", "body": j}
         return {"ok": True, "data": j}
     except Exception as e:
         logger.exception("[NSDOCS][POST dfe] exceção")
