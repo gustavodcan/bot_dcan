@@ -26,6 +26,10 @@ BASE_HEADERS = {
     "Accept-Encoding": "gzip",
 }
 
+HEADERS_DFE = {
+    "Authorization": f"Bearer {NSDOCS_TOKEN}",
+}
+
 def consultar_documentos(chave_acesso: str):
     """
     GET /documentos?filtro={chave}&campos=emitente_nome,emitente_cnpj,destinatario_nome,destinatario_cnpj,numero,data_emissao,peso
@@ -60,7 +64,7 @@ def consultar_chave_acesso(chave_acesso: str):
     Retorno 200 indica que indexou/consultou; depois chame GET novamente.
     """
     url = _abs("/consultar/dfe")
-    headers = dict(BASE_HEADERS)
+    headers = dict(HEADERS_DFE)
     # x-www-form-urlencoded
     headers["Content-Type"] = "application/x-www-form-urlencoded"
     body = {"documento": chave_acesso}
