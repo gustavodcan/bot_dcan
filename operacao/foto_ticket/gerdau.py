@@ -35,7 +35,7 @@ def extrair_dados_cliente_gerdau(img, texto: str):
     # Gerdau Geral : linha com "xx,xxx to" ou "xx.xxx to" e sem horário
     peso_liquido_geral = NAO_ENCONTRADO
     for linha in texto.splitlines():
-        m = re.search(r"\b(\d{2,3}[.,]\d{3})\s+to\b", linha, flags=re.IGNORECASE)
+        m = re.search(r"\b(\d{1,3}[.,]\d{3})\s+to\b", linha, flags=re.IGNORECASE)
         if m and not re.search(r"\d{2}:\d{2}:\d{2}", linha):
             peso_liquido_geral = m.group(1).replace(",", ".")
             break
