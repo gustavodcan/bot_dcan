@@ -43,9 +43,9 @@ def detectar_cliente_por_texto(texto):
         return "mahle"
     elif "orizon" in texto:
         return "orizon"
-    elif "cdr pedreira" in texto or "cor pedreira" in texto or "cgr três marias" in texto or "cgr iperó" in texto or "cgr iper≤" in texto or "agregalog transportes ltda" in texto:
+    elif "cdr pedreira" in texto or "cor pedreira" in texto or "cgr três marias" in texto:
         return "cdr"
-    elif "serviço autônomo" in texto or "servico autonomo" in texto:
+    elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto:
         return "saae"
     elif "gerdau" in texto or "br-ml-pindamonhangaba" in texto:
         return "gerdau"
