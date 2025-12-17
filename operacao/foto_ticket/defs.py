@@ -81,6 +81,7 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
 
     texto = limpar_texto_ocr(texto)
     conversas[numero]["ocr_texto"] = texto
+    logger.debug(f"Texto OCR Puro: {texto}")
 
     cliente_detectado = detectar_cliente_por_texto(texto)
     logger.debug(f"[🕵️] Cliente detectado automaticamente: {cliente_detectado}")
