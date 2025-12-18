@@ -39,6 +39,10 @@ def detectar_cliente_por_texto(texto):
 
     if "ticket de pesagem recebimento" in texto:
         return "rio das pedras"
+    elif "gerdau" in texto or "br-ml-pindamonhangaba" in texto:
+        return "gerdau"
+    elif "arcelormittal" in texto or "arcelor" in texto or "am iracemapolis" in texto or "brm" in texto:
+        return "arcelormittal"
     elif "mahle" in texto:
         return "mahle"
     elif "orizon" in texto:
@@ -47,10 +51,6 @@ def detectar_cliente_por_texto(texto):
         return "cdr"
     elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto:
         return "saae"
-    elif "gerdau" in texto or "br-ml-pindamonhangaba" in texto:
-        return "gerdau"
-    elif "arcelormittal" in texto or "arcelor" in texto or "am iracemapolis" in texto or "brm" in texto:
-        return "arcelormittal"
     else:
         return "cliente_desconhecido"
 
