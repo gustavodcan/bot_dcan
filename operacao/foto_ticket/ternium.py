@@ -6,7 +6,7 @@ def extrair_dados_cliente_ternium(img, texto):
     logger.debug(texto)
 
     # Nota
-    nf_match = re.search(r"\bitem:\s*(\d+)-", texto, re.IGNORECASE)
+    nf_match = re.search(r"\bitem:\s*(?:\[?n\]?\s*)?(\d+)-", texto, re.IGNORECASE)
     nota_val = nf_match.group(1) if nf_match else None
     
     # Ticket
