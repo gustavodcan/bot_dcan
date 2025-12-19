@@ -22,11 +22,11 @@ def extrair_dados_cliente_orizon(img, texto):
 
     # --- Ticket (padrão tipo TB0000108249 ou variações) ---
     match_ticket = re.search(
-        r"\b[tт][bв][оo0]?[0-9]{6,}\b",
+        r"\b[tт][bв][оo0]?([0-9]{6,})\b",
         texto_lower
     )
     if match_ticket:
-        ticket_val = match_ticket.group(0).upper()
+        ticket_val = match_ticket.group(1)
         logger.debug(f"Operação (ticket) encontrada: {ticket_val}")
 
     logger.debug("🎯 Dados extraídos:")
