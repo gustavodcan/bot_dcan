@@ -14,7 +14,7 @@ def extrair_dados_cliente_ternium(img, texto):
     ticket_val = ticket_match.group(1) if ticket_match else None
 
     # Peso
-    peso = re.search(r"\bliqu[ií]do:\s*(\d+)", texto, re.IGNORECASE)
+    peso = re.search(r"\bl[íi]qu[ií]do:\s*(\d+)", texto, re.IGNORECASE)
     peso_liquido = peso.group(1) if peso else None
 
     logger.debug("🎯 Dados extraídos:")
