@@ -4,7 +4,7 @@ from mensagens import enviar_mensagem, enviar_botoes_sim_nao
 logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_saae(img, texto):
-    logger.debug("📜 [SAAE] Texto detectado:")
+    logger.debug("📜 [PROACTIVA] Texto detectado:")
     logger.debug(texto)
 
     ticket_match = re.search(r"(?m)^(?:.*?:\s*)?(\d{5}/\d{4})\s*$", texto)
@@ -70,7 +70,7 @@ def tratar_estado_aguardando_destino_saae(numero, texto_recebido, conversas):
 
     msg = (
         f"📋 Recebi os dados:\n"
-        f"Cliente: SAAE\n"
+        f"Cliente: PROACTIVA\n"
         f"Ticket: {dados.get('ticket')}\n"
         f"Peso Líquido: {dados.get('peso_liquido')}\n"
         f"Origem: {destino_digitado}\n\n"
