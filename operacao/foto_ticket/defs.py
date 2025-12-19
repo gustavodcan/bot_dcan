@@ -49,7 +49,7 @@ def detectar_cliente_por_texto(texto):
         return "mahle"
     elif "cdr pedreira" in texto or "cor pedreira" in texto or "cgr três marias" in texto:
         return "cdr"
-    elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto:
+    elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto or "sistema produtor" in texto:
         return "saae"
     else:
         return "cliente_desconhecido"
