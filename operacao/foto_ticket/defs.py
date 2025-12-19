@@ -61,7 +61,7 @@ def detectar_cliente_por_texto(texto):
 
 def limpar_texto_ocr(texto):
     texto = texto.lower()
-    texto = texto.replace("liq", "líquido")
+    #texto = texto.replace("liq", "líquido")
     texto = texto.replace("outros docs", "outros_docs")
     texto = re.sub(r"[^\w\s:/\.,-]", "", texto)
     texto = re.sub(r"\s{2,}", " ", texto)
