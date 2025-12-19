@@ -25,7 +25,7 @@ def extrair_dados_por_cliente(cliente, texto_ocr):
             return extrair_dados_cliente_orizon(None, texto_ocr)
         case "rio das pedras":
             return extrair_dados_cliente_rio_das_pedras(None, texto_ocr)
-        case "saae":
+        case "proactiva":
             return extrair_dados_cliente_saae(None, texto_ocr)
         case _:
             return {
@@ -50,7 +50,7 @@ def detectar_cliente_por_texto(texto):
     elif "cdr pedreira" in texto or "cor pedreira" in texto or "cgr três marias" in texto:
         return "cdr"
     elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto or "sistema produtor" in texto:
-        return "saae"
+        return "proactiva"
     else:
         return "cliente_desconhecido"
 
