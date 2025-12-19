@@ -8,6 +8,7 @@ from operacao.foto_ticket.mahle import extrair_dados_cliente_mahle
 from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from operacao.foto_ticket.rio_das_pedras import extrair_dados_cliente_rio_das_pedras
 from operacao.foto_ticket.saae import extrair_dados_cliente_saae
+from operacao.foto_ticket.ternium import extrair_dados_cliente_ternium
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,8 @@ def extrair_dados_por_cliente(cliente, texto_ocr):
             return extrair_dados_cliente_arcelormittal(None, texto_ocr)
         case "gerdau":
             return extrair_dados_cliente_gerdau(None, texto_ocr)
+        case "ternium":
+            return extrair_dados_cliente_ternium(None, texto_ocr)
         case "mahle":
             return extrair_dados_cliente_mahle(None, texto_ocr)
         case "orizon":
@@ -47,6 +50,8 @@ def detectar_cliente_por_texto(texto):
         return "gerdau"
     elif "arcelormittal" in texto or "arcelor" in texto or "am iracemapolis" in texto or "brm" in texto:
         return "arcelormittal"
+    elif "ternium" in texto:
+        return "ternium"
     elif "mahle" in texto:
         return "mahle"
     elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto or "sistema produtor" in texto:
