@@ -7,7 +7,7 @@ def extrair_dados_cliente_saae(img, texto):
     logger.debug("📜 [PROACTIVA] Texto detectado:")
     logger.debug(texto)
 
-    ticket_match = re.search(r"(?m)^(?:.*?:\s*)?(\d{5}/\d{4})\s*$", texto)
+    ticket_match = re.search(r"(?m)^(?:.*?\s*)?(\d{5}/\d{4})\s*$", texto)
     ticket_val = ticket_match.group(1).replace("/", "") if ticket_match else "NÃO ENCONTRADO"
 
     outros_docs = re.search(r"outros[\s_]*docs[.:;\-]*[:]?[\s]*([0-9]{4,})", texto)
