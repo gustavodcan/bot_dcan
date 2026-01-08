@@ -47,7 +47,7 @@ def iniciar_fluxo_ticket(numero, conversas):
 def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas):
     viagens = conversas.get(numero, {}).get("opcoes_viagem_ticket", [])
     if not viagens:
-        enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com o despacho.")
+        enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com seu programador(a).")
         conversas.pop(numero, None)
         return {"status": "sem opções"}
 
