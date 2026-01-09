@@ -196,7 +196,7 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
         )
 
         if not numero_viagem:
-            enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Fale com o despacho.")
+            enviar_mensagem(numero, "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Fale com seu programador(a).")
             conversas.pop(numero, None)
             try:
                 os.remove("ticket.jpg")
