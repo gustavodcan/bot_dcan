@@ -7,7 +7,6 @@ from operacao.foto_nf.defs import extrair_chave_acesso
 import xml.etree.ElementTree as ET
 from integracoes.a3soft.client import login_obter_token, receber_xml, enviar_nf
 from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa, carregar_viagens_ativas, VIAGENS
-#from integracoes.google_sheets import atualizar_viagem_nf
 from integracoes.supabase_db import atualizar_viagem
 
 logger = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ def iniciar_fluxo_nf(numero, conversas):
 def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     viagens = conversas.get(numero, {}).get("opcoes_viagem_nf", [])
     if not viagens:
-        enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com o despacho.")
+        enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com seu programador(a).")
         conversas.pop(numero, None)
         return {"status": "sem opções"}
 
@@ -151,17 +150,13 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
                 with pdfplumber.open("nota.pdf") as pdf:
                     texto_paginas = [page.extract_text() or "" for page in pdf.pages]
                     texto = "\n".join(texto_paginas)
-#                logger.debug(f"[NF] Texto extraído com pdfplumber: {repr(texto)[:500]}...")
             except Exception:
                 logger.error("[NF] Falha ao extrair texto com pdfplumber", exc_info=True)
 
-    # Log OCR bruto
-#    logger.debug(f"[NF] OCR bruto/extraído: {repr(texto)[:500]}...")
 
     # Limpa texto
     texto = limpar_texto_ocr(texto)
     conversas[numero]["ocr_texto_nf"] = texto
-#    logger.debug(f"[NF] Texto após limpeza: {repr(texto)[:500]}...")
 
     # Extrai chave
     chave = extrair_chave_acesso(texto)
@@ -272,56 +267,9 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
                 numero
             )
 
-#        try:
-#            # pegue a chave e o número da viagem do que você já guardou no fluxo
-#            chave_acesso = (conversas[numero].get("nf_consulta", {}) or {}).get("chave") \
-#                           or conversas[numero]["dados"].get("chave_acesso")
-
-            # sanitize e valida chave
-#            if not chave_acesso:
-#                logger.error("[A3/NF] Chave de acesso ausente para ReceberNFe")
-#                enviar_mensagem(numero, "⚠️ Não encontrei a chave da NF para enviar ao A3Soft.")
-#            else:
-#                chave_acesso = re.sub(r"\D", "", chave_acesso)
-#                if len(chave_acesso) != 44:
-#                   logger.error(f"[A3/NF] Chave inválida: {chave_acesso}")
-#                    enviar_mensagem(numero, "⚠️ Chave da NF inválida para envio ao A3Soft.")
-#                else:
-#                    # número da viagem: ajuste a origem conforme seu fluxo
-#                    numero_viagem = (
-#                        conversas.get(numero, {}).get("numero_viagem_selecionado")
-#                        or get_viagem_ativa(numero)
-#                    )
-#                    if not numero_viagem:
-#                        enviar_mensagem(numero, "⚠️ Não achei o número da viagem para enviar ao A3Soft.")
-#                    else:
-#                        # 1) login para token fresco
-#                        auth = login_obter_token()
-#                        if not auth.get("ok") or not auth.get("token"):
-#                            logger.error(f"[A3/NF] Falha auth: {auth}")
-#                            enviar_mensagem(numero, "⚠️ Não consegui autenticar no A3Soft para enviar a NF.")
-#                        else:
-#                            # 2) enviar NF
-#                            res_nf = enviar_nf(
-#                                token=auth["token"],
-#                                numero_viagem=int(numero_viagem),
-#                                chave_acesso=chave_acesso
-#                            )
-#
-#                            # 3) feedback + log
-#                            if res_nf.get("ok"):
-#                                enviar_mensagem(numero, "📤 NF enviada ao A3Soft com sucesso.")
-#                                logger.info(f"[A3/NF] OK: {str(res_nf.get('data'))[:500]}")
-#                            else:
-#                                enviar_mensagem(numero, "⚠️ Falha ao enviar NF ao A3Soft.")
-#                                logger.error(f"[A3/NF] ERRO: {res_nf}")
-#        except Exception as e:
-#            logger.exception("[A3/NF] Exceção ao enviar NF para o A3Soft")
-#            enviar_mensagem(numero, f"⚠️ Erro inesperado ao enviar a NF ao A3Soft: {e}")
-
         enviar_mensagem(numero, "✅ Perfeito! Dados confirmados. Obrigado! 🙌")
         conversas.pop(numero, None)
-        # ... (limpeza de arquivos)
+        # limpeza de arquivos
         return {"status": "finalizado"}
 
     # resposta inválida
