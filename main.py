@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify
 #Importação de de Defs e Estados
 from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao)
 from manutencao.checklist import tratar_estado_aguardando_km_manutencao, tratar_estado_aguardando_placa_manutencao, tratar_estado_aguardando_problema_manutencao
-from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket, tratar_estado_selecionando_viagem_ticket
+from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket, tratar_estado_selecionando_viagem_ticket, iniciar_fluxo_ticket_terceiro
 from operacao.foto_nf.estados import tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf, tratar_estado_aguardando_imagem_nf
 from operacao.falar_programador.contato import tratar_descricao_setor, encaminhar_para_setor
 
@@ -94,7 +94,8 @@ def webhook():
     #Define DEF seguinte com base na seleção do usuário no setor "Operação"
     if estado == "aguardando_opcao_operacao":
         if texto_recebido in ['foto_ticket']:
-            resultado = iniciar_fluxo_ticket(numero, conversas)
+            conversas[numero] = {"estado": "aguardando_opcao_ticket", "expira_em": time.time() + TIMEOUT_SECONDS}
+            resultado = enviar_opcoes_ticket(numero, conversas)
             return jsonify(resultado)
         elif texto_recebido in ['foto_nf']:
             resultado = iniciar_fluxo_nf(numero, conversas)
@@ -104,6 +105,15 @@ def webhook():
             conversas[numero]["estado"] = "finalizado"
             conversas.pop(numero, None)
         return jsonify(status="resposta motorista")
+
+    #Define DEF seguinte com base na seleção do usuário no setor "Operação"
+    if estado == "aguardando_opcao_ticket":
+        if texto_recebido in ['eu_mesmo']:
+            resultado = iniciar_fluxo_ticket(numero, conversas)
+            return jsonify(resultado)
+        elif texto_recebido in ['outro_motorista']:
+            resultado = iniciar_fluxo_ticket_terceiro(numero, conversas)
+            return jsonify(resultado)
 
     #Manda para o DEF "Selecionando Viagem_NF" após seleção da viagem
     if estado == "selecionando_viagem_nf":
