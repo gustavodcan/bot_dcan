@@ -64,6 +64,7 @@ def carregar_viagens_ativas(status_filtro: Optional=str) -> List[Dict[str, Any]]
 VIAGENS: List[Dict[str, Any]] = []
 VIAGEM_POR_TELEFONE: Dict[str, str] = {}  #Telefone e Número da viagem
 VIAGEM_ATIVA_POR_TELEFONE: Dict[str, str] = {}
+VIAGEM_ATIVA_POR_NF: Dict[str, str] = {}
 
 #Atualiza os caches em memória com base no resultado do DB.
 def refresh_viagens_cache(status_filtro: Optional[str] = None) -> None:
@@ -79,3 +80,14 @@ def set_viagem_ativa(telefone: str, numero_viagem: str):
 
 def get_viagem_ativa(telefone: str) -> Optional[str]:
     return VIAGEM_ATIVA_POR_TELEFONE.get(telefone)
+
+########################################################################
+
+def get_viagens_por_nf(nota_fiscal: str) -> List[Dict[str, Any]]:
+    return [v for v in VIAGENS if v.get("nota_fiscal") == nota_fiscal]
+
+def set_viagem_ativa_nf(nota_fiscal: str, numero_viagem: str):
+    VIAGEM_ATIVA_POR_NF[nota_fiscal] = numero_viagem
+
+def get_viagem_ativa_nf(nota_fiscal: str) -> Optional[str]:
+    return VIAGEM_ATIVA_POR_NF.get(nota_fiscal)
