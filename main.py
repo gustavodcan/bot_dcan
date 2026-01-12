@@ -95,7 +95,7 @@ def webhook():
     if estado == "aguardando_opcao_operacao":
         if texto_recebido in ['foto_ticket']:
             conversas[numero] = {"estado": "aguardando_opcao_ticket", "expira_em": time.time() + TIMEOUT_SECONDS}
-            resultado = enviar_opcoes_ticket(numero, conversas)
+            resultado = enviar_opcoes_ticket(numero)
             return jsonify(resultado)
         elif texto_recebido in ['foto_nf']:
             resultado = iniciar_fluxo_nf(numero, conversas)
