@@ -112,7 +112,10 @@ def webhook():
             resultado = iniciar_fluxo_ticket(numero, conversas)
             return jsonify(resultado)
         elif texto_recebido in ['outro_motorista']:
-            resultado = iniciar_fluxo_ticket_terceiro(numero, conversas)
+            enviar_mensagem(numero, "🔧 A função de enviar ticket de um motorista terceiro estará disponível em breve!")
+            conversas[numero]["estado"] = "finalizado"
+            conversas.pop(numero, None)
+#            resultado = iniciar_fluxo_ticket_terceiro(numero, conversas)
             return jsonify(resultado)
 
     #Manda para o DEF "Selecionando Viagem_NF" após seleção da viagem
