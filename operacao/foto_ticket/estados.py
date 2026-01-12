@@ -8,6 +8,7 @@ from operacao.foto_ticket.defs import extrair_dados_por_cliente
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from integracoes.azure import salvar_imagem_azure
 from viagens import VIAGEM_POR_TELEFONE, get_viagens_por_telefone, set_viagem_ativa, carregar_viagens_ativas, VIAGENS, get_viagem_ativa
+from viagens import VIAGEM_POR_NF, get_viagens_por_nf, set_viagem_ativa_nf, carregar_viagens_ativas_nf, VIAGENS_NF, get_viagem_ativa_nf
 from integracoes.supabase_db import atualizar_viagem
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,38 @@ def iniciar_fluxo_ticket(numero, conversas):
     conversas[numero]["estado"] = "selecionando_viagem_ticket"
     enviar_lista_viagens(numero, viagens, "Escolha a viagem para enviar o *ticket*:")
     return {"status": "aguardando escolha viagem ticket"}
+
+def iniciar_fluxo_ticket_terceiro(numero, conversas):
+    # sempre recarrega as viagens da planilha, filtrando por nota fiscal
+    VIAGENS_NF.clear()
+    VIAGENS_NF.extend(carregar_viagens_ativas_nf(status_filtro = conversas))
+    viagens = get_viagens_por_nf(numero)
+
+    if not viagens:  # 🚨 Nenhuma viagem encontrada
+        enviar_mensagem(
+            numero,
+            "⚠️ Não encontrei uma *viagem ativa* ou a *nota fiscal não foi enviada*. \n Por favor, fale com seu programador ou envie a nota fiscal no menu anterior.\n\n ⚠️ Conversa encerrada."
+        )
+        conversas.pop(numero, None)
+        return {"status": "sem viagem"}
+
+    if len(viagens) == 1:  # só tem uma opção, seleciona direto
+        selecionada = viagens[0]
+        conversas.setdefault(numero, {})["numero_viagem_selecionado"] = selecionada["numero_viagem"]
+        set_viagem_ativa(numero, selecionada["numero_viagem"])
+        enviar_mensagem(
+            numero,
+            f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['data']} — {selecionada['placa']} · {selecionada['rota']}\n\n"
+            "Agora, envie a *imagem do ticket*."
+        )
+        conversas[numero]["estado"] = "aguardando_imagem"
+        return {"status": "aguardando imagem ticket"}
+
+    # mais de uma opção → manda lista pro motorista
+#    conversas.setdefault(numero, {})["opcoes_viagem_ticket"] = viagens
+#    conversas[numero]["estado"] = "selecionando_viagem_ticket"
+#    enviar_lista_viagens(numero, viagens, "Escolha a viagem para enviar o *ticket*:")
+#    return {"status": "aguardando escolha viagem ticket"}
 
 def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas):
     viagens = conversas.get(numero, {}).get("opcoes_viagem_ticket", [])
