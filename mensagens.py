@@ -124,3 +124,23 @@ def enviar_opcoes_operacao(numero):
     }
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[🟦 Botões operação enviados] Status {res.status_code}: {res.text}")
+
+#Cria botões(manualmente) da opções de ticket e envia para motorista
+def enviar_opcoes_ticket(numero):
+    url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-button-list"
+    payload = {
+        "phone": numero,
+        "message": "Antes de nos enviar a foto do ticket, nos informe: Quem fez o carregamento dessa viagem?",
+        "buttonList": {
+            "buttons": [
+                {"id": "eu_mesmo", "label": "Eu mesmo"},
+                {"id": "outro_motorista", "label": "Outro motorista"}
+            ]
+        }
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Client-Token": ZAPI_CLIENT_TOKEN
+    }
+    res = requests.post(url, json=payload, headers=headers)
+    logger.debug(f"[🟦 Botões operação enviados] Status {res.status_code}: {res.text}")
