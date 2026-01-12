@@ -83,7 +83,7 @@ def get_viagem_ativa(telefone: str) -> Optional[str]:
 ################################################################################################################################
 
 #Consulta viagens no Supabase conforme NF_Filtro
-def carregar_viagens_ativas(nf_filtro: Optional=str) -> List[Dict[str, Any]]:
+def carregar_viagens_ativas_nf(nf_filtro: Optional=str) -> List[Dict[str, Any]]:
     try:
         query = (
             supabase
