@@ -64,7 +64,6 @@ def carregar_viagens_ativas(status_filtro: Optional=str) -> List[Dict[str, Any]]
 VIAGENS: List[Dict[str, Any]] = []
 VIAGEM_POR_TELEFONE: Dict[str, str] = {}  #Telefone e Número da viagem
 VIAGEM_ATIVA_POR_TELEFONE: Dict[str, str] = {}
-VIAGEM_ATIVA_POR_NF: Dict[str, str] = {}
 
 #Atualiza os caches em memória com base no resultado do DB.
 def refresh_viagens_cache(status_filtro: Optional[str] = None) -> None:
@@ -81,10 +80,56 @@ def set_viagem_ativa(telefone: str, numero_viagem: str):
 def get_viagem_ativa(telefone: str) -> Optional[str]:
     return VIAGEM_ATIVA_POR_TELEFONE.get(telefone)
 
-########################################################################
+################################################################################################################################
+
+#Consulta viagens no Supabase conforme NF_Filtro
+def carregar_viagens_ativas(nf_filtro: Optional=str) -> List[Dict[str, Any]]:
+    try:
+        query = (
+            supabase
+            .table("viagens")
+            .select(
+                "numero_viagem, data, placa, telefone_motorista, motorista, rota, "
+                "remetente, destinatario, nota_fiscal, status"
+            )
+        )
+
+        if status_filtro:
+            query = query.eq("nota_fiscal", str(nf_filtro).upper())
+        else:
+            query = query.neq("nota_fiscal", nf_filtro)
+
+        res = query.execute()
+        rows = res.data or []
+
+        viagens_ativas_nf: List[Dict[str, Any]] = []
+        for row in rows:
+            viagens_ativas_nf.append({
+                "numero_viagem": str(row.get("numero_viagem") or "").strip(),
+                "data": iso_to_br(row.get("data")),
+                "placa": str(row.get("placa") or "").strip(),
+                "telefone_motorista": str(row.get("telefone_motorista") or "").strip(),
+                "motorista": str(row.get("motorista") or "").strip(),
+                "rota": str(row.get("rota") or "").strip(),
+                "remetente": str(row.get("remetente") or "").strip(),
+                "nota_fiscal": str(row.get("nota_fiscal") or "").strip(),
+                "destinatario": str(row.get("destinatario") or "").strip(),
+                "status": str(row.get("status") or "").strip().upper(),
+            })
+
+        return viagens_ativas_nf
+
+    except Exception as e:
+        logger.error(f"[SUPABASE] Erro ao carregar viagens: {e}", exc_info=True)
+        return []
+
+#Cache em memória
+VIAGENS_NF: List[Dict[str, Any]] = []
+VIAGEM_POR_NF: Dict[str, str] = {}  #Telefone e Número da viagem
+VIAGEM_ATIVA_POR_NF: Dict[str, str] = {}
 
 def get_viagens_por_nf(nota_fiscal: str) -> List[Dict[str, Any]]:
-    return [v for v in VIAGENS if v.get("nota_fiscal") == nota_fiscal]
+    return [v for v in VIAGENS_NF if v.get("nota_fiscal") == nota_fiscal]
 
 def set_viagem_ativa_nf(nota_fiscal: str, numero_viagem: str):
     VIAGEM_ATIVA_POR_NF[nota_fiscal] = numero_viagem
