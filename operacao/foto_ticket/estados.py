@@ -49,6 +49,7 @@ def iniciar_fluxo_ticket_terceiro(numero, nota_digitada, conversas):
     # sempre recarrega as viagens da planilha, filtrando por nota fiscal
     VIAGENS_NF.clear()
     VIAGENS_NF.extend(carregar_viagens_ativas_nf(nota_digitada))
+    logger.info(f"[DEBUG] VIAGENS_NF total: {len(VIAGENS_NF)}")
     viagens = get_viagens_por_nf(nota_digitada)
 
     if not viagens:  # 🚨 Nenhuma viagem encontrada
