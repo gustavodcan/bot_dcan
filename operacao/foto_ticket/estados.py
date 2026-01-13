@@ -287,6 +287,16 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
         enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não*.")
         return {"status": "aguardando resposta válida"}
 
+def tratar_estado_aguardando_nota_ticket(numero, texto_recebido, conversas):
+    nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
+    if not nota_digitada:
+        enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
+        return {"status": "nota inválida"}
+
+    enviar_mensagem(numero, "O número da nota é: "texto_recebido)
+    conversas[numero]["estado"] = "finalizado"
+    conversas.pop(numero, None)
+
 def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
     nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
     if not nota_digitada:
