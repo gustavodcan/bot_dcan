@@ -33,7 +33,7 @@ def iniciar_fluxo_ticket(numero, conversas):
         set_viagem_ativa(numero, selecionada["numero_viagem"])
         enviar_mensagem(
             numero,
-            f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['data']} — {selecionada['placa']} · {selecionada['rota']}\n\n"
+            f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['nota_fiscal']} - {selecionada['data']} — {selecionada['placa']} · {selecionada['rota']}\n\n"
             "Agora, envie a *imagem do ticket*."
         )
         conversas[numero]["estado"] = "aguardando_imagem"
@@ -41,6 +41,7 @@ def iniciar_fluxo_ticket(numero, conversas):
 
     # mais de uma opção → manda lista pro motorista
     conversas.setdefault(numero, {})["opcoes_viagem_ticket"] = viagens
+    conversas[numero]["nota_fiscal"] = {selecionada['nota_fiscal']}
     conversas[numero]["estado"] = "selecionando_viagem_ticket"
     enviar_lista_viagens(numero, viagens, "Escolha a viagem para enviar o *ticket*:")
     return {"status": "aguardando escolha viagem ticket"}
