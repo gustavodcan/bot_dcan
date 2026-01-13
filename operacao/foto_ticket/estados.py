@@ -487,7 +487,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
             None
         )
 
-        if not viagem and nota_fiscal:
+        if not viagem:
             viagens_nf = get_viagens_por_nf(nota_fiscal)
             viagem = next(
                 (v for v in viagens_nf if str(v.get("numero_viagem")) == str(numero_viagem)),
