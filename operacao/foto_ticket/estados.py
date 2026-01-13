@@ -503,7 +503,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         if nf_esperada and nota_ticket and nf_esperada != nota_ticket:
             enviar_mensagem(
                 numero,
-                f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nota_viagem}. Envie a foto correta do ticket."
+                f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nf_esperada}. Envie a foto correta do ticket."
             )
             conversas[numero]["estado"] = "aguardando_imagem"
             try:
