@@ -94,10 +94,7 @@ def carregar_viagens_ativas_nf(nf_filtro: Optional=str) -> List[Dict[str, Any]]:
             )
         )
 
-        if status_filtro:
-            query = query.eq("nota_fiscal", str(nf_filtro).upper())
-        else:
-            query = query.neq("nota_fiscal", nf_filtro)
+        query = query.eq("nota_fiscal", str(nf_filtro).upper())
 
         res = query.execute()
         rows = res.data or []
