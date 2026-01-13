@@ -500,7 +500,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         logger.debug(f"[CHECK NF] Viagem esperava NF={nf_esperada}, Ticket trouxe NF={nota_ticket}")
 
         # Checagem: NF do ticket x NF da viagem
-        if nota_viagem and nota_ticket and nota_viagem != nota_ticket:
+        if nf_esperada and nota_ticket and nf_esperada != nota_ticket:
             enviar_mensagem(
                 numero,
                 f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nota_viagem}. Envie a foto correta do ticket."
