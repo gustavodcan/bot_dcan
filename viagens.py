@@ -131,7 +131,8 @@ VIAGEM_POR_NF: Dict[str, str] = {}  #Telefone e Número da viagem
 VIAGEM_ATIVA_POR_NF: Dict[str, str] = {}
 
 def get_viagens_por_nf(nota_fiscal: str) -> List[Dict[str, Any]]:
-    return [v for v in VIAGENS_NF if v.get("nota_fiscal") == nota_fiscal]
+    nf = str(nota_fiscal).strip()
+    return [v for v in VIAGENS_NF if str(v.get("nota_fiscal") or "").strip() == nf]
 
 def set_viagem_ativa_nf(nota_fiscal: str, numero_viagem: str):
     VIAGEM_ATIVA_POR_NF[nota_fiscal] = numero_viagem
