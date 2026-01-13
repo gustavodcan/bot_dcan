@@ -283,7 +283,8 @@ def tratar_estado_aguardando_nota_ticket(numero, texto_recebido, conversas):
     if not nota_digitada:
         enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
         return {"status": "nota inválida"}
-    
+
+    conversas[numero]["nota_fiscal"] = str(nota_digitada)
     iniciar_fluxo_ticket_terceiro(numero, nota_digitada, conversas)
 
 def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
@@ -479,25 +480,22 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
                 except FileNotFoundError:
                     pass
                 return {"status": "sem_viagem"}
-
-        nota_ticket = dados.get("nota_fiscal")
         
         # Pega nota fiscal registrada na viagem
         viagens_tel = get_viagens_por_telefone(numero)
-        viagem = next(
-            (v for v in viagens_tel if str(v.get("numero_viagem")) == str(numero_viagem)),
-            None
-        )
+        viagem = next((v for v in viagens_tel if str(v.get("numero_viagem")) == str(numero_viagem)), None)
 
-        if not viagem:
-            viagens_nf = get_viagens_por_nf(nota_ticket)
-            viagem = next(
-                (v for v in viagens_nf if str(v.get("numero_viagem")) == str(numero_viagem)),
-                None
-            )
+        # fallback por NF (usa a NF do ticket se a esperada estiver None)
+        nf_esperada = conversas.get(numero, {}).get("nota_fiscal")
+        nf_para_buscar = nf_esperada or nota_digitada
 
-        nota_viagem = viagem.get("nota_fiscal") if viagem else None
+        if not viagem and nf_para_buscar:
+            viagens_nf = get_viagens_por_nf(str(nf_para_buscar))
+            viagem = next((v for v in viagens_nf if str(v.get("numero_viagem")) == str(numero_viagem)), None)
 
+        nota_ticket = dados.get("nota_fiscal")
+        nota_viagem = nota_digitada if viagem else None
+        
         # Debug detalhado
         logger.debug(f"[CHECK NF] Viagem esperava NF={nota_viagem}, Ticket trouxe NF={nota_ticket}")
 
@@ -541,24 +539,6 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
             logger.info("[TICKET] Upload Azure ok em %s", caminho)
         except Exception:
             logger.error("[TICKET] Falha no upload para Azure.", exc_info=True)
-
-#            # Tenta gerar o Base64 e incluir no payload
-#            try:
-#                with open("ticket.jpg", "rb") as f:
-#                    base_str = base64.b64encode(f.read()).decode("utf-8")
-#                payload["foto_ticket"] = base_str
-#                logger.info("[TICKET] Base64 gerado e adicionado ao payload (viagem %s).", numero_viagem)
-#            except Exception:
-#                logger.warning("[TICKET] Falha ao gerar Base64; seguindo sem foto_ticket.", exc_info=True)
-
-#            conv   = conversas.setdefault(numero, {})
-#            dados  = conv.setdefault("dados", {})
-#            dados["ticket_img_b64"]  = base_str
-#            dados["ticket_img_nome"] = "ticket.jpg"
-
-            # Uma única chamada ao Supabase com tudo junto
-#            atualizar_viagem(numero_viagem, payload)
-#            logger.info("[TICKET] Payload completo atualizado no Supabase (viagem %s).", numero_viagem)
 
         except Exception:
             logger.error("[TICKET] Falha ao enviar as informações ao Supabase.", exc_info=True)
