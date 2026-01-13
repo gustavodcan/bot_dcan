@@ -485,19 +485,19 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         viagens_tel = get_viagens_por_telefone(numero)
         viagem = next((v for v in viagens_tel if str(v.get("numero_viagem")) == str(numero_viagem)), None)
 
-        # fallback por NF (usa a NF do ticket se a esperada estiver None)
-        nf_esperada = conversas.get(numero, {}).get("nota_fiscal")
-        nf_para_buscar = nf_esperada or nota_digitada
+        # NF registrada no estado (quando o cara digitou)
+        nf_esperada = conversas.get(numero, {}).get("nota_fiscal")  # string ou None
+        # NF que veio do ticket/dados (se existir)
+        nota_ticket = dados.get("nota_fiscal")  # pode ser string/int/None
+        # usa a melhor disponível (estado > ticket)
+        nf_para_buscar = nf_esperada or (str(nota_ticket).strip() if nota_ticket else None)
 
         if not viagem and nf_para_buscar:
             viagens_nf = get_viagens_por_nf(str(nf_para_buscar))
             viagem = next((v for v in viagens_nf if str(v.get("numero_viagem")) == str(numero_viagem)), None)
 
-        nota_ticket = dados.get("nota_fiscal")
-        nota_viagem = nota_digitada if viagem else None
-        
         # Debug detalhado
-        logger.debug(f"[CHECK NF] Viagem esperava NF={nota_viagem}, Ticket trouxe NF={nota_ticket}")
+        logger.debug(f"[CHECK NF] Viagem esperava NF={nf_esperada}, Ticket trouxe NF={nota_ticket}")
 
         # Checagem: NF do ticket x NF da viagem
         if nota_viagem and nota_ticket and nota_viagem != nota_ticket:
