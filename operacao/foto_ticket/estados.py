@@ -293,7 +293,7 @@ def tratar_estado_aguardando_nota_ticket(numero, texto_recebido, conversas):
         enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
         return {"status": "nota inválida"}
 
-    enviar_mensagem(numero, "O número da nota é: "texto_recebido)
+    enviar_mensagem(numero, "O número da nota é: " nota_digitada)
     conversas[numero]["estado"] = "finalizado"
     conversas.pop(numero, None)
 
