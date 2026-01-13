@@ -112,12 +112,18 @@ def webhook():
             resultado = iniciar_fluxo_ticket(numero, conversas)
             return jsonify(resultado)
         elif texto_recebido in ['outro_motorista']:
-            enviar_mensagem(numero, "🔧 A função de enviar ticket de um motorista terceiro estará disponível em breve!")
-            conversas[numero]["estado"] = "finalizado"
-            conversas.pop(numero, None)
+            
+#            enviar_mensagem(numero, "🔧 A função de enviar ticket de um motorista terceiro estará disponível em breve!")
+#            conversas[numero]["estado"] = "finalizado"
+#            conversas.pop(numero, None)
+            
 #            from operacao.foto_ticket.estados import iniciar_fluxo_ticket_terceiro
 #            resultado = iniciar_fluxo_ticket_terceiro(numero, conversas)
-            return jsonify(resultado)
+
+            conversas[numero]["estado"] = "aguardando_nota_ticket"
+            enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal localizada no ticket.\n(Ex: *7878*).")
+            return {"status": "solicitando nota ticket"}
+#            return jsonify(resultado)
 
     #Manda para o DEF "Selecionando Viagem_NF" após seleção da viagem
     if estado == "selecionando_viagem_nf":
@@ -165,6 +171,11 @@ def webhook():
     #Manda para o DEF "Aguardando NF Manual" após envio do número da nota fiscal
     if estado == "aguardando_nota_manual":
         resultado = tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas)
+        return jsonify(resultado)
+
+    #Manda para o DEF "Aguardando NF Ticket" após envio do número da nota fiscal localizada no ticket
+    if estado == "aguardando_nota_ticket":
+        resultado = tratar_estado_aguardando_nota_ticket(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
     #Manda para o DEF "Selecionando Viagem_Ticket" após seleção da viagem
