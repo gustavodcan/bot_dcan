@@ -54,7 +54,7 @@ def iniciar_fluxo_ticket_terceiro(numero, conversas):
     if not viagens:  # 🚨 Nenhuma viagem encontrada
         enviar_mensagem(
             numero,
-            "⚠️ Não encontrei uma *viagem ativa* ou a *nota fiscal não foi enviada*. \n Por favor, fale com seu programador ou envie a nota fiscal no menu anterior.\n\n ⚠️ Conversa encerrada."
+            "⚠️ Não encontrei uma *viagem ativa* ou a *nota fiscal não foi enviada*. \n Por favor, fale com seu programador ou envie o número correto da nota fiscal.\n\n ⚠️ Conversa encerrada."
         )
         conversas.pop(numero, None)
         return {"status": "sem viagem"}
@@ -70,12 +70,6 @@ def iniciar_fluxo_ticket_terceiro(numero, conversas):
         )
         conversas[numero]["estado"] = "aguardando_imagem"
         return {"status": "aguardando imagem ticket"}
-
-    # mais de uma opção → manda lista pro motorista
-#    conversas.setdefault(numero, {})["opcoes_viagem_ticket"] = viagens
-#    conversas[numero]["estado"] = "selecionando_viagem_ticket"
-#    enviar_lista_viagens(numero, viagens, "Escolha a viagem para enviar o *ticket*:")
-#    return {"status": "aguardando escolha viagem ticket"}
 
 def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas):
     viagens = conversas.get(numero, {}).get("opcoes_viagem_ticket", [])
@@ -154,11 +148,6 @@ def tratar_estado_aguardando_imagem(numero, data, conversas):
         enviar_mensagem(numero, "❌ Não consegui identificar o cliente. Envie outra foto ou fale com o programador.")
         conversas[numero]["estado"] = "aguardando_imagem"
         return {"status": "cliente não identificado"}
-
-    #if cliente == "saae":
-    #    conversas[numero]["estado"] = "aguardando_destino_saae"
-    #    enviar_mensagem(numero, "🛣️ Cliente SAAE detectado! Informe a *origem da carga* (ex: ETA Vitória).")
-    #    return {"status": "aguardando destino saae"}
 
     dados = extrair_dados_por_cliente(cliente, texto)
 
@@ -292,10 +281,8 @@ def tratar_estado_aguardando_nota_ticket(numero, texto_recebido, conversas):
     if not nota_digitada:
         enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
         return {"status": "nota inválida"}
-
-    enviar_mensagem(numero, f"O número da nota é: {nota_digitada}")
-    conversas[numero]["estado"] = "finalizado"
-    conversas.pop(numero, None)
+    
+    iniciar_fluxo_ticket_terceiro(numero, nota_digitada, conversas)
 
 def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
     nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
