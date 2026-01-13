@@ -100,6 +100,8 @@ def carregar_viagens_ativas_nf(nf_filtro: Optional[str] = None):
         res = query.execute()
         rows = res.data or []
 
+        logger.info(f"[DEBUG] NF={nf_filtro} → {len(rows)} registros encontrados")
+
         viagens_ativas_nf: List[Dict[str, Any]] = []
         for row in rows:
             viagens_ativas_nf.append({
