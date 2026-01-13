@@ -95,7 +95,7 @@ def carregar_viagens_ativas_nf(nf_filtro: Optional[str] = None):
             )
         )
 
-        query = query.eq("nota_fiscal", str(nf_filtro).upper())
+        query = query.eq("nota_fiscal", int(nf_filtro))
 
         res = query.execute()
         rows = res.data or []
@@ -116,6 +116,8 @@ def carregar_viagens_ativas_nf(nf_filtro: Optional[str] = None):
             })
 
         return viagens_ativas_nf
+
+    logger.info(f"[DEBUG] nf_filtro recebido: {nf_filtro} ({type(nf_filtro)})")
 
     except Exception as e:
         logger.error(f"[SUPABASE] Erro ao carregar viagens: {e}", exc_info=True)
