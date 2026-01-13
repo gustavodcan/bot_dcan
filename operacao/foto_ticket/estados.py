@@ -481,8 +481,18 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
                 return {"status": "sem_viagem"}
 
         # Pega nota fiscal registrada na viagem
-        viagens = get_viagens_por_telefone(numero)
-        viagem = next((v for v in viagens if v["numero_viagem"] == numero_viagem), None)
+        viagens_tel = get_viagens_por_telefone(numero)
+        viagem = next(
+            (v for v in viagens_tel if str(v.get("numero_viagem")) == str(numero_viagem)),
+            None
+        )
+
+        if not viagem and nota_fiscal:
+            viagens_nf = get_viagens_por_nf(nota_fiscal)
+            viagem = next(
+                (v for v in viagens_nf if str(v.get("numero_viagem")) == str(numero_viagem)),
+                None
+            )
 
         nota_viagem = viagem.get("nota_fiscal") if viagem else None
         nota_ticket = dados.get("nota_fiscal")
