@@ -277,7 +277,8 @@ def tratar_estado_aguardando_confirmacao(numero, texto_recebido, conversas):
         return {"status": "aguardando resposta válida"}
 
 def tratar_estado_aguardando_nota_ticket(numero, texto_recebido, conversas):
-    nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
+    m = re.search(r"(\d{4,})\b", texto_recebido)
+    nota_digitada = int(m.group(1)) if m else None
     if not nota_digitada:
         enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
         return {"status": "nota inválida"}
@@ -285,7 +286,8 @@ def tratar_estado_aguardando_nota_ticket(numero, texto_recebido, conversas):
     iniciar_fluxo_ticket_terceiro(numero, nota_digitada, conversas)
 
 def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
-    nota_digitada = re.search(r"\b\d{4,}\b", texto_recebido)
+    m = re.search(r"\b\d{4,}\b", texto_recebido)
+    nota_digitada
     if not nota_digitada:
         enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
         return {"status": "nota inválida"}
