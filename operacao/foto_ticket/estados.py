@@ -37,7 +37,7 @@ def iniciar_fluxo_ticket(numero, conversas):
             "Agora, envie a *imagem do ticket*."
         )
         conversas[numero]["estado"] = "aguardando_imagem"
-        conversas[numero]["nota_fiscal"] = {selecionada['nota_fiscal']}
+        conversas[numero]["nota_fiscal"] = selecionada["nota_fiscal"]
         return {"status": "aguardando imagem ticket"}
 
     # mais de uma opção → manda lista pro motorista
@@ -107,7 +107,7 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
         return {"status": "seleção inválida"}
 
     conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
-    conversas[numero]["nota_fiscal"] = {selecionada["nota_fiscal"]}
+    conversas[numero]["nota_fiscal"] = selecionada["nota_fiscal"]
     set_viagem_ativa(numero, selecionada["numero_viagem"])
     conversas[numero].pop("opcoes_viagem_ticket", None)
 
