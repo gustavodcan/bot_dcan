@@ -37,7 +37,7 @@ def iniciar_fluxo_ticket(numero, conversas):
             "Agora, envie a *imagem do ticket*."
         )
         conversas[numero]["estado"] = "aguardando_imagem"
-        conversas[numero]["nota_fiscal"] = {selecionada["nota_fiscal"]}
+        conversas[numero]["nota_fiscal"] = {selecionada['nota_fiscal']}
         return {"status": "aguardando imagem ticket"}
 
     # mais de uma opção → manda lista pro motorista
