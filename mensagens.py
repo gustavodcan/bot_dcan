@@ -14,7 +14,7 @@ def enviar_lista_viagens(numero, viagens, mensagem):
     options = [{
         "rowId": str(v["numero_viagem"]), 
         "title": str(v["numero_viagem"]),
-        "description": f"{v['data']} - NF{v['nota_fiscal']} - {v['remetente']} - {v['rota']} - {v['placa']}"
+        "description": f"{v['data']} - NF{v['nota_fiscal']} - {v['rota']} - {v['placa']} - {v['remetente']}"
     } for v in viagens]
 
     lista_title = f"Suas coletas ativas:"
