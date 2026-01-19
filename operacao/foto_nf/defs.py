@@ -5,9 +5,14 @@ logger = logging.getLogger(__name__)
 def extrair_chave_acesso(texto):
     # Remove quebras de linha e normaliza texto
     texto = texto.replace("\n", " ")
-    logger.debug(f"Texto extraido da nota: {texto}")
-    # Busca blocos de números com possível espaço entre eles
-    matches = re.findall(r'((?:\d{4,6}\s*){10,})', texto)
+    
+    numeros = re.findall(r"\d+", texto)
+    numeros_validos = [n for n in numeros if 4 <= len(n) <= 6]
+
+    if len(numeros_validos) >= 10:
+        matches = " ".join(numeros_validos)
+        
+    logger.debug(f"Texto extraido da nota: {matches}")
 
     for bloco in matches:
         chave = re.sub(r'\D', '', bloco)  # Remove tudo que não for número
