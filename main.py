@@ -55,8 +55,8 @@ def webhook():
 
     estado = conversas.get(numero, {}).get("estado")
 
-    if tipo != "ReceivedCallback":
-        return jsonify(status="ignorado")
+#    if tipo != "ReceivedCallback":
+#        return jsonify(status="ignorado")
 
     #Checagem de inatividade
     agora = time.time()
