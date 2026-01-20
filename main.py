@@ -26,25 +26,24 @@ conversas = {}
 @app.route('/webhook', methods=['POST'])
 def webhook():
     global conversas
-    data = request.json
-    logger.debug("🛰️ Webhook recebido:")
-    logger.debug(data)
+    data = request.get_json(silent=True) or {}
 
-    tipo = data.get("type")
+    tipo = (data.get("type") or "")
+    tipo_l = tipo.lower()
 
-    tipo = data.get("type", "")
-
-    # ✅ 1) Ignora TODO callback de status
-    if "callback" in tipo:
-        # opcional: log bem curtinho
-        logger.debug(f"↩️ Callback ignorado: {data.get('type')} {data.get('status')} {data.get('ids')}")
+    # ✅ 0) Se nem type veio, ignora rápido
+    if not tipo:
         return "ok", 200
 
-    # ✅ 2) Só aqui é mensagem real
-    logger.debug("🛰️ Webhook recebido (mensagem real):")
+    # ✅ 1) Ignora QUALQUER callback (MessageStatusCallback, DeliveryCallback, etc)
+    if "callback" in tipo_l and "received" not in tipo_l:
+        return "ok", 200
+
+    # ✅ 2) Só loga mensagem real (senão teu log vira lixão)
+    logger.debug("🛰️ Webhook (mensagem real):")
     logger.debug(data)
-        
-    numero = data.get("phone") or data.get("from")
+
+    numero = data.get("from") or data.get("phone")
 
     mensagem_original = (
         data.get("buttonsResponseMessage", {}).get("buttonId") or
