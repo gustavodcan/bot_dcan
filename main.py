@@ -31,8 +31,18 @@ def webhook():
     logger.debug(data)
 
     tipo = data.get("type")
-    # ✅ IGNORA callback de status (não é mensagem do usuário)
-    if tipo == "MessageStatusCallback":
+
+    tipo = data.get("type", "")
+
+    # ✅ Tudo isso é callback (não é msg do usuário)
+    CALLBACKS_STATUS = {
+        "MessageStatusCallback",
+        "DeliveryCallback",
+        "ReadCallback",
+        "AckCallback",   # se aparecer
+    }
+
+    if tipo in CALLBACKS_STATUS:
         return "ok", 200
         
     numero = data.get("phone") or data.get("from")
