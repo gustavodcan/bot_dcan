@@ -34,16 +34,15 @@ def webhook():
 
     tipo = data.get("type", "")
 
-    # ✅ Tudo isso é callback (não é msg do usuário)
-    CALLBACKS_STATUS = {
-        "MessageStatusCallback",
-        "DeliveryCallback",
-        "ReadCallback",
-        "AckCallback",   # se aparecer
-    }
-
-    if tipo in CALLBACKS_STATUS:
+    # ✅ 1) Ignora TODO callback de status
+    if "callback" in tipo:
+        # opcional: log bem curtinho
+        logger.debug(f"↩️ Callback ignorado: {data.get('type')} {data.get('status')} {data.get('ids')}")
         return "ok", 200
+
+    # ✅ 2) Só aqui é mensagem real
+    logger.debug("🛰️ Webhook recebido (mensagem real):")
+    logger.debug(data)
         
     numero = data.get("phone") or data.get("from")
 
