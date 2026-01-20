@@ -23,28 +23,15 @@ app = Flask(__name__)
 conversas = {}
 
 #Identifica o tipo de mensagem recebida
-@app.route('/webhook', methods=['POST'])
-def webhook():
+@app.route('/webhook', methods=['POST']) 
+def webhook(): 
     global conversas
-    data = request.get_json(silent=True) or {}
-
-    tipo = (data.get("type") or "")
-    tipo_l = tipo.lower()
-
-    # ✅ 0) Se nem type veio, ignora rápido
-    if not tipo:
-        return "ok", 200
-
-    # ✅ 1) Ignora QUALQUER callback (MessageStatusCallback, DeliveryCallback, etc)
-    if "callback" in tipo_l and "received" not in tipo_l:
-        return "ok", 200
-
-    # ✅ 2) Só loga mensagem real (senão teu log vira lixão)
-    logger.debug("🛰️ Webhook (mensagem real):")
+    data = request.json
+    logger.debug("🛰️ Webhook recebido:")
     logger.debug(data)
 
-    numero = data.get("from") or data.get("phone")
-
+    tipo = data.get("type")
+    numero = data.get("phone") or data.get("from")
     mensagem_original = (
         data.get("buttonsResponseMessage", {}).get("buttonId") or
         data.get("listResponseMessage", {}).get("selectedRowId") or
@@ -54,9 +41,9 @@ def webhook():
     texto_recebido = mensagem_original.strip().lower()
 
     estado = conversas.get(numero, {}).get("estado")
-
-#    if tipo != "ReceivedCallback":
-#        return jsonify(status="ignorado")
+    
+    if tipo != "ReceivedCallback":
+        return jsonify(status="ignorado")
 
     #Checagem de inatividade
     agora = time.time()
