@@ -17,6 +17,8 @@ def extrair_dados_por_cliente(cliente, texto_ocr):
     match cliente:
         case "cdr":
             return extrair_dados_cliente_cdr(None, texto_ocr)
+        case "veolia gerdau":
+            return extrair_dados_cliente_veolia_gerdau(None, texto_ocr)
         case "arcelormittal":
             return extrair_dados_cliente_arcelormittal(None, texto_ocr)
         case "gerdau":
@@ -44,7 +46,7 @@ def detectar_cliente_por_texto(texto):
     if "ticket de pesagem recebimento" in texto:
         return "rio das pedras"
     elif "veolia" in texto and "gerdau" in texto:
-        return "veolia_gerdau"
+        return "veolia gerdau"
     elif "orizon" in texto:
         return "orizon"
     elif "cdr pedreira" in texto or "cor pedreira" in texto or "cgr três marias" in texto:
