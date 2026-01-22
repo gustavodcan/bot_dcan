@@ -9,6 +9,7 @@ from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from operacao.foto_ticket.rio_das_pedras import extrair_dados_cliente_rio_das_pedras
 from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 from operacao.foto_ticket.ternium import extrair_dados_cliente_ternium
+from operacao.foto_ticket.veolia_gerdau import extrair_dados_cliente_veolia_gerdau
 
 logger = logging.getLogger(__name__)
 
