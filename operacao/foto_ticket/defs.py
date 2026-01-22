@@ -42,6 +42,8 @@ def detectar_cliente_por_texto(texto):
 
     if "ticket de pesagem recebimento" in texto:
         return "rio das pedras"
+    elif "veolia" in texto and "gerdau" in texto:
+        return "veolia_gerdau"
     elif "orizon" in texto:
         return "orizon"
     elif "cdr pedreira" in texto or "cor pedreira" in texto or "cgr três marias" in texto:
