@@ -20,12 +20,12 @@ def extrair_dados_cliente_veolia_gerdau(img, texto):
     # 🧠 Log de debug pro Render ou local
     logger.debug("🎯 Dados extraídos:")
     logger.debug(f"Ticket: {ticket_val}")
-    logger.debug(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'Não encontrado'}")
+    logger.debug(f"Outros Docs: {outros_docs.group(1) if outros_docs else 'SEM NF'}")
     logger.debug(f"Peso Líquido: {peso_liquido.group(1) if peso_liquido else 'Não encontrado'}")
 
     return {
         "ticket": ticket_val,
-        "nota_fiscal": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO",
+        "nota_fiscal": outros_docs.group(1) if outros_docs else "SEM NF",
 #        "outros_docs": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO",
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO"
     }
