@@ -119,7 +119,12 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
     conversas[numero]["estado"] = "aguardando_imagem"
     return {"status": "viagem selecionada"}
 
-def tratar_estado_aguardando_imagem(numero, data, conversas):
+def tratar_estado_aguardando_imagem(numero, data, conversas, texto_recebido):
+    if texto_recebido == "encerrar_conversa"
+        enviar_mensagem(numero, "⚠️ Encerrando a conversa.\n" "Para continuar, envie uma nova mensagem para iniciar novamente. ✅")
+        conversas.pop(numero, None)
+        return {"status": "finalizado"}
+    
     if "image" not in data or not data["image"].get("mimeType", "").startswith("image/"):
         enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
         return {"status": "aguardando imagem"}
@@ -503,11 +508,9 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         
         # Checagem: NF do ticket x NF da viagem
         if nota_ticket != "SEM NF" and nf_esperada and nf_esperada != nota_ticket:
-            enviar_mensagem(
-                numero,
-                f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nf_esperada}. Envie a foto correta do ticket."
-            )
-            conversas[numero]["estado"] = "aguardando_imagem"
+            enviar_botao_encerrarconversa(numero, f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nf_esperada}. Envie a foto correta do ticket.")
+            conversas[numero]["estado"] = "aguardando_imagem" #Vai pra linha 122
+
             try:
                 os.remove("ticket.jpg")
             except FileNotFoundError:
