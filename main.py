@@ -154,7 +154,7 @@ def webhook():
 
     #Manda para o DEF "Aguardando Imagem Ticket" após envio da foto
     if estado == "aguardando_imagem":
-        resultado = tratar_estado_aguardando_imagem(numero, data, conversas)
+        resultado = tratar_estado_aguardando_imagem(numero, data, conversas, texto_recebido)
         return jsonify(resultado)
 
     #Manda para o DEF "Aguardando Imagem NF" após envio da foto
