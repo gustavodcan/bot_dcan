@@ -2,7 +2,7 @@ import os, re, requests, logging, base64
 from datetime import datetime
 from integracoes.a3soft.client import login_obter_token, enviar_ticket as a3_enviar_ticket
 from integracoes.google_sheets import conectar_google_sheets, atualizar_viagem_ticket
-from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens
+from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens, enviar_botao_encerrarconversa
 from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_texto
 from operacao.foto_ticket.defs import extrair_dados_por_cliente
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
