@@ -501,8 +501,11 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         # Debug detalhado
         logger.debug(f"[CHECK NF] Viagem esperava NF={nf_esperada}, Ticket trouxe NF={nota_ticket}")
 
+        # Se a viagem estiver marcada como SEM NF, pula a validação e segue o fluxo normal
+        nf_sem_nf = (str(nf_esperada).strip().upper() == "SEM NF")
+        
         # Checagem: NF do ticket x NF da viagem
-        if nf_esperada and nota_ticket and nf_esperada != nota_ticket:
+        if (not nf_sem_nf) and nf_esperada and nota_ticket and nf_esperada != nota_ticket:
             enviar_mensagem(
                 numero,
                 f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nf_esperada}. Envie a foto correta do ticket."
