@@ -508,7 +508,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         
         # Checagem: NF do ticket x NF da viagem
         if nota_ticket != "SEM NF" and nf_esperada and nf_esperada != nota_ticket:
-            enviar_botao_encerrarconversa(numero, f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nf_esperada}. Envie a foto correta do ticket.")
+            enviar_botao_encerrarconversa(numero, f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nf_esperada}.\n" "Envie a foto do ticket correto ou encerre a conversa para selecionar a viagem correta.")
             conversas[numero]["estado"] = "aguardando_imagem" #Vai pra linha 122
 
             try:
