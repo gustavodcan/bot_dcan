@@ -505,7 +505,7 @@ def processar_confirmacao_final(numero, texto_recebido=None, conversas=None):
         nf_sem_nf = nf_esperada == "SEM NF"
         
         # Checagem: NF do ticket x NF da viagem
-        if (not nf_sem_nf) and nf_esperada and nota_ticket and nf_esperada != nota_ticket:
+        if not nf_sem_nf and nota_ticket and nf_esperada != nota_ticket:
             enviar_mensagem(
                 numero,
                 f"❌ O ticket pertence à NF {nota_ticket}, a viagem pertence a NF {nf_esperada}. Envie a foto correta do ticket."
