@@ -1,5 +1,6 @@
 import logging, os, re, requests
 from mensagens import enviar_mensagem, enviar_lista_setor
+from main import 
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +16,10 @@ def tratar_estado_aguardando_km_manutencao(numero, texto_recebido, conversas):
 
     if texto_recebido == "voltar":
         enviar_lista_setor(numero, "Selecione o Setor.")
-        conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
-        return jsonify(status="aguardando confirmação do setor")
+        conv = conversas.setdefault(numero, {"estado": "aguardando_confirmacao_setor", "dados": {}})
+        conv.setdefault("dados", {})
+        conv["estado"] = "aguardando_confirmacao_setor"
+        return {"status": "aguardando_confirmacao_setor"}
     
     km_str = re.sub(r"\D", "", str(texto_recebido))
     if not km_str:
