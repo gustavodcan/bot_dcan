@@ -14,9 +14,9 @@ def _normalizar_validar_placa(texto: str):
 def tratar_estado_aguardando_km_manutencao(numero, texto_recebido, conversas):
 
     if texto_recebido == "voltar":
-    enviar_lista_setor(numero, "Selecione o Setor.")
-    conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
-    return jsonify(status="aguardando confirmação do setor")
+        enviar_lista_setor(numero, "Selecione o Setor.")
+        conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
+        return jsonify(status="aguardando confirmação do setor")
     
     km_str = re.sub(r"\D", "", str(texto_recebido))
     if not km_str:
