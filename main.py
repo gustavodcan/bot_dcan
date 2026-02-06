@@ -84,7 +84,7 @@ def webhook():
             conversas[numero] = {"estado": "aguardando_opcao_operacao", "expira_em": time.time() + TIMEOUT_SECONDS}
             enviar_opcoes_operacao(numero)
         elif texto_recebido == "manutencao":
-            enviar_mensagem(numero, "🛠️ Vamos abrir uma manutenção.\nQual o KM do veículo?")
+            enviar_botao_encerrarconversa(numero, "🛠️ Vamos abrir uma manutenção.\nQual o KM do veículo?")
             conversas[numero]["estado"] = "aguardando_km_manutencao"
         else:
             enviar_lista_setor(numero, "❌ Opção inválida. Por favor, escolha uma opção da lista.")
