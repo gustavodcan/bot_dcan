@@ -78,7 +78,7 @@ def enviar_botoes_sim_nao(numero, mensagem):
     res = requests.post(url, json=payload, headers=headers)
     logger.debug(f"[🟦 Botões enviados] Status {res.status_code}: {res.text}")
 
-#Envia botões de Sim ou Não
+#Envia botão para encerrar conversa
 def enviar_botao_encerrarconversa(numero, mensagem):
     url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-button-list"
     payload = {
@@ -87,6 +87,25 @@ def enviar_botao_encerrarconversa(numero, mensagem):
         "buttonList": {
             "buttons": [
                 {"id": "encerrar_conversa", "label": "Encerrar conversa."},
+            ]
+        }
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Client-Token": ZAPI_CLIENT_TOKEN
+    }
+    res = requests.post(url, json=payload, headers=headers)
+    logger.debug(f"[🟦 Botão enviado] Status {res.status_code}: {res.text}")
+
+#Envia botão de voltar
+def enviar_botao_voltar(numero, mensagem):
+    url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-button-list"
+    payload = {
+        "phone": numero,
+        "message": mensagem,
+        "buttonList": {
+            "buttons": [
+                {"id": "voltar", "label": "Voltar ↩️."},
             ]
         }
     }
