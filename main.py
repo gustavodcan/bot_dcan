@@ -3,7 +3,7 @@ import json, logging, time
 from flask import Flask, request, jsonify
 
 #Importação de de Defs e Estados
-from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao, enviar_opcoes_ticket, enviar_botao_encerrarconversa)
+from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao, enviar_opcoes_ticket, enviar_botao_encerrarconversa, enviar_botao_voltar)
 from manutencao.checklist import tratar_estado_aguardando_km_manutencao, tratar_estado_aguardando_placa_manutencao, tratar_estado_aguardando_problema_manutencao
 from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket, tratar_estado_selecionando_viagem_ticket, tratar_estado_aguardando_nota_ticket
 from operacao.foto_nf.estados import tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf, tratar_estado_aguardando_imagem_nf
@@ -84,7 +84,7 @@ def webhook():
             conversas[numero] = {"estado": "aguardando_opcao_operacao", "expira_em": time.time() + TIMEOUT_SECONDS}
             enviar_opcoes_operacao(numero)
         elif texto_recebido == "manutencao":
-            enviar_mensagem(numero, "🛠️ Vamos abrir uma manutenção.\nQual o KM do veículo?")
+            enviar_botao_voltar(numero, "🛠️ Vamos abrir uma manutenção.\nQual o KM do veículo?")
             conversas[numero]["estado"] = "aguardando_km_manutencao"
         else:
             enviar_lista_setor(numero, "❌ Opção inválida. Por favor, escolha uma opção da lista.")
