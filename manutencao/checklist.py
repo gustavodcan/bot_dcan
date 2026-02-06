@@ -1,5 +1,5 @@
 import logging, os, re, requests
-from mensagens import enviar_mensagem
+from mensagens import enviar_mensagem, enviar_lista_setor
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +12,12 @@ def _normalizar_validar_placa(texto: str):
     return None
 
 def tratar_estado_aguardando_km_manutencao(numero, texto_recebido, conversas):
+
+    if texto_recebido == "voltar":
+    enviar_lista_setor(numero, "Selecione o Setor.")
+    conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
+    return jsonify(status="aguardando confirmação do setor")
+    
     km_str = re.sub(r"\D", "", str(texto_recebido))
     if not km_str:
         enviar_mensagem(numero, "❌ Não entendi o KM. Envie só números (ex.: 120345).")
