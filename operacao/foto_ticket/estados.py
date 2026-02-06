@@ -153,7 +153,7 @@ def tratar_estado_aguardando_imagem(numero, data, conversas, texto_recebido):
     cliente = detectar_cliente_por_texto(texto)
     conversas[numero]["cliente"] = cliente
     if cliente == "cliente_desconhecido":
-        enviar_mensagem(numero, "❌ Não consegui identificar o cliente. Envie outra foto ou fale com o programador.")
+        enviar_botao_encerrarconversa(numero, "❌ Não consegui identificar o cliente. Envie outra foto ou fale com o programador.")
         conversas[numero]["estado"] = "aguardando_imagem"
         return {"status": "cliente não identificado"}
 
