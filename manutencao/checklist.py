@@ -1,6 +1,5 @@
 import logging, os, re, requests
 from mensagens import enviar_mensagem, enviar_lista_setor
-from main import 
 
 logger = logging.getLogger(__name__)
 
