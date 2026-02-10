@@ -59,7 +59,7 @@ def detectar_cliente_por_texto(texto):
         return "ternium"
     elif "mahle" in texto:
         return "mahle"
-    elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto or "sistema produtor" in texto or "municipio de" in texto or "prefeitura municipal" in texto or "zanchetta" in texto:
+    elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto or "sistema produtor" in texto or "municipio de" in texto or "prefeitura municipal" in texto:
         return "proactiva"
     else:
         return "cliente_desconhecido"
