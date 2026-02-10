@@ -102,13 +102,7 @@ def extrair_dados_da_imagem(caminho_imagem, numero):
     if cliente_detectado == "cliente_desconhecido":
         enviar_mensagem(numero, "❌ Não consegui identificar o cliente a partir da imagem. Por favor, envie novamente com mais clareza ou entre em contato com seu programador.")
         return {"erro": "cliente não identificado"}
-
-    # ⚠️ Fluxo especial pro SAAE
-    if cliente_detectado == "saae":
-        conversas[numero]["estado"] = "aguardando_destino_saae"
-        enviar_mensagem(numero, "🛣️ Cliente SAAE detectado!\nPor favor, informe a *origem da carga*\n(ex: ETA Vitória).")
-        return {"status": "aguardando destino saae"}
-
+        
     from operacao.foto_ticket.defs import extrair_dados_por_cliente
     
     #Adiciona o cliente no dicionário
