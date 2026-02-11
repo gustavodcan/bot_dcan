@@ -121,7 +121,7 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
 
 def tratar_estado_aguardando_imagem(numero, data, conversas, texto_recebido):
     if texto_recebido == "encerrar_conversa":
-        enviar_mensagem(numero, "⚠️ Encerrando a conversa.\n" "Para continuar, envie uma nova mensagem para iniciar novamente. ✅")
+        enviar_mensagem(numero, "❌ Conversa Encerrada.\n" "⚠️ Para continuar, envie uma nova mensagem para iniciar novamente.")
         conversas.pop(numero, None)
         return {"status": "finalizado"}
     
