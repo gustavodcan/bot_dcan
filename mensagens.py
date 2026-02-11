@@ -86,7 +86,7 @@ def enviar_botao_encerrarconversa(numero, mensagem):
         "message": mensagem,
         "buttonList": {
             "buttons": [
-                {"id": "encerrar_conversa", "label": "Encerrar conversa."},
+                {"id": "encerrar_conversa", "label": "Cancelar conversa."},
             ]
         }
     }
