@@ -67,7 +67,7 @@ def webhook():
 
     #Se o bot não esta aguardando nada:
     if not estado:
-        enviar_lista_setor(numero, "👋 Olá! Sou o bot de atendimento da DCAN Transportes.\n\n Como posso te ajudar?")
+        enviar_lista_setor(numero, "👋 Olá! Sou o Deco, bot de atendimento da DCAN Transportes.\n\n Como posso te ajudar?")
         conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
         return jsonify(status="aguardando confirmação do setor")
 
