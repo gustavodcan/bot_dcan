@@ -43,8 +43,8 @@ def iniciar_fluxo_nf(numero, conversas):
     return {"status": "aguardando escolha viagem nf"}
 
 
-def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
-    if row_id_recebido == "encerrar_conversa":
+def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas, texto_recebido):
+    if texto_recebido == "encerrar_conversa":
         enviar_mensagem(numero, "❌ Conversa Encerrada.\n" "⚠️ Para continuar, envie uma nova mensagem para iniciar novamente.")
         conversas.pop(numero, None)
         return {"status": "finalizado"}
@@ -95,12 +95,12 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     conversas[numero]["estado"] = "aguardando_imagem_nf"
     return {"status": "viagem selecionada"}
 
-def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
+def tratar_estado_aguardando_imagem_nf(numero, data, conversas, texto_recebido):
     url_arquivo = None
     mime_type = None
     nome_arquivo = None
 
-    if data == "encerrar_conversa":
+    if texto_recebido == "encerrar_conversa":
         enviar_mensagem(numero, "❌ Conversa Encerrada.\n" "⚠️ Para continuar, envie uma nova mensagem para iniciar novamente.")
         conversas.pop(numero, None)
         return {"status": "finalizado"}
