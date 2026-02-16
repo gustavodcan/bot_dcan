@@ -66,6 +66,7 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
                 logger.debug(f"[DEBUG] Viagem selecionada pelo índice: {numero_viagem}")
             else:
                 enviar_botao_encerrarconversa(numero, "❌ Selecione uma viagem da lista, ou cancele a conversa abaixo para reiniciar")
+                conversas[numero]["estado"] = "selecionando_viagem_nf"
                 return {"status": "seleção inválida"}
         except ValueError:
             enviar_mensagem(numero, "❌ Erro ao interpretar opção.")
@@ -79,6 +80,7 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
 
     if not selecionada:
         enviar_botao_encerrarconversa(numero, "❌ Selecione uma viagem da lista, ou cancele a conversa abaixo para reiniciar")
+        conversas[numero]["estado"] = "selecionando_viagem_nf"
         return {"status": "seleção inválida"}
 
     conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
