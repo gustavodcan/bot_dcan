@@ -87,16 +87,16 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     conversas[numero]["estado"] = "aguardando_imagem_nf"
     return {"status": "viagem selecionada"}
 
-def extrair_texto_pdf(caminho_pdf):
-    """Extrai texto nativo de PDFs usando pdfplumber."""
-    texto = ""
-    try:
-        with pdfplumber.open(caminho_pdf) as pdf:
-            for page in pdf.pages:
-                texto += page.extract_text() or ""
-    except Exception as e:
-        logger.error(f"[PDF] Falha ao extrair texto direto: {e}")
-    return texto.strip()
+#def extrair_texto_pdf(caminho_pdf):
+#    """Extrai texto nativo de PDFs usando pdfplumber."""
+#    texto = ""
+#    try:
+#        with pdfplumber.open(caminho_pdf) as pdf:
+#            for page in pdf.pages:
+#                texto += page.extract_text() or ""
+#    except Exception as e:
+#        logger.error(f"[PDF] Falha ao extrair texto direto: {e}")
+#    return texto.strip()
 
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     url_arquivo = None
