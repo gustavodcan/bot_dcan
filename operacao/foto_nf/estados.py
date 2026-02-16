@@ -78,7 +78,7 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
 
     if not selecionada:
-        enviar_mensagem(numero, "❌ Opção inválida. Tente novamente.")
+        enviar_botao_encerrarconversa(numero, "❌ Selecione uma viagem da lista, ou cancele a conversa abaixo para reiniciar")
         return {"status": "seleção inválida"}
 
     conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
@@ -98,6 +98,11 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     mime_type = None
     nome_arquivo = None
 
+    if data == "encerrar_conversa":
+        enviar_mensagem(numero, "❌ Conversa Encerrada.\n" "⚠️ Para continuar, envie uma nova mensagem para iniciar novamente.")
+        conversas.pop(numero, None)
+        return {"status": "finalizado"}
+    
     if "image" in data:
         mime_type = data["image"].get("mimeType", "")
         url_arquivo = data["image"].get("imageUrl")
@@ -110,7 +115,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     logger.debug(f"[NF] Recebido arquivo — MIME: {mime_type}, URL: {url_arquivo}, Nome: {nome_arquivo}")
 
     if not mime_type or (not mime_type.startswith("image/") and mime_type != "application/pdf"):
-        enviar_mensagem(numero, "📎 Envie uma *imagem* ou um *PDF* da nota fiscal.")
+        enviar_botao_encerrarconversa(numero, "📎 Envie uma *imagem* ou *PDF* da nota fiscal. Ou cancele a conversa abaixo para reiniciar")
         return {"status": "aguardando imagem nf"}
 
     # Baixa arquivo
