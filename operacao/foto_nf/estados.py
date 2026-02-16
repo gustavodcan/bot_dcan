@@ -87,22 +87,43 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     conversas[numero]["estado"] = "aguardando_imagem_nf"
     return {"status": "viagem selecionada"}
 
+def _detect_and_decode_compat(detector, img):
+    """
+    OpenCV BarcodeDetector detectAndDecode retorna:
+      - 3 itens: (decoded_info, decoded_type, points)
+      - 4 itens: (ok, decoded_info, decoded_type, points)
+    Essa função normaliza pra: (ok, decoded_info, decoded_type, points)
+    """
+    out = detector.detectAndDecode(img)
+
+    if isinstance(out, tuple):
+        if len(out) == 4:
+            ok, decoded_info, decoded_type, points = out
+            return bool(ok), decoded_info, decoded_type, points
+        elif len(out) == 3:
+            decoded_info, decoded_type, points = out
+            # ok = True se tiver algum texto decodificado não-vazio
+            ok = any((t or "").strip() for t in (decoded_info or []))
+            return ok, decoded_info, decoded_type, points
+
+    return False, [], [], None
+
 def ler_texto_codigo_barras_imagem(caminho_imagem: str) -> str | None:
     img = cv2.imread(caminho_imagem)
     if img is None:
         return None
 
-    # Upscale ajuda quando a foto vem pequena
+    # Upscale
     h, w = img.shape[:2]
     if max(h, w) < 1400:
         img = cv2.resize(img, (w * 2, h * 2), interpolation=cv2.INTER_CUBIC)
 
     detector = cv2.barcode_BarcodeDetector()
-
+    
     # Tentativa 1: imagem original
-    ok, decoded_info, decoded_type, _ = detector.detectAndDecode(img)
+    ok, decoded_info, decoded_type, _ = _detect_and_decode_compat(detector, img)
     if ok:
-        for txt in decoded_info:
+        for txt in (decoded_info or []):
             if txt and txt.strip():
                 return txt.strip()
 
@@ -112,9 +133,9 @@ def ler_texto_codigo_barras_imagem(caminho_imagem: str) -> str | None:
     eq = clahe.apply(gray)
     eq_bgr = cv2.cvtColor(eq, cv2.COLOR_GRAY2BGR)
 
-    ok, decoded_info, decoded_type, _ = detector.detectAndDecode(eq_bgr)
+    ok, decoded_info, decoded_type, _ = _detect_and_decode_compat(detector, eq_bgr)
     if ok:
-        for txt in decoded_info:
+        for txt in (decoded_info or []):
             if txt and txt.strip():
                 return txt.strip()
 
