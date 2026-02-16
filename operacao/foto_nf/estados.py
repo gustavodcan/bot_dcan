@@ -44,6 +44,11 @@ def iniciar_fluxo_nf(numero, conversas):
 
 
 def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
+    if row_id_recebido == "encerrar_conversa":
+        enviar_mensagem(numero, "❌ Conversa Encerrada.\n" "⚠️ Para continuar, envie uma nova mensagem para iniciar novamente.")
+        conversas.pop(numero, None)
+        return {"status": "finalizado"}
+        
     viagens = conversas.get(numero, {}).get("opcoes_viagem_nf", [])
     if not viagens:
         enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com seu programador(a).")
@@ -60,7 +65,7 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
                 numero_viagem = viagens[indice]["numero_viagem"]
                 logger.debug(f"[DEBUG] Viagem selecionada pelo índice: {numero_viagem}")
             else:
-                enviar_mensagem(numero, "❌ Opção inválida. Selecione novamente.")
+                enviar_botao_encerrarconversa(numero, "❌ Selecione uma viagem da lista, ou cancele a conversa abaixo para reiniciar")
                 return {"status": "seleção inválida"}
         except ValueError:
             enviar_mensagem(numero, "❌ Erro ao interpretar opção.")
