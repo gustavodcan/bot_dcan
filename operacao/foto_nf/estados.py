@@ -1,10 +1,11 @@
-import os, re, logging, requests, pdfplumber, cv2
+import os, re, logging, requests, pdfplumber, zxingcpp
 from datetime import datetime
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
 import xml.etree.ElementTree as ET
+import numpy as np
 from integracoes.a3soft.client import login_obter_token, receber_xml, enviar_nf
 from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa, carregar_viagens_ativas, VIAGENS
 from integracoes.supabase_db import atualizar_viagem
@@ -87,57 +88,61 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     conversas[numero]["estado"] = "aguardando_imagem_nf"
     return {"status": "viagem selecionada"}
 
-def _detect_and_decode_compat(detector, img):
-    """
-    OpenCV BarcodeDetector detectAndDecode retorna:
-      - 3 itens: (decoded_info, decoded_type, points)
-      - 4 itens: (ok, decoded_info, decoded_type, points)
-    Essa função normaliza pra: (ok, decoded_info, decoded_type, points)
-    """
-    out = detector.detectAndDecode(img)
-
-    if isinstance(out, tuple):
-        if len(out) == 4:
-            ok, decoded_info, decoded_type, points = out
-            return bool(ok), decoded_info, decoded_type, points
-        elif len(out) == 3:
-            decoded_info, decoded_type, points = out
-            # ok = True se tiver algum texto decodificado não-vazio
-            ok = any((t or "").strip() for t in (decoded_info or []))
-            return ok, decoded_info, decoded_type, points
-
-    return False, [], [], None
+def _tentar_zxing(img) -> str | None:
+    # zxingcpp espera imagem tipo numpy (BGR/GRAY ok)
+    resultados = zxingcpp.read_barcodes(img)
+    if not resultados:
+        return None
+    for r in resultados:
+        txt = (r.text or "").strip()
+        if txt:
+            return txt
+    return None
 
 def ler_texto_codigo_barras_imagem(caminho_imagem: str) -> str | None:
     img = cv2.imread(caminho_imagem)
     if img is None:
         return None
 
-    # Upscale
+    # 1) Upscale (barcode pequeno = inimigo)
     h, w = img.shape[:2]
-    if max(h, w) < 1400:
+    if max(h, w) < 1600:
         img = cv2.resize(img, (w * 2, h * 2), interpolation=cv2.INTER_CUBIC)
 
-    detector = cv2.barcode_BarcodeDetector()
-    
-    # Tentativa 1: imagem original
-    ok, decoded_info, decoded_type, _ = _detect_and_decode_compat(detector, img)
-    if ok:
-        for txt in (decoded_info or []):
-            if txt and txt.strip():
-                return txt.strip()
+    # 2) Gera variações
+    variantes = []
 
-    # Tentativa 2: preprocess leve (cinza + contraste)
+    variantes.append(img)  # original
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    variantes.append(gray)
+
+    # CLAHE ajuda quando tem sombra/contraste ruim
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     eq = clahe.apply(gray)
-    eq_bgr = cv2.cvtColor(eq, cv2.COLOR_GRAY2BGR)
+    variantes.append(eq)
 
-    ok, decoded_info, decoded_type, _ = _detect_and_decode_compat(detector, eq_bgr)
-    if ok:
-        for txt in (decoded_info or []):
-            if txt and txt.strip():
-                return txt.strip()
+    # threshold (muitas DANFEs funcionam melhor assim)
+    thr = cv2.adaptiveThreshold(eq, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                cv2.THRESH_BINARY, 31, 2)
+    variantes.append(thr)
+
+    inv = cv2.bitwise_not(thr)
+    variantes.append(inv)
+
+    # 3) Tenta também em rotações (foto torta)
+    rotações = []
+    for v in variantes:
+        rotações.append(v)
+        rotações.append(cv2.rotate(v, cv2.ROTATE_90_CLOCKWISE))
+        rotações.append(cv2.rotate(v, cv2.ROTATE_180))
+        rotações.append(cv2.rotate(v, cv2.ROTATE_90_COUNTERCLOCKWISE))
+
+    # 4) Decode
+    for v in rotações:
+        txt = _tentar_zxing(v)
+        if txt:
+            return txt
 
     return None
 
