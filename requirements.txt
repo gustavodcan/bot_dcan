@@ -2,6 +2,8 @@ Flask
 pillow
 requests
 google-cloud-vision
+opencv-python-headless
+numpy
 pdfplumber
 google-auth
 gspread
