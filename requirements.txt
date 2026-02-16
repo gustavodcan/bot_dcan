@@ -2,6 +2,7 @@ Flask
 pillow
 requests
 google-cloud-vision
+zxing-cpp
 opencv-python-headless
 numpy
 pdfplumber
