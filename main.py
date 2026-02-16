@@ -128,7 +128,7 @@ def webhook():
     if estado == "selecionando_viagem_nf":
         numero_viagem = data.get("listResponseMessage", {}).get("selectedRowId", "")
         logger.debug(f"[DEBUG] selectedRowId recebido: {data.get('listResponseMessage', {}).get('selectedRowId')}")
-        resultado = tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas)
+        resultado = tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas, texto_recebido)
         return jsonify(resultado)
 
     #Encaminha mensagem de assunto do usuário para o setor resposável
@@ -159,7 +159,7 @@ def webhook():
 
     #Manda para o DEF "Aguardando Imagem NF" após envio da foto
     if estado == "aguardando_imagem_nf":
-        resultado = tratar_estado_aguardando_imagem_nf(numero, data, conversas)
+        resultado = tratar_estado_aguardando_imagem_nf(numero, data, conversas, texto_recebido)
         return jsonify(resultado)
 
     #Manda para o DEF "Confirmação Dados NF" após envio de "Sim" ou "Não"
