@@ -1,4 +1,4 @@
-import os, re, logging, requests, pdfplumber
+import os, re, logging, requests, pdfplumber, cv2
 from datetime import datetime
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
@@ -87,16 +87,38 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     conversas[numero]["estado"] = "aguardando_imagem_nf"
     return {"status": "viagem selecionada"}
 
-#def extrair_texto_pdf(caminho_pdf):
-#    """Extrai texto nativo de PDFs usando pdfplumber."""
-#    texto = ""
-#    try:
-#        with pdfplumber.open(caminho_pdf) as pdf:
-#            for page in pdf.pages:
-#                texto += page.extract_text() or ""
-#    except Exception as e:
-#        logger.error(f"[PDF] Falha ao extrair texto direto: {e}")
-#    return texto.strip()
+def ler_texto_codigo_barras_imagem(caminho_imagem: str) -> str | None:
+    img = cv2.imread(caminho_imagem)
+    if img is None:
+        return None
+
+    # Upscale ajuda quando a foto vem pequena
+    h, w = img.shape[:2]
+    if max(h, w) < 1400:
+        img = cv2.resize(img, (w * 2, h * 2), interpolation=cv2.INTER_CUBIC)
+
+    detector = cv2.barcode_BarcodeDetector()
+
+    # Tentativa 1: imagem original
+    ok, decoded_info, decoded_type, _ = detector.detectAndDecode(img)
+    if ok:
+        for txt in decoded_info:
+            if txt and txt.strip():
+                return txt.strip()
+
+    # Tentativa 2: preprocess leve (cinza + contraste)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    eq = clahe.apply(gray)
+    eq_bgr = cv2.cvtColor(eq, cv2.COLOR_GRAY2BGR)
+
+    ok, decoded_info, decoded_type, _ = detector.detectAndDecode(eq_bgr)
+    if ok:
+        for txt in decoded_info:
+            if txt and txt.strip():
+                return txt.strip()
+
+    return None
 
 def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
     url_arquivo = None
@@ -133,27 +155,40 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas):
         enviar_mensagem(numero, "❌ Erro ao baixar o arquivo da nota. Tente novamente.")
         return {"status": "erro ao baixar"}
 
+    ## Tenta ler código de barras ##
     texto = ""
+
     if mime_type.startswith("image/"):
-        logger.debug("[NF] Arquivo é imagem, rodando OCR com pré-processamento")
-        img = preprocessar_imagem("nota.jpg")
-        img.save("nota_pre_google.jpg")
-        texto = ler_texto_google_ocr("nota_pre_google.jpg")
+        try:
+            barcode_txt = ler_texto_codigo_barras_imagem("nota.jpg")
+            if barcode_txt:
+                logger.debug(f"[NF] ✅ Texto do código de barras encontrado: {barcode_txt}")
+                texto = barcode_txt  # <-- isso garante o "teleporte" pro checkpoint
+            else:
+                logger.debug("[NF] Barcode não encontrado na imagem, seguindo para OCR.")
+        except Exception:
+            logger.error("[NF] Erro ao tentar ler código de barras (OpenCV)", exc_info=True)
+            
+    if not texto:
+        if mime_type.startswith("image/"):
+            logger.debug("[NF] Arquivo é imagem, rodando OCR com pré-processamento")
+            img = preprocessar_imagem("nota.jpg")
+            img.save("nota_pre_google.jpg")
+            texto = ler_texto_google_ocr("nota_pre_google.jpg")
 
-    elif mime_type == "application/pdf":
-        logger.debug("[NF] Arquivo é PDF, tentando primeiro com Google OCR")
-        texto = ler_texto_google_ocr("nota.pdf")
+        elif mime_type == "application/pdf":
+            logger.debug("[NF] Arquivo é PDF, tentando primeiro com Google OCR")
+            texto = ler_texto_google_ocr("nota.pdf")
 
-        if not texto.strip():
-            logger.debug("[NF] Google OCR não retornou nada, tentando pdfplumber")
-            try:
-                with pdfplumber.open("nota.pdf") as pdf:
-                    texto_paginas = [page.extract_text() or "" for page in pdf.pages]
-                    texto = "\n".join(texto_paginas)
-            except Exception:
-                logger.error("[NF] Falha ao extrair texto com pdfplumber", exc_info=True)
-
-
+            if not texto.strip():
+                logger.debug("[NF] Google OCR não retornou nada, tentando pdfplumber")
+                try:
+                    with pdfplumber.open("nota.pdf") as pdf:
+                        texto_paginas = [page.extract_text() or "" for page in pdf.pages]
+                        texto = "\n".join(texto_paginas)
+                except Exception:
+                    logger.error("[NF] Falha ao extrair texto com pdfplumber", exc_info=True)
+    
     # Limpa texto
     texto = limpar_texto_ocr(texto)
     conversas[numero]["ocr_texto_nf"] = texto
