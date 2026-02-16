@@ -88,130 +88,141 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     conversas[numero]["estado"] = "aguardando_imagem_nf"
     return {"status": "viagem selecionada"}
 
-def _only_digits(s: str) -> str:
-    return re.sub(r"\D", "", s or "")
-
-def _read_zxing(img):
-    # Tenta restringir a Code128 se o wrapper suportar "formats"/"try_harder"
-    # (dependendo da versão, pode não existir, então usamos fallback)
+def _read_code128(img) -> str | None:
     try:
-        return zxingcpp.read_barcodes(img, formats=[zxingcpp.BarcodeFormat.Code128])
+        res = zxingcpp.read_barcodes(img, formats=[zxingcpp.BarcodeFormat.Code128])
     except TypeError:
-        return zxingcpp.read_barcodes(img)
+        res = zxingcpp.read_barcodes(img)
 
-def _order_points(pts):
-    # pts: (4,2)
-    rect = np.zeros((4, 2), dtype="float32")
-    s = pts.sum(axis=1)
-    rect[0] = pts[np.argmin(s)]  # top-left
-    rect[2] = pts[np.argmax(s)]  # bottom-right
-    diff = np.diff(pts, axis=1)
-    rect[1] = pts[np.argmin(diff)]  # top-right
-    rect[3] = pts[np.argmax(diff)]  # bottom-left
-    return rect
+    if not res:
+        return None
 
-def _warp_barcode(img, pts, pad=12):
-    # pts pode vir como lista de pontos (polígono). Vamos usar bounding + perspective.
-    pts = np.array(pts, dtype=np.float32)
+    for r in res:
+        txt = (r.text or "").strip()
+        if txt:
+            return txt
+    return None
 
-    # Se vier mais de 4 pontos, pega o retângulo mínimo
-    if pts.shape[0] != 4:
-        x, y, w, h = cv2.boundingRect(pts.astype(np.int32))
-        x1 = max(0, x - pad); y1 = max(0, y - pad)
-        x2 = min(img.shape[1], x + w + pad); y2 = min(img.shape[0], y + h + pad)
-        return img[y1:y2, x1:x2]
+def _variants(bgr):
+    out = [bgr]
+    gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+    out.append(gray)
 
-    rect = _order_points(pts)
+    # melhora contraste
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    eq = clahe.apply(gray)
+    out.append(eq)
 
-    (tl, tr, br, bl) = rect
-    widthA = np.linalg.norm(br - bl)
-    widthB = np.linalg.norm(tr - tl)
-    maxW = int(max(widthA, widthB))
+    # binarização
+    thr = cv2.adaptiveThreshold(eq, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                cv2.THRESH_BINARY, 31, 2)
+    out.append(thr)
+    out.append(cv2.bitwise_not(thr))
 
-    heightA = np.linalg.norm(tr - br)
-    heightB = np.linalg.norm(tl - bl)
-    maxH = int(max(heightA, heightB))
+    # alguns bindings preferem BGR
+    out.append(cv2.cvtColor(eq, cv2.COLOR_GRAY2BGR))
+    out.append(cv2.cvtColor(thr, cv2.COLOR_GRAY2BGR))
+    return out
 
-    dst = np.array([
-        [0, 0],
-        [maxW - 1, 0],
-        [maxW - 1, maxH - 1],
-        [0, maxH - 1]
-    ], dtype=np.float32)
+def _rotations(img):
+    return [
+        img,
+        cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE),
+        cv2.rotate(img, cv2.ROTATE_180),
+        cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE),
+    ]
 
-    M = cv2.getPerspectiveTransform(rect, dst)
-    warped = cv2.warpPerspective(img, M, (maxW, maxH))
-    return warped
+def _try_decode_full(img) -> str | None:
+    # tenta em variantes e rotações
+    for v in _variants(img):
+        for r in _rotations(v):
+            txt = _read_code128(r)
+            if txt:
+                return txt
+    return None
 
-def ler_texto_codigo_barras_imagem(caminho_imagem: str) -> str | None:
+def _looks_like_barcode_only(img) -> bool:
+    """
+    Heurística simples: imagem com muitas linhas verticais finas (padrão barcode)
+    e pouca complexidade textual.
+    Não é ciência exata, mas ajuda a evitar crop quando já veio recortado.
+    """
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (3, 3), 0)
+    edges = cv2.Canny(gray, 60, 180)
+
+    h, w = edges.shape[:2]
+    # conta "densidade" de bordas
+    edge_density = edges.mean() / 255.0  # 0..1
+
+    # projeta bordas na horizontal: barcode tende a ter muitas bordas em colunas
+    col_sum = edges.sum(axis=0) / 255.0
+    # se muitas colunas têm borda, é forte indicador de barcode
+    cols_with_edges = np.mean(col_sum > (0.08 * h))  # % colunas com bastante borda
+
+    # ajuste conservador pra não dar falso positivo demais
+    return (edge_density > 0.03 and cols_with_edges > 0.35)
+
+def ler_texto_codigo_barras_imagem(caminho_imagem: str, logger=None) -> str | None:
     img = cv2.imread(caminho_imagem)
     if img is None:
         return None
 
-    # Upscale inicial
+    # Upscale geral
     h, w = img.shape[:2]
     if max(h, w) < 2000:
         img = cv2.resize(img, (w * 2, h * 2), interpolation=cv2.INTER_CUBIC)
 
-    # 1) Primeira leitura direta
-    results = _read_zxing(img)
-    if results:
-        # pega o primeiro que tenha texto
-        for r in results:
-            txt = (r.text or "").strip()
-            if not txt:
-                continue
+    if logger:
+        hh, ww = img.shape[:2]
+        logger.debug(f"[NF] Barcode scan adaptativo: {ww}x{hh}")
 
-            # Se já parece chave (44 dígitos), beleza
-            if len(_only_digits(txt)) == 44:
-                return txt
+    # 1) tenta imagem inteira
+    txt = _try_decode_full(img)
+    if txt:
+        return txt
 
-            # 2) Leitura “turbo”: recorta pela posição e tenta de novo
-            try:
-                # r.position costuma vir como polígono/pontos
-                roi = _warp_barcode(img, r.position)
+    # 2) se parece que já veio recortada (barcode-only), NÃO faz crop agressivo
+    if _looks_like_barcode_only(img):
+        if logger:
+            logger.debug("[NF] Imagem parece ser recorte de barcode; evitando crop por grid.")
+        return None  # não achou nem full, então não inventa crop que pode piorar
 
-                # aumenta bem o ROI
-                rh, rw = roi.shape[:2]
-                roi = cv2.resize(roi, (rw * 4, rh * 4), interpolation=cv2.INTER_CUBIC)
+    # 3) fallback: grid crops com overlap (sem assumir posição)
+    H, W = img.shape[:2]
 
-                # preprocess agressivo
-                gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-                gray = cv2.GaussianBlur(gray, (3, 3), 0)
+    # tamanhos de janela (percentuais do doc)
+    window_scales = [
+        (0.55, 0.35),  # janela "larga"
+        (0.70, 0.45),  # maior
+        (0.40, 0.30),  # menor
+    ]
 
-                # sharpen
-                kernel = np.array([[0,-1,0],[-1,5,-1],[0,-1,0]], dtype=np.float32)
-                sharp = cv2.filter2D(gray, -1, kernel)
+    # overlap (passo menor = mais tentativas, mais lento)
+    step_factor = 0.35
 
-                # threshold (barcode ama binarização)
-                thr = cv2.adaptiveThreshold(
-                    sharp, 255,
-                    cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                    cv2.THRESH_BINARY,
-                    31, 2
-                )
+    for ws, hs in window_scales:
+        win_w = int(W * ws)
+        win_h = int(H * hs)
+        if win_w < 300 or win_h < 200:
+            continue
 
-                # tenta em algumas variantes
-                variants = [roi, gray, sharp, thr, cv2.bitwise_not(thr)]
-                for v in variants:
-                    rr = _read_zxing(v)
-                    for r2 in rr or []:
-                        t2 = (r2.text or "").strip()
-                        if not t2:
-                            continue
-                        # Se virar 44 dígitos, sucesso
-                        if len(_only_digits(t2)) == 44:
-                            return t2
-                        # Se você quer “texto cru”, mas a leitura direta tava ruim,
-                        # prefiro retornar a segunda tentativa mesmo sem 44, pois tende a ser melhor.
-                        txt = t2
+        step_x = max(50, int(win_w * step_factor))
+        step_y = max(50, int(win_h * step_factor))
 
-            except Exception:
-                # Se der ruim no recorte, cai fora e retorna o melhor que tiver
-                pass
+        for y in range(0, H - win_h + 1, step_y):
+            for x in range(0, W - win_w + 1, step_x):
+                crop = img[y:y+win_h, x:x+win_w]
 
-            # fallback: retorna o melhor txt que sobrou
-            return txt
+                # upscale extra no crop
+                ch, cw = crop.shape[:2]
+                crop2 = cv2.resize(crop, (cw * 2, ch * 2), interpolation=cv2.INTER_CUBIC)
+
+                txt = _try_decode_full(crop2)
+                if txt:
+                    if logger:
+                        logger.debug(f"[NF] ✅ Barcode encontrado em grid crop x={x},y={y},w={win_w},h={win_h}")
+                    return txt
 
     return None
 
