@@ -88,60 +88,129 @@ def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas):
     conversas[numero]["estado"] = "aguardando_imagem_nf"
     return {"status": "viagem selecionada"}
 
-def _tentar_zxing(img) -> str | None:
-    # zxingcpp espera imagem tipo numpy (BGR/GRAY ok)
-    resultados = zxingcpp.read_barcodes(img)
-    if not resultados:
-        return None
-    for r in resultados:
-        txt = (r.text or "").strip()
-        if txt:
-            return txt
-    return None
+def _only_digits(s: str) -> str:
+    return re.sub(r"\D", "", s or "")
+
+def _read_zxing(img):
+    # Tenta restringir a Code128 se o wrapper suportar "formats"/"try_harder"
+    # (dependendo da versão, pode não existir, então usamos fallback)
+    try:
+        return zxingcpp.read_barcodes(img, formats=[zxingcpp.BarcodeFormat.Code128])
+    except TypeError:
+        return zxingcpp.read_barcodes(img)
+
+def _order_points(pts):
+    # pts: (4,2)
+    rect = np.zeros((4, 2), dtype="float32")
+    s = pts.sum(axis=1)
+    rect[0] = pts[np.argmin(s)]  # top-left
+    rect[2] = pts[np.argmax(s)]  # bottom-right
+    diff = np.diff(pts, axis=1)
+    rect[1] = pts[np.argmin(diff)]  # top-right
+    rect[3] = pts[np.argmax(diff)]  # bottom-left
+    return rect
+
+def _warp_barcode(img, pts, pad=12):
+    # pts pode vir como lista de pontos (polígono). Vamos usar bounding + perspective.
+    pts = np.array(pts, dtype=np.float32)
+
+    # Se vier mais de 4 pontos, pega o retângulo mínimo
+    if pts.shape[0] != 4:
+        x, y, w, h = cv2.boundingRect(pts.astype(np.int32))
+        x1 = max(0, x - pad); y1 = max(0, y - pad)
+        x2 = min(img.shape[1], x + w + pad); y2 = min(img.shape[0], y + h + pad)
+        return img[y1:y2, x1:x2]
+
+    rect = _order_points(pts)
+
+    (tl, tr, br, bl) = rect
+    widthA = np.linalg.norm(br - bl)
+    widthB = np.linalg.norm(tr - tl)
+    maxW = int(max(widthA, widthB))
+
+    heightA = np.linalg.norm(tr - br)
+    heightB = np.linalg.norm(tl - bl)
+    maxH = int(max(heightA, heightB))
+
+    dst = np.array([
+        [0, 0],
+        [maxW - 1, 0],
+        [maxW - 1, maxH - 1],
+        [0, maxH - 1]
+    ], dtype=np.float32)
+
+    M = cv2.getPerspectiveTransform(rect, dst)
+    warped = cv2.warpPerspective(img, M, (maxW, maxH))
+    return warped
 
 def ler_texto_codigo_barras_imagem(caminho_imagem: str) -> str | None:
     img = cv2.imread(caminho_imagem)
     if img is None:
         return None
 
-    # 1) Upscale (barcode pequeno = inimigo)
+    # Upscale inicial
     h, w = img.shape[:2]
-    if max(h, w) < 1600:
+    if max(h, w) < 2000:
         img = cv2.resize(img, (w * 2, h * 2), interpolation=cv2.INTER_CUBIC)
 
-    # 2) Gera variações
-    variantes = []
+    # 1) Primeira leitura direta
+    results = _read_zxing(img)
+    if results:
+        # pega o primeiro que tenha texto
+        for r in results:
+            txt = (r.text or "").strip()
+            if not txt:
+                continue
 
-    variantes.append(img)  # original
+            # Se já parece chave (44 dígitos), beleza
+            if len(_only_digits(txt)) == 44:
+                return txt
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    variantes.append(gray)
+            # 2) Leitura “turbo”: recorta pela posição e tenta de novo
+            try:
+                # r.position costuma vir como polígono/pontos
+                roi = _warp_barcode(img, r.position)
 
-    # CLAHE ajuda quando tem sombra/contraste ruim
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    eq = clahe.apply(gray)
-    variantes.append(eq)
+                # aumenta bem o ROI
+                rh, rw = roi.shape[:2]
+                roi = cv2.resize(roi, (rw * 4, rh * 4), interpolation=cv2.INTER_CUBIC)
 
-    # threshold (muitas DANFEs funcionam melhor assim)
-    thr = cv2.adaptiveThreshold(eq, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                cv2.THRESH_BINARY, 31, 2)
-    variantes.append(thr)
+                # preprocess agressivo
+                gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                gray = cv2.GaussianBlur(gray, (3, 3), 0)
 
-    inv = cv2.bitwise_not(thr)
-    variantes.append(inv)
+                # sharpen
+                kernel = np.array([[0,-1,0],[-1,5,-1],[0,-1,0]], dtype=np.float32)
+                sharp = cv2.filter2D(gray, -1, kernel)
 
-    # 3) Tenta também em rotações (foto torta)
-    rotações = []
-    for v in variantes:
-        rotações.append(v)
-        rotações.append(cv2.rotate(v, cv2.ROTATE_90_CLOCKWISE))
-        rotações.append(cv2.rotate(v, cv2.ROTATE_180))
-        rotações.append(cv2.rotate(v, cv2.ROTATE_90_COUNTERCLOCKWISE))
+                # threshold (barcode ama binarização)
+                thr = cv2.adaptiveThreshold(
+                    sharp, 255,
+                    cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                    cv2.THRESH_BINARY,
+                    31, 2
+                )
 
-    # 4) Decode
-    for v in rotações:
-        txt = _tentar_zxing(v)
-        if txt:
+                # tenta em algumas variantes
+                variants = [roi, gray, sharp, thr, cv2.bitwise_not(thr)]
+                for v in variants:
+                    rr = _read_zxing(v)
+                    for r2 in rr or []:
+                        t2 = (r2.text or "").strip()
+                        if not t2:
+                            continue
+                        # Se virar 44 dígitos, sucesso
+                        if len(_only_digits(t2)) == 44:
+                            return t2
+                        # Se você quer “texto cru”, mas a leitura direta tava ruim,
+                        # prefiro retornar a segunda tentativa mesmo sem 44, pois tende a ser melhor.
+                        txt = t2
+
+            except Exception:
+                # Se der ruim no recorte, cai fora e retorna o melhor que tiver
+                pass
+
+            # fallback: retorna o melhor txt que sobrou
             return txt
 
     return None
