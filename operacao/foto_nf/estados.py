@@ -1,4 +1,4 @@
-import os, re, logging, requests, pdfplumber, zxingcpp
+import os, re, logging, requests, pdfplumber, cv2, zxingcpp
 from datetime import datetime
 from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
