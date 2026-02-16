@@ -1,6 +1,6 @@
 import os, re, logging, requests, pdfplumber, cv2, zxingcpp
 from datetime import datetime
-from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens
+from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens, enviar_botao_encerrarconversa
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
