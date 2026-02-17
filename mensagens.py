@@ -172,7 +172,7 @@ def enviar_opcoes_ticket(numero):
         "buttonList": {
             "buttons": [
                 {"id": "eu_mesmo", "label": "Eu mesmo"},
-                {"id": "outro_motorista", "label": "Outro motorista"}
+                {"id": "outro_motorista", "label": "Outro motorista"},
                 {"id": "voltar", "label": "Voltar"}
             ]
         }
