@@ -109,7 +109,8 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
     selecionada = next((v for v in viagens if str(v["numero_viagem"]) == str(numero_viagem)), None)
 
     if not selecionada:
-        enviar_mensagem(numero, "❌ Opção inválida. Tente novamente.")
+        enviar_botao_encerrarconversa(numero, "❌ Opção inválida. Escolha uma opção válida acima.\n" "Ou cancele a conversa abaixo para reiniciar:")
+        conversas[numero]["estado"] = "selecionando_viagem_ticket"
         return {"status": "seleção inválida"}
 
     conversas[numero]["numero_viagem_selecionado"] = selecionada["numero_viagem"]
