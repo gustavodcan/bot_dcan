@@ -110,19 +110,14 @@ def webhook():
         if texto_recebido in ['eu_mesmo']:
             resultado = iniciar_fluxo_ticket(numero, conversas)
             return jsonify(resultado)
+        elif texto_recebido in ['voltar']:
+            enviar_lista_setor(numero, "👋 Olá! Sou o Deco, bot de atendimento da DCAN Transportes.\n\n Como posso te ajudar?")
+            conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
+            return jsonify(status="aguardando confirmação do setor")
         elif texto_recebido in ['outro_motorista']:
-            
-#            enviar_mensagem(numero, "🔧 A função de enviar ticket de um motorista terceiro estará disponível em breve!")
-#            conversas[numero]["estado"] = "finalizado"
-#            conversas.pop(numero, None)
-            
-#            from operacao.foto_ticket.estados import iniciar_fluxo_ticket_terceiro
-#            resultado = iniciar_fluxo_ticket_terceiro(numero, conversas)
-
             conversas[numero]["estado"] = "aguardando_nota_ticket"
             enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal localizada no ticket.\n(Ex: *7878*).")
             return {"status": "solicitando nota ticket"}
-#            return jsonify(resultado)
 
     #Manda para o DEF "Selecionando Viagem_NF" após seleção da viagem
     if estado == "selecionando_viagem_nf":
