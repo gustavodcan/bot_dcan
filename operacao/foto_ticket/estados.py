@@ -73,7 +73,13 @@ def iniciar_fluxo_ticket_terceiro(numero, nota_digitada, conversas):
         conversas[numero]["estado"] = "aguardando_imagem"
         return {"status": "aguardando imagem ticket"}
 
-def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas):
+def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas, texto_recebido):
+    
+    if texto_recebido == "encerrar_conversa":
+        enviar_mensagem(numero, "❌ Conversa Encerrada.\n" "⚠️ Para continuar, envie uma nova mensagem para iniciar novamente.")
+        conversas.pop(numero, None)
+        return {"status": "finalizado"}
+        
     viagens = conversas.get(numero, {}).get("opcoes_viagem_ticket", [])
     if not viagens:
         enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com seu programador(a).")
@@ -120,13 +126,14 @@ def tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversa
     return {"status": "viagem selecionada"}
 
 def tratar_estado_aguardando_imagem(numero, data, conversas, texto_recebido):
+    
     if texto_recebido == "encerrar_conversa":
         enviar_mensagem(numero, "❌ Conversa Encerrada.\n" "⚠️ Para continuar, envie uma nova mensagem para iniciar novamente.")
         conversas.pop(numero, None)
         return {"status": "finalizado"}
     
     if "image" not in data or not data["image"].get("mimeType", "").startswith("image/"):
-        enviar_mensagem(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.")
+        enviar_botao_encerrarconversa(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir. Ou cancele a conversa abaixo para reiniciar")
         return {"status": "aguardando imagem"}
 
     url_img = data["image"]["imageUrl"]
