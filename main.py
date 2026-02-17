@@ -174,7 +174,7 @@ def webhook():
 
     #Manda para o DEF "Selecionando Viagem_Ticket" após seleção da viagem
     if estado == "selecionando_viagem_ticket":
-        resultado = tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas)
+        resultado = tratar_estado_selecionando_viagem_ticket(numero, mensagem_original, conversas, texto_recebido)
         return jsonify(resultado)
 
    #Manda para o DEF "Aguardando Destino SAAE" após detecção do OCR 
