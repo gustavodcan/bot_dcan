@@ -133,7 +133,7 @@ def tratar_estado_aguardando_imagem(numero, data, conversas, texto_recebido):
         return {"status": "finalizado"}
     
     if "image" not in data or not data["image"].get("mimeType", "").startswith("image/"):
-        enviar_botao_encerrarconversa(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir. Ou cancele a conversa abaixo para reiniciar")
+        enviar_botao_encerrarconversa(numero, "📸 Por favor, envie uma imagem do ticket para prosseguir.\n" "Ou cancele a conversa abaixo para reiniciar")
         return {"status": "aguardando imagem"}
 
     url_img = data["image"]["imageUrl"]
