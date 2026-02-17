@@ -118,6 +118,10 @@ def webhook():
             conversas[numero]["estado"] = "aguardando_nota_ticket"
             enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal localizada no ticket.\n(Ex: *7878*).")
             return {"status": "solicitando nota ticket"}
+        else:
+            enviar_mensagem(numero, "❌ Opção inválida. Por favor, escolha uma opção válida acima.")
+            conversas[numero]["estado"] = "aguardando_opcao_ticket"
+            return {"status": "aguardando_opcao_ticket"}
 
     #Manda para o DEF "Selecionando Viagem_NF" após seleção da viagem
     if estado == "selecionando_viagem_nf":
