@@ -34,12 +34,22 @@ def extrair_dados_cliente_gerdau(img, texto: str):
 
     # Gerdau Geral : linha com "xx,xxx to" ou "xx.xxx to" e sem horário
     peso_liquido_geral = NAO_ENCONTRADO
-    # Incluir futuramente: se achar 4 linhas (match's), selecionar a 3, se achar 5 linhas (match's) selecionar a 4.
+    
+    # Se achar 4 linhas (match's), selecionar a 3, se achar 5 linhas (match's) selecionar a 4.
+    matches_validos = []
+
     for linha in texto.splitlines():
         m = re.search(r"\b(\d{1,3}[.,]\d{3})\s+to\b", linha, flags=re.IGNORECASE)
         if m and not re.search(r"\d{2}:\d{2}:\d{2}", linha):
-            peso_liquido_geral = m.group(1).replace(",", ".")
-            break
+            matches_validos.append(m.group(1).replace(",", "."))
+
+    peso_liquido_geral = None
+
+    if len(matches_validos) == 4:
+        peso_liquido_geral = matches_validos[2]  # 3º (índice 2)
+
+    elif len(matches_validos) == 5:
+        peso_liquido_geral = matches_validos[3]  # 4º (índice 3)
 
     # Gerdau Pinda: variações de "líquido" com 4–6 dígitos
     m_peso_pinda = re.search(r"(?i)[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*\n?\s*([0-9]{4,6})",texto,)
