@@ -518,47 +518,101 @@ def tratar_estado_aguardando_imagem_acrescer_nf(numero, data, conversas, texto_r
     )
     enviar_botoes_sim_nao(numero, msg)
     return {"status": "aguardando confirmação dados nf"}
-    
-def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversas):
-    dados = conversas[numero].get("nf_consulta", {})
 
-    # se respondeu NÃO: volta para enviar imagem
-    if texto_recebido.lower() in ["não", "nao", "n"]:
+def _append_unico(campo_atual: str, novo_valor: str):
+    campo_atual = (campo_atual or "").strip()
+    novo_valor = (str(novo_valor).strip() if novo_valor else "")
+
+    if not novo_valor:
+        return campo_atual, False
+
+    itens = [x.strip() for x in campo_atual.split(",") if x.strip()]
+
+    if novo_valor in itens:
+        return campo_atual, True
+
+    itens.append(novo_valor)
+    return ",".join(itens), False
+
+def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversas):
+    texto = (texto_recebido or "").strip().lower()
+
+    # dados extraídos da NF (do teu OCR/consulta)
+    dados_nf = conversas.get(numero, {}).get("nf_consulta", {}) or {}
+
+    # aqui eu assumo que tua viagem selecionada foi guardada antes
+    # AJUSTA esse nome se o teu fluxo salva em outra chave
+    selecionada = conversas.get(numero, {}).get("viagem_selecionada")
+
+    if texto in ["não", "nao", "n"]:
         enviar_mensagem(numero, "🔁 Sem problemas! Por favor, envie a *imagem da nota* novamente.")
-        conversas[numero]["estado"] = "aguardando_imagem_acrescer_nf"
-        # limpa dados anteriores
+        conversas.setdefault(numero, {})["estado"] = "aguardando_imagem_acrescer_nf"
         conversas[numero].pop("nf_consulta", None)
-        try:
-            os.remove("nota.jpg")
-            os.remove("nota_pre_google.jpg")
-        except Exception:
-            pass
+
+        # limpeza de arquivos (não explode se não existir)
+        for arq in ["nota.jpg", "nota_pre_google.jpg"]:
+            try:
+                os.remove(arq)
+            except Exception:
+                pass
+
         return {"status": "requisitado reenviar nf"}
 
-    # se respondeu SIM: finaliza
-    if texto_recebido.lower() in ["sim", "s"]:
+    if texto in ["sim", "s"]:
+        # pega numero_viagem de algum lugar confiável
         numero_viagem = (
             conversas.get(numero, {}).get("numero_viagem_selecionado")
+            or (selecionada.get("numero_viagem") if selecionada else None)
             or get_viagem_ativa(numero)
         )
 
-        if numero_viagem:
-            atualizar_viagem(
-                numero_viagem,
-                {
-                    "chave_acesso": dados.get("chave") or "",
-                    "nota_fiscal": dados.get("numero") or ""
-                }
-            )
-        else:
-            logger.warning(
-                "[NF] Sem viagem selecionada/ativa na confirmação de NF para %s",
-                numero
-            )
+        if not numero_viagem:
+            logger.warning("[NF] Sem viagem selecionada/ativa na confirmação de NF para %s", numero)
+            enviar_mensagem(numero, "⚠️ Tô sem a viagem ativa aqui. Refaça a seleção da viagem, por favor.")
+            return {"status": "sem viagem ativa"}
 
-        enviar_mensagem(numero, "✅ Perfeito! Dados confirmados. Obrigado! 🙌")
+        # se tiver selecionada, atualiza estado de viagem ativa e cache
+        if selecionada and selecionada.get("numero_viagem"):
+            conversas.setdefault(numero, {})["numero_viagem_selecionado"] = selecionada["numero_viagem"]
+            set_viagem_ativa(numero, selecionada["numero_viagem"])
+
+        # valores novos vindos da NF atual
+        nova_chave = dados_nf.get("chave") or ""
+        nova_nf = dados_nf.get("numero") or ""
+
+        # valores atuais (preferência: vem da selecionada; senão considera vazio)
+        chave_atual = (selecionada.get("chave_acesso") if selecionada else "") or ""
+        nf_atual = (selecionada.get("nota_fiscal") if selecionada else "") or ""
+
+        # faz append com verificação de duplicidade
+        chave_final, chave_dup = _append_unico(chave_atual, nova_chave, sep=",")
+        nf_final, nf_dup = _append_unico(nf_atual, nova_nf, sep=",")
+
+        # se a NF já existe, avisa e não grava
+        # (tu pode decidir se quer checar chave também; aqui o principal é NF)
+        if nf_dup:
+            enviar_mensagem(numero, f"A nota *{nova_nf}* já foi lançada nessa viagem. Por favor, tente novamente.")
+            conversas.pop(numero, None)
+            return {"status": "nf duplicada"}
+
+        # grava no banco
+        atualizar_viagem(
+            numero_viagem,
+            {
+                "chave_acesso": chave_final,
+                "nota_fiscal": nf_final,
+            },
+        )
+
+        enviar_mensagem(numero, "✅ Fechou! Acrescentei a nota nessa viagem. Obrigado! 🙌")
         conversas.pop(numero, None)
-        # limpeza de arquivos
+
+        for arq in ["nota.jpg", "nota_pre_google.jpg"]:
+            try:
+                os.remove(arq)
+            except Exception:
+                pass
+
         return {"status": "finalizado"}
 
     # resposta inválida
