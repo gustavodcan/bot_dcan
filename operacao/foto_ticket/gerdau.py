@@ -13,7 +13,7 @@ def extrair_dados_cliente_gerdau(img, texto: str):
     logger.debug(texto)
 
     # Gerdau Geral: ticket com 8 dígitos
-    m_ticket_geral = re.search(r"(?<!\d)(\d{8})(?!\d)", texto)
+    m_ticket_geral = re.search(r"^\s*\d{8,9}\s*$", texto)
     ticket_val = m_ticket_geral.group(1) if m_ticket_geral else NAO_ENCONTRADO
 
     # Gerdau Pinda: “processo: 74928/1” (5+ dígitos com possível “/”)
@@ -39,9 +39,9 @@ def extrair_dados_cliente_gerdau(img, texto: str):
     matches_validos = []
 
     for linha in texto.splitlines():
-        m = re.search(r"\b(\d{1,3}[.,]\d{3})\s+to\b", linha, flags=re.IGNORECASE)
+        m = re.search(r"\b(\d{1,3}\s*[.,]\s*\d{3})\s+to\b", linha, flags=re.IGNORECASE)
         if m:
-            matches_validos.append(m.group(1).replace(",", "."))
+            matches_validos.append(m.group(1).replace(",", ".").replace(" ", ""))
 
     peso_liquido_geral = None
 
