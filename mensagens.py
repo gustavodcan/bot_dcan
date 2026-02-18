@@ -128,6 +128,7 @@ def enviar_lista_setor(numero, mensagem):
             "options": [
                 {"id": "comercial", "description": "(Cotações, Novos serviços e Parcerias)", "title": "Comercial"},
                 {"id": "faturamento", "description": "(Contratos, Conhecimentos e Comprovantes)", "title": "Faturamento"},
+                {"id": "compras", "description": "(Parcerias de Compras, Equipamentos, Insumos e etc)", "title": "Compras"},
                 {"id": "financeiro",  "description": "(Pagamentos, Descontos e Dúvidas)", "title": "Financeiro"},
                 {"id": "recursos humanos", "description": "(Vagas, Documentação e Benefícios)", "title": "Recursos Humanos"},
                 {"id": "operacao", "description": "(Coletas, Entregas e Tickets)", "title": "Operação"},
