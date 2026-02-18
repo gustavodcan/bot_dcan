@@ -149,6 +149,12 @@ def webhook():
         resultado = tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas, texto_recebido)
         return jsonify(resultado)
 
+    if estado == "selecionando_viagem_acrescer_nf":
+        numero_viagem = data.get("listResponseMessage", {}).get("selectedRowId", "")
+        logger.debug(f"[DEBUG] selectedRowId recebido: {data.get('listResponseMessage', {}).get('selectedRowId')}")
+        resultado = tratar_estado_selecionando_viagem_nf(numero, numero_viagem, conversas, texto_recebido)
+        return jsonify(resultado)
+
     #Encaminha mensagem de assunto do usuário para o setor resposável
     if estado.startswith("aguardando_descricao_"):
         tratar_descricao_setor(numero, mensagem_original.strip(), conversas)
@@ -180,8 +186,18 @@ def webhook():
         resultado = tratar_estado_aguardando_imagem_nf(numero, data, conversas, texto_recebido)
         return jsonify(resultado)
 
+    #Manda para o DEF "Aguardando Imagem NF" após envio da foto
+    if estado == "aguardando_imagem_acrescer_nf":
+        resultado = tratar_estado_aguardando_imagem_nf(numero, data, conversas, texto_recebido)
+        return jsonify(resultado)
+
     #Manda para o DEF "Confirmação Dados NF" após envio de "Sim" ou "Não"
     if estado == "aguardando_confirmacao_dados_nf":
+        resultado = tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas)
+        return jsonify(resultado)
+
+    #Manda para o DEF "Confirmação Dados NF" após envio de "Sim" ou "Não"
+    if estado == "aguardando_confirmacao_dados_acrescer_nf":
         resultado = tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas)
         return jsonify(resultado)
 
