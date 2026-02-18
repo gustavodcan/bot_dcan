@@ -45,6 +45,8 @@ def extrair_dados_cliente_gerdau(img, texto: str):
 
     peso_liquido_geral = None
 
+    logger.debug(matches_validos)
+
     if len(matches_validos) == 4:
         peso_liquido_geral = matches_validos[2]  # 3º (índice 2)
 
