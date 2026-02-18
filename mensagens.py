@@ -194,7 +194,7 @@ def enviar_opcoes_nf(numero):
         "buttonList": {
             "buttons": [
                 {"id": "enviar_nf", "label": "Enviar primeira NF"},
-                {"id": "adicionar_nf", "label": "Adicionar NF à outra viagem"},
+                {"id": "adicionar_nf", "label": "Adicionar mais uma NF"},
                 {"id": "voltar", "label": "Voltar"}
             ]
         }
