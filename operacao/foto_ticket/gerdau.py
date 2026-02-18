@@ -13,7 +13,7 @@ def extrair_dados_cliente_gerdau(img, texto: str):
     logger.debug(texto)
 
     # Gerdau Geral: ticket com 8 dígitos
-    m_ticket_geral = re.search(r"(^\s*\d{8,9}\s*$)", texto, re.MULTILINE)
+    m_ticket_geral = re.search(r"^.*?(?<!\d)(\d{8,9})(?!\d).*$", texto, re.MULTILINE)
     ticket_val = m_ticket_geral.group(1) if m_ticket_geral else NAO_ENCONTRADO
 
     # Gerdau Pinda: “processo: 74928/1” (5+ dígitos com possível “/”)
