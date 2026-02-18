@@ -334,7 +334,7 @@ def tratar_estado_selecionando_viagem_acrescer_nf(numero, row_id_recebido, conve
         conversas.pop(numero, None)
         return {"status": "finalizado"}
         
-    viagens = conversas.get(numero, {}).get("opcoes_viagem_nf", [])
+    viagens = conversas.get(numero, {}).get("opcoes_viagem_acrescer_nf", [])
     if not viagens:
         enviar_mensagem(numero, "❌ Não encontrei opções de viagem para este número. Fale com seu programador(a).")
         conversas.pop(numero, None)
