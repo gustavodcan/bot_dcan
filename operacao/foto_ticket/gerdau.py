@@ -51,7 +51,7 @@ def extrair_dados_cliente_gerdau(img, texto: str):
         peso_liquido_geral = matches_validos[2]  # 3º (índice 2)
 
     elif len(matches_validos) == 5:
-        peso_liquido_geral = matches_validos[3]  # 4º (índice 3)
+        peso_liquido_geral = matches_validos[2]  # 3º (índice 3)
 
     # Gerdau Pinda: variações de "líquido" com 4–6 dígitos
     m_peso_pinda = re.search(r"(?i)[\s_]*l[ií]qu[ií]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{0,2}\s*\n?\s*([0-9]{4,6})",texto,)
