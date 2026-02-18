@@ -319,7 +319,7 @@ def iniciar_fluxo_acrescer_nf(numero, conversas):
             f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['remetente']} — {selecionada['data']} — {selecionada['placa']} · {selecionada['rota']}\n\n"
             "Agora, envie a *imagem da nota fiscal*."
         )
-        conversas[numero]["estado"] = "aguardando_imagem_nf"
+        conversas[numero]["estado"] = "aguardando_imagem_acrescer_nf"
         return {"status": "aguardando imagem nf"}
 
     conversas.setdefault(numero, {})["opcoes_viagem_acrescer_nf"] = viagens
