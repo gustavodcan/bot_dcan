@@ -97,7 +97,8 @@ def webhook():
             resultado = enviar_opcoes_ticket(numero)
             return jsonify(resultado)
         elif texto_recebido in ['foto_nf']:
-            resultado = iniciar_fluxo_nf(numero, conversas)
+            conversas[numero] = {"estado": "aguardando_opcao_nf", "expira_em": time.time() + TIMEOUT_SECONDS}
+            resultado = enviar_opcoes_nf(numero)
             return jsonify(resultado)
         else:
             enviar_mensagem(numero, "🔧 Entrar em contato com o programador ainda está em desenvolvimento. Em breve estará disponível!")
@@ -118,6 +119,23 @@ def webhook():
             conversas[numero]["estado"] = "aguardando_nota_ticket"
             enviar_mensagem(numero, "🧾 Por favor, envie o número da nota fiscal localizada no ticket.\n(Ex: *7878*).")
             return {"status": "solicitando nota ticket"}
+        else:
+            enviar_mensagem(numero, "❌ Opção inválida. Por favor, escolha uma opção válida acima.")
+            conversas[numero]["estado"] = "aguardando_opcao_ticket"
+            return {"status": "aguardando_opcao_ticket"}
+
+    #Define DEF seguinte com base na seleção do usuário no setor "Operação"
+    if estado == "aguardando_opcao_nf":
+        if texto_recebido in ['enviar_nf']:
+            resultado = iniciar_fluxo_nf(numero, conversas)
+            return jsonify(resultado)
+        elif texto_recebido in ['voltar']:
+            enviar_lista_setor(numero, "👋 Olá! Sou o Deco, bot de atendimento da DCAN Transportes.\n\n Como posso te ajudar?")
+            conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
+            return jsonify(status="aguardando confirmação do setor")
+        elif texto_recebido in ['adicionar_nf']:
+            resultado = iniciar_fluxo_acrescer_nf(numero, conversas)
+            return jsonify(resultado)
         else:
             enviar_mensagem(numero, "❌ Opção inválida. Por favor, escolha uma opção válida acima.")
             conversas[numero]["estado"] = "aguardando_opcao_ticket"
