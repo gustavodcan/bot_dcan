@@ -73,7 +73,7 @@ def webhook():
 
     #Define DEF seguinte baseado no setor recebido pelo usuário
     if estado == "aguardando_confirmacao_setor":
-        if texto_recebido in ["comercial", "faturamento", "financeiro", "recursos humanos"]:
+        if texto_recebido in ["comercial", "faturamento", "financeiro", "recursos humanos", "compras"]:
             conversas[numero] = {
                 "estado": f"aguardando_descricao_{texto_recebido}",
                 "setor": texto_recebido,
