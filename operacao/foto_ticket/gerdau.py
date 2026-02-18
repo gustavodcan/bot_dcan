@@ -40,8 +40,8 @@ def extrair_dados_cliente_gerdau(img, texto: str):
 
     for linha in texto.splitlines():
         m = re.search(r"\b(\d{1,3}[.,]\d{3})\s+to\b", linha, flags=re.IGNORECASE)
-        if m and not re.search(r"\d{2}:\d{2}:\d{2}", linha):
-            matches_validos.append(m.group(1).replace(",", "."))
+        #if m and not re.search(r"\d{2}:\d{2}:\d{2}", linha):
+        matches_validos.append(m.group(1).replace(",", "."))
 
     peso_liquido_geral = None
 
