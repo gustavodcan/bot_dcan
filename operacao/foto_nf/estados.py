@@ -588,6 +588,9 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
         chave_final, chave_dup = _append_unico(chave_atual, nova_chave)
         nf_final, nf_dup = _append_unico(nf_atual, nova_nf)
 
+        logger.debug(f"[NF] Chave Supa: {chave_atual} Chave Nova: {nova_chave}")
+        logger.debug(f"[NF] Num NF Supa: {nf_atual} Num NF Nova: {nova_nf}")
+
         # se a NF já existe, avisa e não grava
         # (tu pode decidir se quer checar chave também; aqui o principal é NF)
         if nf_dup:
