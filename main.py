@@ -188,7 +188,7 @@ def webhook():
 
     #Manda para o DEF "Aguardando Imagem NF" após envio da foto
     if estado == "aguardando_imagem_acrescer_nf":
-        resultado = tratar_estado_aguardando_imagem_nf(numero, data, conversas, texto_recebido)
+        resultado = tratar_estado_aguardando_imagem_acrescer_nf(numero, data, conversas, texto_recebido)
         return jsonify(resultado)
 
     #Manda para o DEF "Confirmação Dados NF" após envio de "Sim" ou "Não"
