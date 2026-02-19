@@ -571,9 +571,9 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
             return {"status": "sem viagem ativa"}
 
         # se tiver selecionada, atualiza estado de viagem ativa e cache
-        if selecionada and selecionada.get("numero_viagem"):
-            conversas.setdefault(numero, {})["numero_viagem_selecionado"] = selecionada["numero_viagem"]
-            set_viagem_ativa(numero, selecionada["numero_viagem"])
+        #if selecionada and selecionada.get("numero_viagem"):
+        #    conversas.setdefault(numero, {})["numero_viagem_selecionado"] = selecionada["numero_viagem"]
+        #    set_viagem_ativa(numero, selecionada["numero_viagem"])
 
         # valores novos vindos da NF atual
         nova_chave = dados_nf.get("chave") or ""
