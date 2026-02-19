@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 from integracoes.a3soft.client import login_obter_token, receber_xml, enviar_nf
 from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa, carregar_viagens_ativas, VIAGENS
-from integracoes.supabase_db import atualizar_viagem
+from integracoes.supabase_db import atualizar_viagem, supabase
 
 logger = logging.getLogger(__name__)
 
