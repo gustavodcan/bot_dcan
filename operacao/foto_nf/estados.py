@@ -580,8 +580,8 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
         nova_nf = dados_nf.get("numero") or ""
 
         # valores atuais (preferência: vem da selecionada; senão considera vazio)
-        chave_atual = (selecionada['chave_acesso'] if selecionada else "") or ""
-        nf_atual = (selecionada['nota_fiscal'] if selecionada else "") or ""
+        chave_atual = selecionada["chave_acesso"] if selecionada else ""
+        nf_atual = selecionada["nota_fiscal"] if selecionada else ""
 
         # faz append com verificação de duplicidade
         chave_final, chave_dup = _append_unico(chave_atual, nova_chave)
