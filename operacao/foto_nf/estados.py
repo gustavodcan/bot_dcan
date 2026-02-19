@@ -585,8 +585,8 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
         nf_atual = (selecionada.get("nota_fiscal") if selecionada else "") or ""
 
         # faz append com verificação de duplicidade
-        chave_final, chave_dup = _append_unico(chave_atual, nova_chave, sep=",")
-        nf_final, nf_dup = _append_unico(nf_atual, nova_nf, sep=",")
+        chave_final, chave_dup = _append_unico(chave_atual, nova_chave)
+        nf_final, nf_dup = _append_unico(nf_atual, nova_nf)
 
         # se a NF já existe, avisa e não grava
         # (tu pode decidir se quer checar chave também; aqui o principal é NF)
