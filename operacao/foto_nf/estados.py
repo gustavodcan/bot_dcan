@@ -542,7 +542,7 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
 
     # aqui eu assumo que tua viagem selecionada foi guardada antes
     # AJUSTA esse nome se o teu fluxo salva em outra chave
-    selecionada = conversas.get(numero, {}).get("viagem_selecionada")
+    selecionada = conversas.get(numero, {}).get("numero_viagem")
 
     if texto in ["não", "nao", "n"]:
         enviar_mensagem(numero, "🔁 Sem problemas! Por favor, envie a *imagem da nota* novamente.")
