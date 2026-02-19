@@ -559,7 +559,6 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
         return {"status": "requisitado reenviar nf"}
 
     if texto in ["sim", "s"]:
-        # pega numero_viagem de algum lugar confiável
         numero_viagem = (
             conversas.get(numero, {}).get("numero_viagem_selecionado")
             or get_viagem_ativa(numero)
@@ -570,65 +569,40 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
             enviar_mensagem(numero, "⚠️ Tô sem a viagem ativa aqui. Refaça a seleção da viagem, por favor.")
             return {"status": "sem viagem ativa"}
 
-        # se tiver selecionada, atualiza estado de viagem ativa e cache
-        #if selecionada and selecionada.get("numero_viagem"):
-        #    conversas.setdefault(numero, {})["numero_viagem_selecionado"] = selecionada["numero_viagem"]
-        #    set_viagem_ativa(numero, selecionada["numero_viagem"])
-
-        # Se selecionada veio como string (ex: "100"), transforma em dict buscando no banco
-        if isinstance(selecionada, str):
-            try:
-                num_viagem = int(selecionada.strip())
-            except ValueError:
-                num_viagem = None
-
-            if num_viagem:
-                selecionada = buscar_viagem_por_numero(num_viagem)  # você implementa/usa sua função
-            else:
-                selecionada = None
-
-        # valores novos vindos da NF atual
         nova_chave = dados_nf.get("chave") or ""
         nova_nf = dados_nf.get("numero") or ""
 
-        # valores atuais (preferência: vem da selecionada; senão considera vazio)
-        chave_atual = selecionada("chave_acesso") if selecionada else ""
-        nf_atual = selecionada("nota_fiscal") if selecionada else ""
+        # 🔥 fonte da verdade: banco
+        res = (
+            supabase.table("viagens")
+            .select("chave_acesso, nota_fiscal")
+            .eq("numero_viagem", numero_viagem)
+            .single()
+            .execute()
+        )
 
-        # faz append com verificação de duplicidade
-        chave_final, chave_dup = _append_unico(chave_atual, nova_chave)
+        if not res.data:
+            logger.warning(f"[NF] Viagem {numero_viagem} não encontrada no Supabase.")
+            enviar_mensagem(numero, "⚠️ Não achei essa viagem no sistema. Refaça a seleção, por favor.")
+            return {"status": "viagem nao encontrada"}
+
+        chave_atual = res.data.get("chave_acesso") or ""
+        nf_atual = res.data.get("nota_fiscal") or ""
+
+        chave_final, _ = _append_unico(chave_atual, nova_chave)
         nf_final, nf_dup = _append_unico(nf_atual, nova_nf)
 
-        logger.debug(f"[NF] Chave Supa: {chave_atual} Chave Nova: {nova_chave}")
-        logger.debug(f"[NF] Num NF Supa: {nf_atual} Num NF Nova: {nova_nf}")
+        logger.debug(f"[NF] Chave Supa: {chave_atual} | Chave Nova: {nova_chave}")
+        logger.debug(f"[NF] Num NF Supa: {nf_atual} | Num NF Nova: {nova_nf}")
+        logger.debug(f"[NF] Num NF Final: {nf_final}")
 
-        # se a NF já existe, avisa e não grava
-        # (tu pode decidir se quer checar chave também; aqui o principal é NF)
         if nf_dup:
-            enviar_mensagem(numero, f"A nota *{nova_nf}* já foi lançada nessa viagem. Por favor, tente novamente.")
+            enviar_mensagem(numero, f"😅 Amigão, a nota *{nova_nf}* já foi lançada nessa viagem.")
             conversas.pop(numero, None)
             return {"status": "nf duplicada"}
 
-        # grava no banco
-        atualizar_viagem(
-            numero_viagem,
-            {
-                "chave_acesso": chave_final,
-                "nota_fiscal": nf_final,
-            },
-        )
+        atualizar_viagem(numero_viagem, {"chave_acesso": chave_final, "nota_fiscal": nf_final})
 
-        enviar_mensagem(numero, "✅ Fechou! Acrescentei a nota nessa viagem. Obrigado! 🙌")
+        enviar_mensagem(numero, "✅ Perfeito! Acrescentei a nota nessa viagem. Obrigado!")
         conversas.pop(numero, None)
-
-        for arq in ["nota.jpg", "nota_pre_google.jpg"]:
-            try:
-                os.remove(arq)
-            except Exception:
-                pass
-
         return {"status": "finalizado"}
-
-    # resposta inválida
-    enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não* para confirmar os dados da nota.")
-    return {"status": "aguardando resposta válida dados nf"}
