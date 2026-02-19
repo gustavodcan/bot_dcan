@@ -542,7 +542,7 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
 
     # aqui eu assumo que tua viagem selecionada foi guardada antes
     # AJUSTA esse nome se o teu fluxo salva em outra chave
-    selecionada = conversas.get(numero, {}).get("numero_viagem_selecionado")
+    selecionada = conversas.get(numero, {}).get("viagem_selecionada")
 
     if texto in ["não", "nao", "n"]:
         enviar_mensagem(numero, "🔁 Sem problemas! Por favor, envie a *imagem da nota* novamente.")
@@ -575,13 +575,25 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
         #    conversas.setdefault(numero, {})["numero_viagem_selecionado"] = selecionada["numero_viagem"]
         #    set_viagem_ativa(numero, selecionada["numero_viagem"])
 
+        # Se selecionada veio como string (ex: "100"), transforma em dict buscando no banco
+        if isinstance(selecionada, str):
+            try:
+                num_viagem = int(selecionada.strip())
+            except ValueError:
+                num_viagem = None
+
+            if num_viagem:
+                selecionada = buscar_viagem_por_numero(num_viagem)  # você implementa/usa sua função
+            else:
+                selecionada = None
+
         # valores novos vindos da NF atual
         nova_chave = dados_nf.get("chave") or ""
         nova_nf = dados_nf.get("numero") or ""
 
         # valores atuais (preferência: vem da selecionada; senão considera vazio)
-        chave_atual = selecionada["chave_acesso"] if selecionada else ""
-        nf_atual = selecionada["nota_fiscal"] if selecionada else ""
+        chave_atual = selecionada("chave_acesso") if selecionada else ""
+        nf_atual = selecionada("nota_fiscal") if selecionada else ""
 
         # faz append com verificação de duplicidade
         chave_final, chave_dup = _append_unico(chave_atual, nova_chave)
