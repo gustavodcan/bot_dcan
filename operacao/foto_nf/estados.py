@@ -1,6 +1,6 @@
 import os, re, logging, requests, pdfplumber, cv2, zxingcpp
 from datetime import datetime
-from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens, enviar_botao_encerrarconversa
+from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens, enviar_botao_encerrarconversa, enviar_lista_setor
 from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
 from operacao.foto_ticket.defs import limpar_texto_ocr
 from operacao.foto_nf.defs import extrair_chave_acesso
@@ -296,6 +296,20 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
                                                #ACRESCER NOTAS FISCAIS EM VIAGENS QUE JA POSSUEM NF#
 
 ##############################################################################################################################################################
+
+def tratar_estado_aguardando_confirmacao_nf(numero, texto_recebido, conversas):
+    
+    if texto_recebido == "voltar":
+        enviar_lista_setor(numero, "👋 Olá! Sou o Deco, bot de atendimento da DCAN Transportes.\n\n Como posso te ajudar?")
+        conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
+        return jsonify(status="aguardando confirmação do setor")
+    elif texto_recebido == "confi_sim":
+        resultado = iniciar_fluxo_acrescer_nf(numero, conversas)
+        return jsonify(resultado)
+    elif texto_recebido == "confi_nao":
+        enviar_mensagem(numero, "Perfeito!.\n" "Em caso de dúvidas, contate seu programador.\n" "Conversa encerrada.")
+        conversas.pop(numero, None)
+        return {"status": "finalizado"}
 
 def iniciar_fluxo_acrescer_nf(numero, conversas):
     VIAGENS.clear()
