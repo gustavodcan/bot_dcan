@@ -302,10 +302,10 @@ def tratar_estado_aguardando_confirmacao_nf(numero, texto_recebido, conversas):
     if texto_recebido == "voltar":
         enviar_lista_setor(numero, "👋 Olá! Sou o Deco, bot de atendimento da DCAN Transportes.\n\n Como posso te ajudar?")
         conversas[numero]["estado"] = "aguardando_confirmacao_setor"
-        return jsonify(status="aguardando confirmação do setor")
+        #return jsonify(status="aguardando confirmação do setor")
     elif texto_recebido == "confi_sim":
         resultado = iniciar_fluxo_acrescer_nf(numero, conversas)
-        return jsonify(resultado)
+        #return jsonify(resultado)
     elif texto_recebido == "confi_nao":
         enviar_mensagem(numero, "Perfeito!.\n" "Em caso de dúvidas, contate seu programador.\n" "Conversa encerrada.")
         conversas.pop(numero, None)
