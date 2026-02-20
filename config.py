@@ -22,7 +22,8 @@ mapa_setores = {
     "comercial": os.getenv("SETOR_COMERCIAL"),
     "faturamento": os.getenv("SETOR_FATURAMENTO"),
     "financeiro": os.getenv("SETOR_FINANCEIRO"),
-    "recursos humanos": os.getenv("SETOR_RH")
+    "recursos humanos": os.getenv("SETOR_RH"),
+    "compras": os.getenv("SETOR_COMPRAS")
 }
 
 #A3SOFT VARS:
