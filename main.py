@@ -135,7 +135,7 @@ def webhook():
             conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
             return jsonify(status="aguardando confirmação do setor")
         elif texto_recebido in ['adicionar_nf']:
-            resultado = enviar_confirmacao_nf(numero, conversas)
+            resultado = enviar_confirmacao_nf(numero)
             conversas[numero]["estado"] = "aguardando_confirmacao_nf"
             return jsonify(resultado)
         else:
