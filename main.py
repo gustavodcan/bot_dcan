@@ -3,11 +3,11 @@ import json, logging, time
 from flask import Flask, request, jsonify
 
 #Importação de de Defs e Estados
-from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao, enviar_opcoes_ticket, enviar_opcoes_nf, enviar_botao_encerrarconversa, enviar_botao_voltar)
+from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao, enviar_opcoes_ticket, enviar_opcoes_nf, enviar_botao_encerrarconversa, enviar_botao_voltar, enviar_confirmacao_nf)
 from manutencao.checklist import tratar_estado_aguardando_km_manutencao, tratar_estado_aguardando_placa_manutencao, tratar_estado_aguardando_problema_manutencao
 from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket, tratar_estado_selecionando_viagem_ticket, tratar_estado_aguardando_nota_ticket
 from operacao.foto_nf.estados import tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf, tratar_estado_aguardando_imagem_nf
-from operacao.foto_nf.estados import tratar_estado_confirmacao_dados_acrescer_nf, iniciar_fluxo_acrescer_nf, tratar_estado_selecionando_viagem_acrescer_nf, tratar_estado_aguardando_imagem_acrescer_nf
+from operacao.foto_nf.estados import tratar_estado_confirmacao_dados_acrescer_nf, iniciar_fluxo_acrescer_nf, tratar_estado_selecionando_viagem_acrescer_nf, tratar_estado_aguardando_imagem_acrescer_nf, tratar_estado_aguardando_confirmacao_nf
 from operacao.falar_programador.contato import tratar_descricao_setor, encaminhar_para_setor
 
 #Timeout global de inatividade
@@ -135,13 +135,19 @@ def webhook():
             conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
             return jsonify(status="aguardando confirmação do setor")
         elif texto_recebido in ['adicionar_nf']:
-            resultado = iniciar_fluxo_acrescer_nf(numero, conversas)
+            resultado = enviar_confirmacao_nf(numero, conversas)
+            conversas[numero]["estado"] = "aguardando_confirmacao_nf"
             return jsonify(resultado)
         else:
             enviar_mensagem(numero, "❌ Opção inválida. Por favor, escolha uma opção válida acima.")
             conversas[numero]["estado"] = "aguardando_opcao_ticket"
             return {"status": "aguardando_opcao_ticket"}
 
+    #Manda para o DEF "Aguardando Confirmação NF" 
+    if estado == "aguardando_confirmacao_nf":
+        resultado = tratar_estado_aguardando_confirmacao_nf(numero, texto_recebido, conversas)
+        return jsonify(resultado)
+    
     #Manda para o DEF "Selecionando Viagem_NF" após seleção da viagem
     if estado == "selecionando_viagem_nf":
         numero_viagem = data.get("listResponseMessage", {}).get("selectedRowId", "")
