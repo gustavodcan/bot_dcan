@@ -301,7 +301,7 @@ def tratar_estado_aguardando_confirmacao_nf(numero, texto_recebido, conversas):
     
     if texto_recebido == "voltar":
         enviar_lista_setor(numero, "👋 Olá! Sou o Deco, bot de atendimento da DCAN Transportes.\n\n Como posso te ajudar?")
-        conversas[numero] = {"estado": "aguardando_confirmacao_setor", "expira_em": time.time() + TIMEOUT_SECONDS}
+        conversas[numero]["estado"] = "aguardando_confirmacao_setor"
         return jsonify(status="aguardando confirmação do setor")
     elif texto_recebido == "confi_sim":
         resultado = iniciar_fluxo_acrescer_nf(numero, conversas)
