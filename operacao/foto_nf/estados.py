@@ -597,8 +597,8 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
         logger.debug(f"[NF] Num NF Final: {nf_final}")
 
         if nf_dup:
-            enviar_mensagem(numero, f"😅 Amigão, a nota *{nova_nf}* já foi lançada nessa viagem.")
-            conversas.pop(numero, None)
+            enviar_botao_encerrarconversa(numero, f"⚠️ A NF *{nova_nf}* já foi lançada nessa viagem. Por favor, envie a foto da segunda NF!\n" "Ou encerre a conversa no botão abaixo!")
+            conversas[numero]["estado"] = "aguardando_imagem_acrescer_nf"
             return {"status": "nf duplicada"}
 
         atualizar_viagem(numero_viagem, {"chave_acesso": chave_final, "nota_fiscal": nf_final})
