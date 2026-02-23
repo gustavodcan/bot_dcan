@@ -101,11 +101,15 @@ def webhook():
             conversas[numero] = {"estado": "aguardando_opcao_nf", "expira_em": time.time() + TIMEOUT_SECONDS}
             resultado = enviar_opcoes_nf(numero)
             return jsonify(resultado)
-        else:
+        elif texto_recebido in ['falar_programador']:
             enviar_mensagem(numero, "🔧 Entrar em contato com o programador ainda está em desenvolvimento. Em breve estará disponível!")
             conversas[numero]["estado"] = "finalizado"
             conversas.pop(numero, None)
-        return jsonify(status="resposta motorista")
+            return jsonify(status="resposta motorista")
+        else:
+            enviar_mensagem(numero, "❌ Opção inválida. Por favor, escolha uma opção válida acima.")
+            conversas[numero]["estado"] = "aguardando_opcao_operacao"
+            return {"status": "aguardando_opcao_operacao"}
 
     #Define DEF seguinte com base na seleção do usuário no setor "Operação"
     if estado == "aguardando_opcao_ticket":
