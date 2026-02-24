@@ -18,6 +18,10 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
+# silencia debug verborrágico de rede (Supabase/httpx/httpcore/h2)
+for noisy in ("httpcore", "httpx", "h2", "hpack"):
+    logging.getLogger(noisy).setLevel(logging.WARNING)
+
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
