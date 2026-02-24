@@ -304,7 +304,7 @@ def tratar_estado_aguardando_nota_ticket(numero, texto_recebido, conversas):
 
 def tratar_estado_aguardando_nota_manual(numero, texto_recebido, conversas):
     m = re.search(r"\b\d{4,}\b", texto_recebido)
-    nota_digitada
+    nota_digitada = m
     if not nota_digitada:
         enviar_mensagem(numero, "❌ Por favor, envie apenas o número da nota.\n(Ex: *7878*).")
         return {"status": "nota inválida"}

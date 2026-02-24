@@ -20,7 +20,7 @@ def iso_to_br(data_iso: Optional[str]) -> str:
         return str(data_iso)
 
 #Consulta viagens no Supabase conforme StatusFiltro
-def carregar_viagens_ativas(status_filtro: Optional=str) -> List[Dict[str, Any]]:
+def carregar_viagens_ativas(status_filtro: Optional[str]) -> List[Dict[str, Any]]:
     try:
         query = (
             supabase

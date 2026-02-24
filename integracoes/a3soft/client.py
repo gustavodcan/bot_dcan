@@ -1,5 +1,5 @@
 # integracoes/a3soft/client.py
-import logging, requests
+import logging, requests, re, html
 from urllib.parse import urljoin
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -223,22 +223,12 @@ def enviar_ticket(
         "foto": {"nome": str(foto_nome), "base64": str(foto_base64)},
     }
     
-    # 🔍 logs úteis
-    try:
-        import json
-        foto_len = len(foto_base64 or "")
-        logger.debug(f"[A3/TICKET] Enviando body -> {json.dumps({**body, 'foto': {'nome': body['foto']['nome'], 'base64': f'<{foto_len} chars>'}}, ensure_ascii=False)[:2000]}")
-    except Exception:
-        logger.debug(f"[A3/TICKET] Enviando body (repr) -> nome={body['foto']['nome']} base64_len={len(foto_base64 or '')}")
-
     try:
         r = _session.post(url, json=body, headers=JSON_HDRS, timeout=(10, 60))
         try:
             data = r.json()
         except Exception:
             data = (r.text or "").strip()
-
-        logger.debug(f"[A3/TICKET] Resposta HTTP {r.status_code} - corpo: {str(data)[:1000]}")
 
         if r.status_code >= 400:
             return {"ok": False, "status": r.status_code, "error": "http_error", "data": data}
