@@ -38,7 +38,7 @@ def enviar_lista_viagens(numero, viagens, mensagem):
 
     try:
         res = requests.post(url, json=payload, headers=headers, timeout=15)
-        logger.debug(f"[🟪 Lista de viagens enviada] Status {res.status_code}: {res.text}")
+        logger.debug(f"[🟪 Lista de viagens enviada para: {numero}] Status {res.status_code}: {res.text}")
         if res.status_code != 200:
             logger.error("[Z-API] Falha ao enviar lista: %s", res.text)
             return False
@@ -56,7 +56,7 @@ def enviar_mensagem(numero, texto):
         "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    logger.debug(f"[🟢 Texto simples enviado] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟢 Texto simples enviado para: {numero}] Status {res.status_code}: {res.text}")
 
 #Envia botões de Sim ou Não
 def enviar_botoes_sim_nao(numero, mensagem):
@@ -76,7 +76,7 @@ def enviar_botoes_sim_nao(numero, mensagem):
         "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    logger.debug(f"[🟦 Botões de Sim ou Não enviados] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟦 Botões de Sim ou Não enviados para: {numero}] Status {res.status_code}: {res.text}")
 
 #Envia botão para encerrar conversa
 def enviar_botao_encerrarconversa(numero, mensagem):
@@ -95,7 +95,7 @@ def enviar_botao_encerrarconversa(numero, mensagem):
         "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    logger.debug(f"[🟦 Botão de Encerrar Conversa enviado] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟦 Botão de Encerrar Conversa enviado para: {numero}] Status {res.status_code}: {res.text}")
 
 #Envia botão de voltar
 def enviar_botao_voltar(numero, mensagem):
@@ -114,7 +114,7 @@ def enviar_botao_voltar(numero, mensagem):
         "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    logger.debug(f"[🟦 Botão de Voltar enviado] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟦 Botão de Voltar enviado para: {numero}] Status {res.status_code}: {res.text}")
 
 #Cria(manualmente) lista de setores e envia para o motorista
 def enviar_lista_setor(numero, mensagem):
@@ -141,7 +141,7 @@ def enviar_lista_setor(numero, mensagem):
         "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    logger.debug(f"[🟪 Lista de setor enviada] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟪 Lista de setor enviado para: {numero}] Status {res.status_code}: {res.text}")
 
 #Cria botões(manualmente) da operação e envia para motorista
 def enviar_opcoes_operacao(numero):
@@ -162,7 +162,7 @@ def enviar_opcoes_operacao(numero):
         "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    logger.debug(f"[🟦 Botões operação enviados] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟦 Botões operação enviados para: {numero}] Status {res.status_code}: {res.text}")
 
 #Cria botões(manualmente) da opções de ticket e envia para motorista
 def enviar_opcoes_ticket(numero):
@@ -183,7 +183,7 @@ def enviar_opcoes_ticket(numero):
         "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    logger.debug(f"[🟦 Botões opções Tickets enviados] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟦 Botões opções Tickets enviados para: {numero}] Status {res.status_code}: {res.text}")
 
 #Cria botões(manualmente) da opções de nf e envia para motorista
 def enviar_opcoes_nf(numero):
@@ -204,7 +204,7 @@ def enviar_opcoes_nf(numero):
         "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    logger.debug(f"[🟦 Botões opções NF enviados] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟦 Botões opções NF enviados para: {numero}] Status {res.status_code}: {res.text}")
 
 def enviar_confirmacao_nf(numero):
     url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-button-list"
@@ -224,4 +224,4 @@ def enviar_confirmacao_nf(numero):
         "Client-Token": ZAPI_CLIENT_TOKEN
     }
     res = requests.post(url, json=payload, headers=headers)
-    logger.debug(f"[🟦 Botões confirmação NF enviados] Status {res.status_code}: {res.text}")
+    logger.debug(f"[🟦 Botões confirmação NF enviados para: {numero}] Status {res.status_code}: {res.text}")
