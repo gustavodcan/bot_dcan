@@ -32,8 +32,8 @@ conversas = {}
 def webhook(): 
     global conversas
     data = request.json
-    logger.debug("🛰️ Webhook recebido:")
-    logger.debug(data)
+    #logger.debug("🛰️ Webhook recebido:")
+    #logger.debug(data)
 
     tipo = data.get("type")
     numero = data.get("phone") or data.get("from")
