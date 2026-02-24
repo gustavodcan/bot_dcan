@@ -11,7 +11,7 @@ from operacao.foto_nf.estados import tratar_estado_confirmacao_dados_acrescer_nf
 from operacao.falar_programador.contato import tratar_descricao_setor, encaminhar_para_setor
 
 #Timeout global de inatividade
-TIMEOUT_SECONDS = 60 * 5
+TIMEOUT_SECONDS = 60 * 60
 
 logging.basicConfig(
     level=logging.DEBUG,
