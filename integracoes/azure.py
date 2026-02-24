@@ -4,6 +4,14 @@ from azure.core.exceptions import ResourceExistsError
 
 logger = logging.getLogger(__name__)
 
+# Silenciar debug's inuteis Azure
+for noisy in (
+    "azure",
+    "azure.core.pipeline.policies.http_logging_policy",
+    "azure.storage",
+):
+    logging.getLogger(noisy).setLevel(logging.WARNING)
+
 ACCOUNT_NAME = os.getenv("AZURE_FILE_ACCOUNT_NAME", "").strip()
 ACCOUNT_KEY  = os.getenv("AZURE_FILE_ACCOUNT_KEY", "").strip()
 DEFAULT_SHARE = os.getenv("AZURE_SHARE_NAME", "tickets").strip()
