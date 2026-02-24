@@ -39,7 +39,7 @@ def extrair_dados_cliente_gerdau(img, texto: str):
     matches_validos = []
 
     for linha in texto.splitlines():
-        m = re.search(r"\b(\d{1,3}\s*[.,]\s*\d{3})\s+to\b", linha, flags=re.IGNORECASE)
+        m = re.search(r"\b(\d{1,3}\s*[.,]\s*\d{3})\s+[t,c][o,0]\b", linha, flags=re.IGNORECASE)
         if m:
             matches_validos.append(m.group(1).replace(",", ".").replace(" ", ""))
 
