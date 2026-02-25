@@ -1,14 +1,59 @@
-#Importação de Bibliotecas
-import json, logging, time
+# ===== Standard library =====
+import json
+import logging
+import time
+
+# ===== Third-party =====
 from flask import Flask, request, jsonify
 
-#Importação de de Defs e Estados
-from mensagens import (enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_setor, enviar_opcoes_operacao, enviar_opcoes_ticket, enviar_opcoes_nf, enviar_botao_encerrarconversa, enviar_botao_voltar, enviar_confirmacao_nf)
-from manutencao.checklist import tratar_estado_aguardando_km_manutencao, tratar_estado_aguardando_placa_manutencao, tratar_estado_aguardando_problema_manutencao
-from operacao.foto_ticket.estados import tratar_estado_aguardando_nota_manual, tratar_estado_aguardando_imagem, processar_confirmacao_final, iniciar_fluxo_ticket, tratar_estado_selecionando_viagem_ticket, tratar_estado_aguardando_nota_ticket
-from operacao.foto_nf.estados import tratar_estado_confirmacao_dados_nf, iniciar_fluxo_nf, tratar_estado_selecionando_viagem_nf, tratar_estado_aguardando_imagem_nf
-from operacao.foto_nf.estados import tratar_estado_confirmacao_dados_acrescer_nf, iniciar_fluxo_acrescer_nf, tratar_estado_selecionando_viagem_acrescer_nf, tratar_estado_aguardando_imagem_acrescer_nf, tratar_estado_aguardando_confirmacao_nf
-from operacao.falar_programador.contato import tratar_descricao_setor, encaminhar_para_setor
+# ===== Local: mensagens =====
+from mensagens import (
+    enviar_mensagem,
+    enviar_botoes_sim_nao,
+    enviar_lista_setor,
+    enviar_opcoes_operacao,
+    enviar_opcoes_ticket,
+    enviar_opcoes_nf,
+    enviar_botao_encerrarconversa,
+    enviar_botao_voltar,
+    enviar_confirmacao_nf,
+)
+
+# ===== Local: manutencao =====
+from manutencao.checklist import (
+    tratar_estado_aguardando_km_manutencao,
+    tratar_estado_aguardando_placa_manutencao,
+    tratar_estado_aguardando_problema_manutencao,
+)
+
+# ===== Local: tickets =====
+from operacao.foto_ticket.estados import (
+    tratar_estado_aguardando_nota_manual,
+    tratar_estado_aguardando_imagem,
+    processar_confirmacao_final,
+    iniciar_fluxo_ticket,
+    tratar_estado_selecionando_viagem_ticket,
+    tratar_estado_aguardando_nota_ticket,
+)
+
+# ===== Local: nota fiscal =====
+from operacao.foto_nf.estados import (
+    tratar_estado_confirmacao_dados_nf,
+    iniciar_fluxo_nf,
+    tratar_estado_selecionando_viagem_nf,
+    tratar_estado_aguardando_imagem_nf,
+    tratar_estado_confirmacao_dados_acrescer_nf,
+    iniciar_fluxo_acrescer_nf,
+    tratar_estado_selecionando_viagem_acrescer_nf,
+    tratar_estado_aguardando_imagem_acrescer_nf,
+    tratar_estado_aguardando_confirmacao_nf,
+)
+
+# ===== Local: setor =====
+from operacao.falar_programador.contato import (
+    tratar_descricao_setor,
+    encaminhar_para_setor,
+)
 
 #Timeout global de inatividade
 TIMEOUT_SECONDS = 60 * 60

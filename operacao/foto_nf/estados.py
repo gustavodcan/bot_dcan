@@ -1,14 +1,51 @@
-import os, re, logging, requests, pdfplumber, cv2, zxingcpp
+# ===== Standard library =====
+import os
+import re
+import logging
+import requests
 from datetime import datetime
-from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens, enviar_botao_encerrarconversa, enviar_lista_setor
-from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
-from operacao.foto_ticket.defs import limpar_texto_ocr
-from operacao.foto_nf.defs import extrair_chave_acesso
+
+# ===== Third-party =====
+import cv2
+import zxingcpp
+import pdfplumber
 import xml.etree.ElementTree as ET
 import numpy as np
-from integracoes.a3soft.client import login_obter_token, receber_xml, enviar_nf
-from viagens import get_viagens_por_telefone, set_viagem_ativa, get_viagem_ativa, carregar_viagens_ativas, VIAGENS
-from integracoes.supabase_db import atualizar_viagem, supabase
+
+# ===== Local =====
+from mensagens import (
+    enviar_mensagem,
+    enviar_botoes_sim_nao,
+    enviar_lista_viagens,
+    enviar_botao_encerrarconversa,
+    enviar_lista_setor,
+)
+from integracoes.google_vision import (
+    preprocessar_imagem,
+    ler_texto_google_ocr,
+)
+from operacao.foto_ticket.defs import (
+    limpar_texto_ocr,
+)
+from operacao.foto_nf.defs import (
+    extrair_chave_acesso,
+)
+from integracoes.a3soft.client import (
+    login_obter_token,
+    receber_xml,
+    enviar_nf,
+)
+from viagens import (
+    get_viagens_por_telefone,
+    set_viagem_ativa,
+    get_viagem_ativa,
+    carregar_viagens_ativas,
+    VIAGENS
+)
+from integracoes.supabase_db import (
+    atualizar_viagem,
+    supabase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +78,6 @@ def iniciar_fluxo_nf(numero, conversas):
     conversas[numero]["estado"] = "selecionando_viagem_nf"
     enviar_lista_viagens(numero, viagens, "Escolha uma das viagens abaixo para continuar o envio da NF.")
     return {"status": "aguardando escolha viagem nf"}
-
 
 def tratar_estado_selecionando_viagem_nf(numero, row_id_recebido, conversas, texto_recebido):
     if texto_recebido == "encerrar_conversa":
@@ -291,11 +327,7 @@ def tratar_estado_confirmacao_dados_nf(numero, texto_recebido, conversas):
     enviar_botoes_sim_nao(numero, "❓ Por favor, clique em *Sim* ou *Não* para confirmar os dados da nota.")
     return {"status": "aguardando resposta válida dados nf"}
 
-##############################################################################################################################################################
-
-                                               #ACRESCER NOTAS FISCAIS EM VIAGENS QUE JA POSSUEM NF#
-
-##############################################################################################################################################################
+# ===== ACRESCER NOTAS FISCAIS EM VIAGENS QUE JA POSSUEM NF ===== 
 
 def tratar_estado_aguardando_confirmacao_nf(numero, texto_recebido, conversas):
     
@@ -340,7 +372,6 @@ def iniciar_fluxo_acrescer_nf(numero, conversas):
     conversas[numero]["estado"] = "selecionando_viagem_acrescer_nf"
     enviar_lista_viagens(numero, viagens, "Escolha uma das viagens abaixo para continuar o envio da NF.")
     return {"status": "aguardando escolha viagem nf"}
-
 
 def tratar_estado_selecionando_viagem_acrescer_nf(numero, row_id_recebido, conversas, texto_recebido):
     if texto_recebido == "encerrar_conversa":
@@ -586,7 +617,7 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
         nova_chave = dados_nf.get("chave") or ""
         nova_nf = dados_nf.get("numero") or ""
 
-        # Procurando no banco de dados
+        # Procurando no banco de
         res = (
             supabase.table("viagens")
             .select("chave_acesso, nota_fiscal")
