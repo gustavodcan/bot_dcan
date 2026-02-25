@@ -190,7 +190,7 @@ def enviar_opcoes_nf(numero):
     url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE_ID}/token/{ZAPI_API_TOKEN}/send-button-list"
     payload = {
         "phone": numero,
-        "message": "Antes de nos enviar a foto da nota fiscal, nos informe: O que deseja enviar?",
+        "message": "Antes de nos enviar a nota fiscal, nos informe: O que deseja enviar?",
         "buttonList": {
             "buttons": [
                 {"id": "enviar_nf", "label": "Foto ou PDF da NF"},
