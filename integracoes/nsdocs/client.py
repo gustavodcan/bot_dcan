@@ -1,9 +1,18 @@
+# ===== Standard library =====
 import logging
 import requests
+
+# ===== Third-party =====
 from urllib.parse import urljoin
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from config import NSDOCS_BASE_URL, NSDOCS_TOKEN, NSDOCS_EMPRESA_CNPJ
+
+# ===== Local: config =====
+from config import (
+    NSDOCS_BASE_URL,
+    NSDOCS_TOKEN,
+    NSDOCS_EMPRESA_CNPJ,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +25,6 @@ _adapter = HTTPAdapter(max_retries=_retry)
 _session.mount("http://", _adapter)
 _session.mount("https://", _adapter)
 
-def _abs(path: str) -> str:
-    return urljoin(NSDOCS_BASE_URL.rstrip("/") + "/", path.lstrip("/"))
-
 BASE_HEADERS = {
     "Authorization": f"Bearer {NSDOCS_TOKEN}",
     "Empresa-Cnpj": NSDOCS_EMPRESA_CNPJ,
@@ -29,6 +35,9 @@ BASE_HEADERS = {
 HEADERS_DFE = {
     "Authorization": f"Bearer {NSDOCS_TOKEN}",
 }
+
+def _abs(path: str) -> str:
+    return urljoin(NSDOCS_BASE_URL.rstrip("/") + "/", path.lstrip("/"))
 
 def consultar_documentos(chave_acesso: str):
     """

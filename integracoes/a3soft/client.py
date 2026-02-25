@@ -1,8 +1,15 @@
-# integracoes/a3soft/client.py
-import logging, requests, re, html
+# ===== Standard library =====
+import logging
+import requests
+import re
+import html
+
+# ===== Third-party =====
 from urllib.parse import urljoin
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+# ===== Local: config =====
 from config import (
     A3SOFT_BASE_URL, A3SOFT_LOGIN, A3SOFT_SENHA,
     A3SOFT_ENDPOINT_LOGIN, A3SOFT_ENDPOINT_XML,
@@ -11,21 +18,20 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
-# integracoes/a3soft/client.py (topo: sessão)
+# integracoes/a3soft/client.py
 _session = requests.Session()
 _retry = Retry(
-    total=1,                  # menos tentativas pra não "comer" o erro real
+    total=1,
     connect=1,
     read=1,
     backoff_factor=0.5,
-    status_forcelist=[429, 502, 503, 504],  # tira 500 daqui p/ não virar ResponseError
+    status_forcelist=[429, 502, 503, 504],
     allowed_methods=["POST"],
-    raise_on_status=False,    # importante: não explode em 5xx, devolve resp
+    raise_on_status=False,
 )
 _adapter = HTTPAdapter(max_retries=_retry)
 _session.mount("http://", _adapter)
 _session.mount("https://", _adapter)
-
 
 JSON_HDRS = {"Content-Type":"application/json","accept":"application/json"}
 

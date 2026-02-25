@@ -35,11 +35,12 @@ bot_dcan/\
 \
 💡 Funcionalidades
 - Processamento de imagem com OCR (Google Vision)
-- Extração de dados de tickets por cliente
-- Extração de chave de acesso NF-e
-- Consulta NF-e via A3Danfe
+- Extração dos dados de tickets por cliente
+- Extração da chave de acesso NF-e
+- Consulta NF-e via NSDocs
 - Envio de dados para SupaBase
-- Upload da imagem e informações extraídas para A3Soft
+- Upload de imagem para AzureFiles
+- Informações extraídas enviadas para Supabase
 - Uso de botões e listas via Z-API
 
 ✨ Créditos\

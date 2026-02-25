@@ -1,19 +1,25 @@
+# ===== Standard library =====
 import os
 
+# Venv Z-API
 ZAPI_INSTANCE_ID = os.getenv("ZAPI_INSTANCE_ID")
 ZAPI_API_TOKEN = os.getenv("ZAPI_API_TOKEN")
 ZAPI_CLIENT_TOKEN = os.getenv("ZAPI_CLIENT_TOKEN")
 
+#Venv token /notificar_viagem
 DCAN_TOKEN_KEY = os.getenv("DCAN_TOKEN_KEY")
 
+#Venv Azure
 AZURE_FILE_ACCOUNT_NAME = os.getenv("AZURE_FILE_ACCOUNT_NAME")
 AZURE_FILE_ACCOUNT_KEY = os.getenv("AZURE_FILE_ACCOUNT_KEY")
 AZURE_FILE_SHARE_NAME = os.getenv("AZURE_FILE_SHARE_NAME")
 
+#Venv API's Google
 GOOGLE_CREDS_JSON = os.getenv("GOOGLE_CREDS_JSON")
 GOOGLE_CREDS_PATH = "/etc/secrets/GOOGLE_CREDS_JSON"
 GOOGLE_SHEETS_PATH = "/etc/secrets/acc_servico"
 
+#Venv NsDocs
 NSDOCS_BASE_URL = os.getenv("NSDOCS_BASE_URL")
 NSDOCS_TOKEN    = os.getenv("NSDOCS_TOKEN")
 NSDOCS_EMPRESA_CNPJ = os.getenv("NSDOCS_EMPRESA_CNPJ")
@@ -26,13 +32,10 @@ mapa_setores = {
     "compras": os.getenv("SETOR_COMPRAS")
 }
 
-#A3SOFT VARS:
-
+#Venv A3
 A3SOFT_BASE_URL = os.getenv("A3SOFT_BASE_URL")
-
 A3SOFT_LOGIN = os.getenv("A3SOFT_LOGIN")
 A3SOFT_SENHA = os.getenv("A3SOFT_SENHA")
-
 A3SOFT_ENDPOINT_LOGIN = os.getenv("A3SOFT_ENDPOINT_LOGIN")
 A3SOFT_ENDPOINT_XML = os.getenv("A3SOFT_ENDPOINT_XML")
 A3SOFT_ENDPOINT_NF = os.getenv("A3SOFT_ENDPOINT_NF")

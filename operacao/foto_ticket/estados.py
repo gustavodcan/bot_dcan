@@ -1,15 +1,63 @@
-import os, re, requests, logging, base64
+# ===== Standard library =====
+import os
+import re
+import requests
+import logging
+import base64
 from datetime import datetime
-from integracoes.a3soft.client import login_obter_token, enviar_ticket as a3_enviar_ticket
-from integracoes.google_sheets import conectar_google_sheets, atualizar_viagem_ticket
-from mensagens import enviar_mensagem, enviar_botoes_sim_nao, enviar_lista_viagens, enviar_botao_encerrarconversa
-from operacao.foto_ticket.defs import limpar_texto_ocr, detectar_cliente_por_texto
-from operacao.foto_ticket.defs import extrair_dados_por_cliente
-from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
-from integracoes.azure import salvar_imagem_azure
-from viagens import VIAGEM_POR_TELEFONE, get_viagens_por_telefone, set_viagem_ativa, carregar_viagens_ativas, VIAGENS, get_viagem_ativa
-from viagens import VIAGEM_POR_NF, get_viagens_por_nf, set_viagem_ativa_nf, carregar_viagens_ativas_nf, VIAGENS_NF, get_viagem_ativa_nf
-from integracoes.supabase_db import atualizar_viagem
+
+# ===== Local: integracoes =====
+from integracoes.a3soft.client import (
+    login_obter_token,
+    enviar_ticket as a3_enviar_ticket,
+)
+from integracoes.google_sheets import (
+    conectar_google_sheets,
+    atualizar_viagem_ticket,
+)
+from integracoes.google_vision import (
+    preprocessar_imagem,
+    ler_texto_google_ocr,
+)
+from integracoes.azure import (
+    salvar_imagem_azure,
+)
+from integracoes.supabase_db import (
+    atualizar_viagem,
+)
+
+# ===== Local: ticket =====
+from operacao.foto_ticket.defs import (
+    limpar_texto_ocr,
+    detectar_cliente_por_texto,
+    extrair_dados_por_cliente,
+)
+
+# ===== Local: viagens =====
+from viagens import (
+    VIAGEM_POR_TELEFONE,
+    get_viagens_por_telefone,
+    set_viagem_ativa,
+    carregar_viagens_ativas,
+    VIAGENS,
+    get_viagem_ativa,
+)
+from viagens import (
+    VIAGEM_POR_NF,
+    get_viagens_por_nf,
+    set_viagem_ativa_nf,
+    carregar_viagens_ativas_nf,
+    VIAGENS_NF,
+    get_viagem_ativa_nf,
+)
+
+# ===== Local: mensagens =====
+from mensagens import (
+    enviar_mensagem,
+    enviar_botoes_sim_nao,
+    enviar_lista_viagens,
+    enviar_botao_encerrarconversa,
+)
 
 logger = logging.getLogger(__name__)
 

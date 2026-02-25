@@ -1,6 +1,21 @@
-import logging, os, requests
-from mensagens import enviar_mensagem, enviar_lista_setor
-from config import mapa_setores, ZAPI_INSTANCE_ID, ZAPI_API_TOKEN, ZAPI_CLIENT_TOKEN
+# ===== Standard library =====
+import logging
+import os
+import requests
+
+# ===== Local: mensagens =====
+from mensagens import (
+    enviar_mensagem,
+    enviar_lista_setor,
+)
+
+# ===== Local: config =====
+from config import (
+    mapa_setores,
+    ZAPI_INSTANCE_ID,
+    ZAPI_API_TOKEN,
+    ZAPI_CLIENT_TOKEN,
+)
 
 logger = logging.getLogger(__name__)
 

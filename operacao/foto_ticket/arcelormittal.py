@@ -1,4 +1,7 @@
-import re, logging
+# ===== Standard library =====
+import re
+import logging
+
 logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_arcelormittal(img, texto):

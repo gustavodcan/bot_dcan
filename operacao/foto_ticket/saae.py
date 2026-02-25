@@ -1,5 +1,13 @@
-import re, os, logging
-from mensagens import enviar_mensagem, enviar_botoes_sim_nao
+# ===== Standard library =====
+import re
+import os
+import logging
+
+# ===== Local: mensagens =====
+from mensagens import (
+    enviar_mensagem,
+    enviar_botoes_sim_nao,
+)
 
 logger = logging.getLogger(__name__)
 

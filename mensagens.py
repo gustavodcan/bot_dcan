@@ -1,5 +1,14 @@
-import os, requests, logging
-from config import ZAPI_INSTANCE_ID, ZAPI_API_TOKEN, ZAPI_CLIENT_TOKEN
+# ===== Standard library =====
+import os
+import requests
+import logging
+
+# ===== Local =====
+from config import (
+    ZAPI_INSTANCE_ID,
+    ZAPI_API_TOKEN,
+    ZAPI_CLIENT_TOKEN,
+)
 
 logger = logging.getLogger(__name__)
 

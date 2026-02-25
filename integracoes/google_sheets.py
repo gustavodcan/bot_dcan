@@ -1,8 +1,14 @@
+# ===== Standard library =====
 import json
+from datetime import datetime
+
+# ===== Third-party =====
 import gspread
 from google.oauth2.service_account import Credentials
+
+# ===== Local: config =====
 from config import GOOGLE_SHEETS_PATH
-from datetime import datetime
+
 
 def conectar_google_sheets():
     with open(GOOGLE_SHEETS_PATH, 'r') as f:
@@ -35,6 +41,7 @@ def manutencao_get_sheet_base():
     sh = client.open("manutencao_ocorrencia")
     ws = sh.worksheet("base")
     return ws
+
 def _map_header(ws):
     """Retorna dict {nome_coluna: indice_coluna} lendo a primeira linha."""
     header = ws.row_values(1)

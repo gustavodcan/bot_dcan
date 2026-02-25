@@ -1,4 +1,7 @@
-import re, logging
+# ===== Standard library =====
+import re
+import logging
+
 logger = logging.getLogger(__name__)
 
 def extrair_dados_cliente_cdr(img, texto):
@@ -25,4 +28,3 @@ def extrair_dados_cliente_cdr(img, texto):
         "peso_liquido": peso_liquido.group(1) if peso_liquido else "NÃO ENCONTRADO",
         "nota_fiscal": outros_docs.group(1) if outros_docs else "NÃO ENCONTRADO"
     }
-

@@ -1,4 +1,6 @@
-import re, logging
+# ===== Standard library =====
+import re
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -57,4 +59,3 @@ def extrair_dados_cliente_mahle(img, texto):
         "peso_liquido": peso_liquido_val,
         "nota_fiscal": nota_fiscal_val
     }
-

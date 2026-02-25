@@ -1,5 +1,14 @@
-import logging, os, re, requests
-from mensagens import enviar_mensagem, enviar_lista_setor
+# ===== Standard library =====
+import logging
+import os
+import requests
+import re
+
+# ===== Local: mensagens =====
+from mensagens import (
+    enviar_mensagem,
+    enviar_lista_setor,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,8 @@
-import os, logging
+# ===== Standard library =====
+import os
+import logging
+
+# ===== Third-party =====
 from azure.storage.fileshare import ShareServiceClient
 from azure.core.exceptions import ResourceExistsError
 

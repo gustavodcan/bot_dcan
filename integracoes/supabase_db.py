@@ -1,6 +1,13 @@
-import os, logging
-from supabase import create_client, Client
+# ===== Standard library =====
+import os
+import logging
 from datetime import datetime
+
+# ===== Local: integracoes =====
+from supabase import (
+    create_client,
+    Client,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +51,6 @@ def salvar_viagem(dados: dict):
     except Exception:
         logger.error("[SUPABASE] Erro ao salvar viagem", exc_info=True)
         raise
-
 
 def atualizar_viagem(numero_viagem: str, campos: dict):
     #Atualiza os campos de uma viagem existente (busca por numero_viagem).

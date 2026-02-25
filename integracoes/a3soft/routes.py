@@ -1,6 +1,17 @@
-# integracoes/a3soft/routes.py
-from flask import Blueprint, request, jsonify
-from .client import login_obter_token, receber_xml, enviar_nf, enviar_ticket
+# ===== Third-party =====
+from flask import (
+    Blueprint,
+    request,
+    jsonify,
+)
+
+# ===== Local: client =====
+from .client import (
+    login_obter_token,
+    receber_xml,
+    enviar_nf,
+    enviar_ticket,
+)
 
 a3soft_bp = Blueprint("a3soft_bp", __name__)
 

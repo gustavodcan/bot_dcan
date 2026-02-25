@@ -1,7 +1,14 @@
+# ===== Standard library =====
 import logging
-from typing import List, Dict, Any, Optional
 from datetime import datetime
-from integracoes.supabase_db import supabase  # usa o client já criado no módulo do supa
+
+# ===== Third-party =====
+from typing import List, Dict, Any, Optional
+
+# ===== Local =====
+from integracoes.supabase_db import (
+    supabase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +87,7 @@ def set_viagem_ativa(telefone: str, numero_viagem: str):
 def get_viagem_ativa(telefone: str) -> Optional[str]:
     return VIAGEM_ATIVA_POR_TELEFONE.get(telefone)
 
-################################################################################################################################
+# ===== Módulos para filtro de Ticket Terceiro =====
 
 #Consulta viagens no Supabase conforme NF_Filtro
 def carregar_viagens_ativas_nf(nf_filtro: Optional[str] = None):

@@ -1,8 +1,15 @@
+# ===== Standard library =====
 import json
+
+# ===== Third-party =====
 from google.cloud import vision
 from google.oauth2 import service_account
 from PIL import Image
-from config import GOOGLE_CREDS_PATH
+
+# ===== Local =====
+from config import (
+    GOOGLE_CREDS_PATH,
+)
 
 def get_google_vision_client():
     with open(GOOGLE_CREDS_PATH, "r") as f:
@@ -27,4 +34,3 @@ def preprocessar_imagem(caminho):
     largura, altura = imagem.size
     imagem = imagem.resize((largura * 2, altura * 2), Image.LANCZOS)
     return imagem
-

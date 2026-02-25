@@ -1,6 +1,18 @@
-import re, os, logging
-from integracoes.google_vision import preprocessar_imagem, ler_texto_google_ocr
+# ===== Standard library =====
+import re
+import logging
+import os
+
+# ===== Local: mensagens =====
 from mensagens import enviar_mensagem
+
+# ===== Local: integracoes =====
+from integracoes.google_vision import (
+    preprocessar_imagem,
+    ler_texto_google_ocr,
+)
+
+# ===== Local: clientes =====
 from operacao.foto_ticket.cdr import extrair_dados_cliente_cdr
 from operacao.foto_ticket.arcelormittal import extrair_dados_cliente_arcelormittal
 from operacao.foto_ticket.gerdau import extrair_dados_cliente_gerdau
