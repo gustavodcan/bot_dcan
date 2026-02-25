@@ -193,8 +193,8 @@ def enviar_opcoes_nf(numero):
         "message": "Antes de nos enviar a foto da nota fiscal, nos informe: O que deseja enviar?",
         "buttonList": {
             "buttons": [
-                {"id": "enviar_nf", "label": "Primeira NF da viagem"},
-                {"id": "adicionar_nf", "label": "Segunda NF da viagem"},
+                {"id": "enviar_nf", "label": "Foto ou PDF da NF"},
+                {"id": "adicionar_nf", "label": "Informação Adicional"},
                 {"id": "voltar", "label": "Voltar"}
             ]
         }
