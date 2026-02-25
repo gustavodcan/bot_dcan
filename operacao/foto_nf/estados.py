@@ -319,7 +319,7 @@ def iniciar_fluxo_acrescer_nf(numero, conversas):
     if not viagens:
         enviar_mensagem(
             numero,
-            "⚠️ Não encontrei uma *viagem ativa* vinculada ao seu número. Por favor, fale com seu programador."
+            "⚠️ Não encontrei uma *viagem válida* para essa opção. Por favor, fale com seu programador."
         )
         conversas.pop(numero, None)
         return {"status": "sem viagem"}
@@ -586,7 +586,7 @@ def tratar_estado_confirmacao_dados_acrescer_nf(numero, texto_recebido, conversa
         nova_chave = dados_nf.get("chave") or ""
         nova_nf = dados_nf.get("numero") or ""
 
-        # 🔥 fonte da verdade: banco
+        # Procurando no banco de dados
         res = (
             supabase.table("viagens")
             .select("chave_acesso, nota_fiscal")

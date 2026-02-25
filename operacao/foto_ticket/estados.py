@@ -67,7 +67,7 @@ def iniciar_fluxo_ticket_terceiro(numero, nota_digitada, conversas):
         set_viagem_ativa(numero, selecionada["numero_viagem"])
         enviar_mensagem(
             numero,
-            f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['data']} — {selecionada['placa']} · {selecionada['rota']}\n\n"
+            f"🧭 Viagem selecionada: *{selecionada['numero_viagem']}* — {selecionada['remetente']} — {selecionada['data']} — {selecionada['placa']} · {selecionada['rota']}\n\n"
             "Agora, envie a *imagem do ticket*."
         )
         conversas[numero]["estado"] = "aguardando_imagem"
