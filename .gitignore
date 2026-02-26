@@ -1,0 +1,22 @@
+# Ambiente virtual
+venv/
+.env
+*.env
+__pycache__/
+*.pyc
+.vscode/
+*.log
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.sqlite3
