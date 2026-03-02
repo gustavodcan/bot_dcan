@@ -161,8 +161,8 @@ def enviar_opcoes_operacao(numero):
         "buttonList": {
             "buttons": [
                 {"id": "falar_programador", "label": "Falar com programador"},
-                {"id": "foto_nf", "label": "Enviar foto NF"},
-                {"id": "foto_ticket", "label": "Enviar foto ticket"}
+                {"id": "foto_nf", "label": "Enviar Nota Fiscal"},
+                {"id": "foto_ticket", "label": "Enviar Ticket Descarga"}
             ]
         }
     }
