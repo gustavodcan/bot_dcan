@@ -31,7 +31,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
         ultimo_numero = int(numeros[-1])
 
         # Busca a última linha que contém "pb XXXX kg"
-        linhas_pb = re.findall(r"^.*pb\s+(\d{4,6})\s+kg.*$", texto, re.MULTILINE | re.IGNORECASE)
+        linhas_pb = re.findall(r"pb\s+(\d{4,6})\s+(?:kg|kq)", texto, re.MULTILINE | re.IGNORECASE)
         if linhas_pb:
             valor_pb = int(linhas_pb[-1])
             peso_liquido = str(valor_pb - ultimo_numero)
