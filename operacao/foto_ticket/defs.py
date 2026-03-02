@@ -65,7 +65,7 @@ def detectar_cliente_por_texto(texto):
         return "cdr"
     elif "gerdau" in texto or "br-ml-pindamonhangaba" in texto:
         return "gerdau"
-    elif "arcelormittal" in texto or "arcelor" in texto or "am iracemapolis" in texto or "brm" in texto or "celormittal" in texto or "arcelormit" in texto:
+    elif "arcelormittal" in texto or "arcelor" in texto or "am iracemapolis" in texto or "brm" in texto or "celormittal" in texto or "arcelormit" in texto or "rcelormittal" in texto:
         return "arcelormittal"
     elif "ternium" in texto:
         return "ternium"
