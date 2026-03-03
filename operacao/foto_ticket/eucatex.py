@@ -17,10 +17,12 @@ def extrair_dados_cliente_eucatex(img, texto):
     # Se achar 6 match's, selecionar a 5, se achar 5 match's selecionar a 5.
     matches_validos = []
     
-    for linha in texto.splitlines():
-        m = re.search(r"\b(\d{1,3}\s*[.,]\s*\d{3})\b", linha, flags=re.IGNORECASE)
-        if m:
-            matches_validos.append(m.group(1).replace(",", ".").replace(" ", ""))
+    matches = re.findall(r"\b(\d{1,3}\s*[.,]\s*\d{3})\b", linha, flags=re.IGNORECASE)
+
+    for m in matches:
+        matches_validos.append(
+            m.replace(",", ".").replace(" ", "")
+        )
 
     peso_liquido = None
 
