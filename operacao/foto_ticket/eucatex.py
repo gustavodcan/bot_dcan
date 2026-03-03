@@ -14,8 +14,6 @@ def extrair_dados_cliente_eucatex(img, texto):
     
     # Peso
     
-    # ja deixa setado peso liquido como não encontrado
-    peso_liquido = NAO_ENCONTRADO
     # Se achar 6 match's, selecionar a 5, se achar 5 match's selecionar a 5.
     matches_validos = []
     
