@@ -9,8 +9,8 @@ def extrair_dados_cliente_gescrap(img, texto):
     logger.debug(texto)
     
     # Ticket
-    m_ticket_gescrap = re.search(r"(?i)\bticket de pesagem\b[\s:]*([0-9/]{3,})", texto)
-    ticket_val_gescrap = m_ticket_gescrap.group(1) if m_ticket_gescrap else NAO_ENCONTRADO
+    ticket_val_gescrap = re.search(r"(?i)\bticket de pesagem\b[\s:]*([0-9/]{3,})", texto)
+    #ticket_val_gescrap = m_ticket_gescrap.group(1) if m_ticket_gescrap else NAO_ENCONTRADO
     
     # Peso
     
