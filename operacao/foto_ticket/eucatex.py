@@ -4,8 +4,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def extrair_dados_cliente_ternium(img, texto):
-    logger.debug("📜 Cliente Detectado: Ternium")
+def extrair_dados_cliente_eucatex(img, texto):
+    logger.debug("📜 Cliente Detectado: Eucatex")
     logger.debug(texto)
 
     # Nota
