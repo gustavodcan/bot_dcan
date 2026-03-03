@@ -21,6 +21,7 @@ from operacao.foto_ticket.orizon import extrair_dados_cliente_orizon
 from operacao.foto_ticket.rio_das_pedras import extrair_dados_cliente_rio_das_pedras
 from operacao.foto_ticket.saae import extrair_dados_cliente_saae
 from operacao.foto_ticket.ternium import extrair_dados_cliente_ternium
+from operacao.foto_ticket.eucatex import extrair_dados_cliente_eucatex
 from operacao.foto_ticket.veolia_gerdau import extrair_dados_cliente_veolia_gerdau
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,8 @@ def extrair_dados_por_cliente(cliente, texto_ocr):
             return extrair_dados_cliente_mahle(None, texto_ocr)
         case "orizon":
             return extrair_dados_cliente_orizon(None, texto_ocr)
+        case "eucatex":
+            return extrair_dados_cliente_eucatex(None, texto_ocr)
         case "rio das pedras":
             return extrair_dados_cliente_rio_das_pedras(None, texto_ocr)
         case "proactiva":
@@ -61,6 +64,8 @@ def detectar_cliente_por_texto(texto):
         return "veolia gerdau"
     elif "orizon" in texto:
         return "orizon"
+    elif "eucatex" in texto:
+        return "eucatex"
     elif "cdr pedreira" in texto or "cor pedreira" in texto or "cgr três marias" in texto:
         return "cdr"
     elif "gerdau" in texto or "br-ml-pindamonhangaba" in texto:
