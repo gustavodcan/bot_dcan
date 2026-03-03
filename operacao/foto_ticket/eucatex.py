@@ -7,26 +7,34 @@ logger = logging.getLogger(__name__)
 def extrair_dados_cliente_eucatex(img, texto):
     logger.debug("📜 Cliente Detectado: Eucatex")
     logger.debug(texto)
-
-    # Nota
-    nf_match = re.search(r"\bitem:\s*(?:\[?n\]?\s*)?(\d+)-", texto, re.IGNORECASE)
-    nota_val = nf_match.group(1) if nf_match else None
     
     # Ticket
-    ticket_match = re.search(r"\bpesagem:\s*(\d+)", texto, re.IGNORECASE)
-    ticket_val = ticket_match.group(1) if ticket_match else None
+    m_ticket_ectx = re.search(r"(?i)\bboleto\b[\s:]*([0-9/]{3,})", texto)
+    ticket_val_ectx = m_ticket_ectx.group(1) if m_ticket_ectx else NAO_ENCONTRADO
 
     # Peso
-    peso = re.search(r"\bl[íi]qu[ií]do:\s*(\d+)", texto, re.IGNORECASE)
-    peso_liquido = peso.group(1) if peso else None
+    for linha in texto.splitlines():
+        m = re.search(r"\b(\d{1,3}\s*[.,]\s*\d{3})\b", linha, flags=re.IGNORECASE)
+        if m:
+            matches_validos.append(m.group(1).replace(",", ".").replace(" ", ""))
+
+    peso_liquido = None
+
+    logger.debug(matches_validos)
+
+    if len(matches_validos) == 6:
+        peso_liquido = matches_validos[4]
+
+    elif len(matches_validos) == 5:
+        peso_liquido = matches_validos[4]
 
     logger.debug("🎯 Dados extraídos:")
-    logger.debug(f"Nota Fiscal: {nota_val}")
-    logger.debug(f"Ticket: {ticket_val}")
+    logger.debug(f"Nota Fiscal: {ticket_val_ectx}")
+    logger.debug(f"Ticket: {ticket_val_ectx}")
     logger.debug(f"Peso Líquido: {peso_liquido}")
 
     return {
-        "nota_fiscal": nota_val,
-        "ticket": ticket_val,
+        "nota_fiscal": ticket_val_ectx,
+        "ticket": ticket_val_ectx,
         "peso_liquido": peso_liquido
     }
