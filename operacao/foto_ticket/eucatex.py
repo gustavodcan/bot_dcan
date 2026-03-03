@@ -11,8 +11,14 @@ def extrair_dados_cliente_eucatex(img, texto):
     # Ticket
     m_ticket_ectx = re.search(r"(?i)\bboleto\b[\s:]*([0-9/]{3,})", texto)
     ticket_val_ectx = m_ticket_ectx.group(1) if m_ticket_ectx else NAO_ENCONTRADO
-
+    
     # Peso
+    
+    # ja deixa setado peso liquido como não encontrado
+    peso_liquido = NAO_ENCONTRADO
+    # Se achar 6 match's, selecionar a 5, se achar 5 match's selecionar a 5.
+    matches_validos = []
+    
     for linha in texto.splitlines():
         m = re.search(r"\b(\d{1,3}\s*[.,]\s*\d{3})\b", linha, flags=re.IGNORECASE)
         if m:
