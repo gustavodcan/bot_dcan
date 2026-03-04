@@ -56,7 +56,7 @@ from operacao.falar_programador.contato import (
 )
 
 #Timeout global de inatividade
-TIMEOUT_SECONDS = 60 * 1440
+TIMEOUT_SECONDS = 60 * 10
 
 logging.basicConfig(
     level=logging.DEBUG,
