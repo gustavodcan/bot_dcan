@@ -31,7 +31,7 @@ def extrair_dados_cliente_eucatex(img, texto):
     if len(matches_validos) == 6:
         peso_liquido = matches_validos[4]
 
-    elif len(matches_validos) == 5:
+    elif len(matches_validos) == 7:
         peso_liquido = matches_validos[4]
 
     logger.debug("🎯 Dados extraídos:")
