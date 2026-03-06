@@ -9,8 +9,8 @@ def extrair_dados_cliente_gescrap(img, texto):
     logger.debug(texto)
     
     # Ticket
-    m_ticket_ectx = re.search(r"(?<!\d)(\d{7})(?!\d)", texto)
-    ticket_val_ectx = m_ticket_ectx.group(1) if m_ticket_ectx else None
+    m_ticket_gescrap = re.search(r"(?<!\d)(\d{7})(?!\d)", texto)
+    ticket_val_gescrap = m_ticket_gescrap.group(1) if m_ticket_gescrap else None
     
     # Peso
     
