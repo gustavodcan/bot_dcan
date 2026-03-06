@@ -80,7 +80,7 @@ def detectar_cliente_por_texto(texto):
     elif "eucatex" in texto:
         return "eucatex"
     elif "gescrap" in texto:
-        return "eucatex"
+        return "gescrap"
     elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto or "sistema produtor" in texto or "municipio de" in texto or "prefeitura municipal" in texto:
         return "proactiva"
     else:
