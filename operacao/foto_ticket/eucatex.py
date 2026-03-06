@@ -9,8 +9,8 @@ def extrair_dados_cliente_eucatex(img, texto):
     logger.debug(texto)
     
     # Ticket
-    m_ticket_ectx = re.search(r"^.*?(?<!\d)(\d{7})(?!\d).*$", texto)
-    ticket_val_ectx = m_ticket_ectx.group(1) #if m_ticket_ectx else NAO_ENCONTRADO
+    m_ticket_ectx = re.search(r"(?<!\d)(\d{7})(?!\d)", texto)
+    ticket_val_ectx = m_ticket_ectx.group(1) if m_ticket_ectx else None
     
     # Peso
     
