@@ -40,7 +40,7 @@ def extrair_dados_cliente_gescrap(img, texto):
     logger.debug(f"Peso Líquido: {peso_liquido}")
 
     return {
-        "nota_fiscal": ticket_val_gescrap,
+        "nota_fiscal": "SEM NF",
         "ticket": ticket_val_gescrap,
         "peso_liquido": peso_liquido
     }
