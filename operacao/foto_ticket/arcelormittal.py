@@ -17,7 +17,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
         nota_val = nf_match.group(1)
 
     # BRM
-    brm_match = re.search(r"[be][rfi](?:m|im)\s+mes[:\-]?\s*(\d+)", texto, re.IGNORECASE)
+    brm_match = re.search(r"[be]?[rfi](?:m|im)\s+mes[:\-]?\s*(\d+)", texto, re.IGNORECASE)
     brm_val = brm_match.group(1) if brm_match else "NÃO ENCONTRADO"
 
     # Peso líquido: captura todos os números que aparecem sozinhos em uma linha
@@ -31,7 +31,7 @@ def extrair_dados_cliente_arcelormittal(img, texto):
         ultimo_numero = int(numeros[-1])
 
         # Busca a última linha que contém "pb XXXX kg"
-        linhas_pb = re.findall(r"^.*pb\s+(\d{4,6})\s+kg.*$", texto, re.MULTILINE | re.IGNORECASE)
+        linhas_pb = re.findall(r"pb\s+(\d{4,6})\s+(?:kg|kq)", texto, re.MULTILINE | re.IGNORECASE)
         if linhas_pb:
             valor_pb = int(linhas_pb[-1])
             peso_liquido = str(valor_pb - ultimo_numero)
