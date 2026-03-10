@@ -67,6 +67,8 @@ def detectar_cliente_por_texto(texto):
         return "veolia gerdau"
     elif "orizon" in texto:
         return "orizon"
+    elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto or "sistema produtor" in texto or "municipio de" in texto or "prefeitura municipal" in texto or "prysmian" in texto or "prysmia" in texto:
+        return "proactiva"
     elif "cdr pedreira" in texto or "cor pedreira" in texto or "cgr três marias" in texto:
         return "cdr"
     elif "gerdau" in texto or "br-ml-pindamonhangaba" in texto:
@@ -81,8 +83,6 @@ def detectar_cliente_por_texto(texto):
         return "eucatex"
     elif "gescrap" in texto:
         return "gescrap"
-    elif "serviço autônomo" in texto or "servico autonomo" in texto or "prefeitura do" in texto or "sistema produtor" in texto or "municipio de" in texto or "prefeitura municipal" in texto:
-        return "proactiva"
     else:
         return "cliente_desconhecido"
 
