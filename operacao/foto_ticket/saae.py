@@ -21,7 +21,7 @@ def extrair_dados_cliente_saae(img, texto):
     outros_docs = re.search(r"outros[\s_]*docs[.:;\-]*[:]?[\s]*([0-9]{4,})", texto)
 
     peso_liquido = re.search(
-        r"peso[\s_]*l[iíoe]qu[iíoe]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{1,2}\s*([0-9]{4,6})",
+        r"peso[\s_]*l[iíoe]qu[iíoe]d(?:o|ouido|uido|oudo)?[\s_]*(?:kg)?[:：]{1,2}\s*([0-9]{3,6})",
         texto
     )
 
