@@ -193,8 +193,8 @@ def webhook():
             return jsonify(resultado)
         else:
             enviar_mensagem(numero, "❌ Opção inválida. Por favor, escolha uma opção válida acima.")
-            conversas[numero]["estado"] = "aguardando_opcao_ticket"
-            return {"status": "aguardando_opcao_ticket"}
+            conversas[numero]["estado"] = "aguardando_opcao_nf"
+            return {"status": "aguardando_opcao_nf"}
 
     #Manda para o DEF "Aguardando Confirmação NF" 
     if estado == "aguardando_confirmacao_nf":
