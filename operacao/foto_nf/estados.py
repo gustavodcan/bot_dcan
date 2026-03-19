@@ -222,7 +222,7 @@ def tratar_estado_aguardando_imagem_nf(numero, data, conversas, texto_recebido):
 
     from integracoes.nsdocs.client import buscar_ou_consultar_e_buscar
 
-    enviar_mensagem(numero, "🔎 Consultando dados da NF no NSDocs...")
+    enviar_mensagem(numero, "🔎 Consultando dados da NF..")
 
     # sanitize chave
     import re
@@ -505,7 +505,7 @@ def tratar_estado_aguardando_imagem_acrescer_nf(numero, data, conversas, texto_r
 
     from integracoes.nsdocs.client import buscar_ou_consultar_e_buscar
 
-    enviar_mensagem(numero, "🔎 Consultando dados da NF no NSDocs...")
+    enviar_mensagem(numero, "🔎 Consultando dados da NF...")
 
     # sanitize chave
     import re
