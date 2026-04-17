@@ -31,7 +31,7 @@ def extrair_dados_cliente_rio_das_pedras(img, texto):
                 peso_raw = match_peso.group(1)
                 logger.debug(f"[⚖️] Peso capturado: {peso_raw}")
                 try:
-                    peso_limpo = peso_raw.replace(".", "").replace(",", "")
+                    peso_limpo = peso_raw #.replace(".", "").replace(",", "")
                     peso_liquido_val = str(int(peso_limpo))
                     logger.debug(f"[✅] Peso líquido final: {peso_liquido_val}")
                 except Exception as e:
