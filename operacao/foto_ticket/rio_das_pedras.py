@@ -26,13 +26,13 @@ def extrair_dados_cliente_rio_das_pedras(img, texto):
     for linha in linhas:
         if re.search(r"l[ií1!|][qg][uúü][ií1!|][d0o][a-z]*[:：-]*", linha):
             logger.debug(f"[👁️] Linha suspeita de peso líquido: {linha}")
-            match_peso = re.search(r"(\d{1,3}(?:[.,]\d{3}){1,2})\s*kg", linha)
+            match_peso = re.search(r"(\d{1,3}(?:[.,]\d{3}){1,2})\s*k[g9]", linha)
             if match_peso:
                 peso_raw = match_peso.group(1)
                 logger.debug(f"[⚖️] Peso capturado: {peso_raw}")
                 try:
-                    peso_limpo = peso_raw #.replace(".", "").replace(",", "")
-                    peso_liquido_val = str(int(peso_limpo))
+                    peso_limpo = peso_raw.replace(",", "").replace(".", ",")
+                    peso_liquido_val = str(int(float(peso_limpo)))
                     logger.debug(f"[✅] Peso líquido final: {peso_liquido_val}")
                 except Exception as e:
                     logger.debug(f"[❌] Erro ao converter peso: {e}")
