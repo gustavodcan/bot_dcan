@@ -47,7 +47,7 @@ def extrair_dados_por_cliente(cliente, texto_ocr):
             return extrair_dados_cliente_eucatex(None, texto_ocr)
         case "gescrap":
             return extrair_dados_cliente_gescrap(None, texto_ocr)
-        case "rio das pedras":
+        case "residuos arcelormittal":
             return extrair_dados_cliente_rio_das_pedras(None, texto_ocr)
         case "proactiva":
             return extrair_dados_cliente_saae(None, texto_ocr)
@@ -62,7 +62,7 @@ def detectar_cliente_por_texto(texto):
     texto = texto.lower()
 
     if "ticket de pesagem recebimento" in texto:
-        return "rio das pedras"
+        return "residuos arcelormittal"
     elif "veolia" in texto and "gerdau" in texto:
         return "veolia gerdau"
     elif "orizon" in texto:
